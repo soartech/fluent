@@ -1,0 +1,48 @@
+---
+
+moodle_defaults:
+  data_dir:   "/opt/tla/moodle_data"
+  web_root:   "/var/www/moodle"
+  root_url:   "http://{{ default_hostname | default('localhost') }}"
+  port:       8090
+  version:    "MOODLE_31_STABLE"
+  vhost_conf: "moodle_vhost.conf.j2"
+  owner:      "{{ apache2.owner }}"
+  group:      "{{ apache2.group }}"
+  admin: {}
+    #username: "" # SET ME IN PLAYBOOK OR INVENTORY
+    #password: "" # SET ME IN PLAYBOOK OR INVENTORY
+    #email: "" # SET ME IN PLAYBOOK OR INVENTORY
+
+  download_cache_dir: "{{ download_cache_dir | default('/tmp') }}"
+  init_cache_dir:     "{{ init_cache_dir | default('/var/cache/ansible') }}/moodle_xapi"
+
+  dependencies:
+    - "php5-pgsql"
+    - "curl"
+    - "php5-curl"
+    - "php5-gd"
+
+_moodle_platform_specific_defaults:
+  Ubuntu:
+    trusty:
+      dependencies:
+        - "php5-pgsql"
+        - "curl"
+        - "php5-curl"
+        - "php5-gd"
+    xenial:
+      dependencies:
+        - "php7.0-pgsql"
+        - "curl"
+        - "graphviz"
+        - "aspell"
+        - "curl"
+        - "php7.0-curl"
+        - "php7.0-gd"
+        - "php7.0-xml"
+        - "php7.0-zip"
+        - "php7.0-pspell"
+        - "php7.0-intl"
+        - "php7.0-xmlrpc"
+        - "php7.0-ldap"

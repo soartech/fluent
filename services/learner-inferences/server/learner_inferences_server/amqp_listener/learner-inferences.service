@@ -1,0 +1,14 @@
+[Unit]
+Description=Learner Inferences Service
+Requires=multi-user.target
+After=multi-user.target
+
+[Service]
+Type=simple
+ExecStart=/bin/bash /var/lib/learner-inferences/learner_inferences_service start
+ExecStop=/bin/bash /var/lib/learner-inferences/learner_inferences_service stop
+Reload=on-abnormal
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

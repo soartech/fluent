@@ -1,0 +1,62 @@
+---
+
+- name: Copy config.py template file
+  template:
+    src: "config.py.j2"
+    dest: "/vagrant/recommender/server/recommenderserver/config.py"
+  notify: restart apache
+
+- name: Install Pip
+  command: apt-get -y install python3-pip
+
+- name: Install numpy
+  command: python3 -m pip install numpy
+
+- name: Install Flask
+  command: python3 -m pip install flask
+
+- name: Install Connexion
+  command: python3 -m pip install connexion
+
+- name: Install Isodate
+  command: python3 -m pip install isodate
+
+- name: Install Cass Client Python Package in Develop Mode
+  command: python3 -m pip install -e /vagrant/cass/clients/python/
+
+- name: Install Cass Graph Python Package in Develop Mode
+  command: python3 -m pip install -e /vagrant/cass/cass-graph/
+
+- name: Install Recommender UI Client Pythin Package in Develop Mode
+  command: python3 -m pip install -e /vagrant/recommender-ui-support/clients/python/
+
+- name: Install Recommender Server Python Package in Develop Mode
+  command: python3 -m pip install -e /vagrant/recommender/server/
+
+- name: Make /var/www/recommender Directory
+  file:
+    path: /var/www/recommender
+    state: directory
+
+- name: Copy WSGI file to /var/www/recommender
+  copy:
+    src: recommender.wsgi
+    dest: /var/www/recommender/recommender.wsgi
+
+- name: Copy Apache config file
+  template:
+    src:  recommender.j2
+    dest: /etc/apache2/sites-available/recommender.conf
+  notify: restart apache
+
+- name: Add Listening Port to ports.conf
+  lineinfile:
+    dest: /etc/apache2/ports.conf
+    line: Listen {{ tla_config.recommender.port }}
+  notify: restart apache
+
+- name: Enable Recommender VirtualHost
+  shell: a2ensite recommender
+  args:
+    creates: /etc/apache2/sites-enabled/recommender.conf
+  notify: restart apache

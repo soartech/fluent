@@ -1,0 +1,15 @@
+---
+
+assessment_ap_defaults:
+  web_root:    "/var/www/assessment-activity-provider"
+  server_name: "{{ default_hostname | default('localhost') }}"
+  server_path: "/assessment-activity-provider/"
+  port:        80
+  source_dir:  "assessment-activity-provider"
+  vhost_file:  "assessment-activity-provider-vhost.conf.j2"
+  owner:       "www-data"
+  group:       "www-data"
+  lrs:
+    endpoint_url: "http://localhost/xapi/"
+    #username:     "" # SET ME IN PLAYBOOK OR INVENTORY
+    #password:     "" # SET ME IN PLAYBOOK OR INVENTORY

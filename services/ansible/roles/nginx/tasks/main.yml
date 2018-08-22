@@ -1,0 +1,37 @@
+---
+
+- name: "Initialize NGINX Owning Group"
+  tags: always
+  set_fact:
+    nginx_defaults: "{{ nginx_defaults | combine({ 'group': '{{ nginx.owner }}' }) }}"
+  when: "nginx.owner is defined"
+
+- name: "Initialize NGINX Configuration"
+  tags: always
+  set_fact:
+    nginx: "{{ nginx_defaults | combine(nginx | default({}), recursive=True) }}"
+
+- name: "Debug Role Configuration"
+  tags: always
+  debug:
+    msg: "{{ nginx }}"
+
+# Stop Apache if needed to prevent any conflicts from both trying to listen to port 80 by default
+- name: "Check if Apache Service Exists"
+  stat: "path=/etc/init.d/{{ apache2.init_name }}"
+  register: _apache_status
+
+- name: "Make sure Apache is not running"
+  service:
+    name:    "{{ apache2.init_name }}"
+    state:   stopped
+  register: _apache_stop_result
+  when: _apache_status.stat.exists
+
+- include: "nginx-{{ ansible_os_family }}.yml"
+
+- name: "Restart Apache if needed"
+  service:
+    name:    "{{ apache2.init_name }}"
+    state:   started
+  when: _apache_status.stat.exists and _apache_stop_result.changed

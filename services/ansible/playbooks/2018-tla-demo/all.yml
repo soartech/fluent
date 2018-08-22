@@ -1,0 +1,11 @@
+---
+
+#- include: "../misc/dev-tools.yml"
+#- include: "../misc/vagrant_prep.yml"
+#- include: "../misc/monitoring.yml"
+- include: "1-lrs/lrs_server.yml"
+- include: "2-logging-lrs/logging_lrs_server.yml"
+- include: "3-adl/adl_server.yml"
+- include: "4-st/soartech.yml"
+- include: "5-activity-providers/ap_server.yml"
+- include: "6-moodle/moodle_server.yml"

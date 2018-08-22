@@ -1,0 +1,95 @@
+# mongod.conf
+
+# for documentation of all options, see:
+#   http://docs.mongodb.org/manual/reference/configuration-options/
+
+# Where and how to store data.
+{% if 'storage' in mongodb.config %}
+storage:
+{{ mongodb.config.storage | to_nice_yaml | indent(4, true) }}
+{% else %}
+#storage:
+{% endif %}
+
+# where to write logging data.
+{% if 'systemLog' in mongodb.config %}
+systemLog:
+{{ mongodb.config.systemLog | to_nice_yaml | indent(4, true) }}
+{% else %}
+#systemLog:
+{% endif %}
+
+# network interfaces
+{% if 'net' in mongodb.config %}
+net:
+{{ mongodb.config.net | to_nice_yaml | indent(4, true) }}
+{% else %}
+#net:
+{% endif %}
+
+{% if 'processManagement' in mongodb.config %}
+processManagement:
+{{ mongodb.config.processManagement | to_nice_yaml | indent(4, true) }}
+{% else %}
+#processManagement:
+{% endif %}
+
+{% if 'security' in mongodb.config %}
+security:
+{{ mongodb.config.security | to_nice_yaml | indent(4, true) }}
+{% else %}
+#security:
+{% endif %}
+
+{% if 'operationProfiling' in mongodb.config %}
+operationProfiling:
+{{ mongodb.config.operationProfiling | to_nice_yaml | indent(4, true) }}
+{% else %}
+#operationProfiling:
+{% endif %}
+
+{% if 'replication' in mongodb.config %}
+replication:
+{{ mongodb.config.replication | to_nice_yaml | indent(4, true) }}
+{% else %}
+#replication:
+{% endif %}
+
+{% if 'sharding' in mongodb.config %}
+sharding:
+{{ mongodb.config.sharding | to_nice_yaml | indent(4, true) }}
+{% else %}
+#sharding:
+{% endif %}
+
+## Enterprise-Only Options:
+
+{% if 'auditLog' in mongodb.config %}
+auditLog:
+{{ mongodb.config.auditLog | to_nice_yaml | indent(4, true) }}
+{% else %}
+#auditLog:
+{% endif %}
+
+{% if 'snmp' in mongodb.config %}
+snmp:
+{{ mongodb.config.snmp | to_nice_yaml | indent(4, true) }}
+{% else %}
+#snmp:
+{% endif %}
+
+{% for entry in mongodb.config %}
+{% if     entry != "storage"
+      and entry != "systemLog" 
+      and entry != "net" 
+      and entry != "processManagement" 
+      and entry != "security" 
+      and entry != "operationProfiling" 
+      and entry != "replication" 
+      and entry != "sharding" 
+      and entry != "auditLog" 
+      and entry != "snmp" %}
+{{ entry }}:
+{{ mongodb.config[entry] | to_nice_yaml | indent(4, true) }}
+{% endif %}
+{% endfor %}

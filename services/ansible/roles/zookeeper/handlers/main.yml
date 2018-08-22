@@ -1,0 +1,6 @@
+---
+- name: "Start Zookeeper Server"
+  service: name=zookeeper state=started
+
+- name: "Restart Zookeeper Server"
+  service: name=zookeeper state=restarted

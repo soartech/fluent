@@ -1,0 +1,11 @@
+---
+
+- name: "Load initial zookeeper nodes"
+  command: "./bin/zkCli.sh create {{ item.key }} \"{{ item.value }}\""
+  args:
+    chdir: "{{ zookeeper.home }}"
+  with_dict: "{{ zookeeper.init_nodes }}"
+  register: _zk_init_nodes
+  changed_when: "_zk_init_nodes.rc == 0 and 'Node already exists' not in _zk_init_nodes.stderr"
+  failed_when:  "_zk_init_nodes.rc != 0"
+

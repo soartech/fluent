@@ -1,0 +1,12 @@
+---
+
+cass_data_defaults:
+  init_cache_dir: "{{ init_cache_dir | default('/var/cache/ansible') }}/cass_data"
+  base_url: "http://localhost"
+  frameworks: []
+
+## Example Framework:
+#- name:         "My CASS Framework"
+#  framework_id: "5c0b7012-b2fd-431e-aab2-ee3feb323085"
+#  competencies: "tlaCompetencies.csv"
+#  relations:    "tlaRelations.csv"

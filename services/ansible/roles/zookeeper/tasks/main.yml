@@ -1,0 +1,20 @@
+---
+
+- name: "Initialize Zookeeper Home and Download URL"
+  tags: always
+  set_fact:
+    zookeeper_defaults: "{{ zookeeper_defaults | combine({ 'home': '/opt/zookeeper/zookeeper-' + zookeeper.version, 'download_url': 'http://archive.apache.org/dist/zookeeper/zookeeper-{{ zookeeper.version }}/zookeeper-{{ zookeeper.version }}.tar.gz' }) }}"
+  when: "zookeeper.version is defined"
+
+- name: "Initialize Zookeeper Configuration"
+  tags: always
+  set_fact:
+    zookeeper: "{{ zookeeper_defaults | combine(zookeeper | default({}), recursive=True) }}"
+
+- name: "Debug Role Configuration"
+  tags: always
+  debug:
+    msg: "{{ zookeeper }}"
+
+- include: "zookeeper-{{ ansible_os_family }}.yml"
+- include: "load-nodes-{{ ansible_os_family }}.yml"

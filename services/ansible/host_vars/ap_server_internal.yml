@@ -1,0 +1,28 @@
+---
+
+# This contains general settings for the local vagrant activity provider VM
+
+ansible_connection: local
+
+# hostname of this host
+default_hostname:         "insertHostName"
+
+# hostnames/ips of other hosts we might be interacting with
+lrs_hostname:             "insertHostName"
+logging_lrs_hostname:     "insertHostName" # NOT SET UP
+adl_server_hostname:      "insertHostName"
+st_server_hostname:       "insertHostName"
+ap_server_hostname:       "insertHostName"
+moodle_server_hostname:   "insertHostName" # NOT SET UP
+
+log_stats_cfg:
+  script_src: "{{ deployment_base }}/shell-scripts/log-stats"
+  time:
+    minute: "*/5"
+
+tcpdump:
+  filter_path: "/root/ap-filter.txt"
+  filter_template: "{{ deployment_base }}/ansible/config_templates/ap-filter.txt"
+  output_path: "/vagrant/activity-providers"
+  ifaces:
+    - "any"

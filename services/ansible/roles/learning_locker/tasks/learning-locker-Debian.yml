@@ -1,0 +1,121 @@
+---
+
+- name: "Install Learning Locker Dependencies"
+  apt:
+    name:  "{{ item }}"
+    state: present
+    update_cache:     "{{ learning_locker.apt.update_cache }}"
+    cache_valid_time: "{{ learning_locker.apt.cache_valid_time }}"
+  with_items: "{{ learning_locker.dependencies }}"
+
+- name: "Enable PHP Modules"
+  become: true
+  command: "{{ learning_locker.phpenmod }} {{ item }}"
+  #args:
+  #  creates: ""
+  with_items: "{{ learning_locker.php_modules_to_enable }}"
+
+- name: "Create Learning Locker Web Root Directory"
+  file:
+    path:  "{{ learning_locker.web_root }}"
+    state: directory
+    owner: "{{ learning_locker.owner }}"
+    group: "{{ learning_locker.group }}"
+
+- name: "Download Learning Locker Zip File"
+  connection: local
+  become:     false
+  get_url:
+    url:  "https://github.com/LearningLocker/learninglocker/archive/v{{ learning_locker.version }}.tar.gz"
+    dest: "{{ learning_locker.download_cache_dir }}/learninglocker-v{{ learning_locker.version }}.tar.gz"
+
+- name: "Unzip Learning Locker"
+  unarchive:
+    src:     "{{ learning_locker.download_cache_dir }}/learninglocker-v{{ learning_locker.version }}.tar.gz"
+    dest:    "{{ learning_locker.web_root }}"
+    creates: "{{ learning_locker.web_root }}/learninglocker-{{ learning_locker.version }}"
+    owner:   "{{ learning_locker.owner }}"
+    group:   "{{ learning_locker.group }}"
+    copy:    yes
+
+- name: "Download Composer installer"
+  get_url:
+    url:  "https://getcomposer.org/installer"
+    dest: "{{ learning_locker.init_cache_dir }}/composer-installer"
+    mode: 0755
+
+- name: "Set Up Composer"
+  become:      true
+  shell: "php5.6 {{ learning_locker.init_cache_dir }}/composer-installer"
+  args:
+    chdir:   "{{ learning_locker.web_root }}/learninglocker-{{ learning_locker.version }}"
+    creates: "{{ learning_locker.web_root }}/learninglocker-{{ learning_locker.version }}/composer.phar"
+
+- name: "Set Up Learning Locker"
+  shell: "php5.6 composer.phar install --no-interaction --no-dev"
+  args:
+    chdir:   "{{ learning_locker.web_root }}/learninglocker-{{ learning_locker.version }}"
+    creates: "{{ learning_locker.web_root }}/learninglocker-{{ learning_locker.version }}/vendor"
+  become_user: "{{ learning_locker.owner }}"
+  become:      true
+
+- name: "Configure LearningLocker"
+  template:
+    src:    "{{ item.key }}.php.j2"
+    dest:   "{{ learning_locker.web_root }}/learninglocker-{{ learning_locker.version }}/app/config/{{ item.key }}.php"
+    owner:  "{{ learning_locker.owner }}"
+    group:  "{{ learning_locker.group }}"
+    backup: true
+  with_dict: "{{ learning_locker.config }}"
+  register: _ll_config
+
+- name: "Copy Learning Locker VirtualHost File"
+  template:
+    src:  "{{ learning_locker.vhost_conf }}"
+    dest: "/etc/apache2/sites-available/learning-locker.conf"
+  notify: "Reload Apache"
+
+- name: "Set LearningLocker Storage to Writable"
+  file:
+    path:    "{{ learning_locker.web_root }}/learninglocker-{{ learning_locker.version }}/app/storage"
+    state:   directory
+    owner:   "{{ learning_locker.owner }}"
+    group:   "{{ learning_locker.group }}"
+    recurse: yes
+
+- name: "Initialize LearningLocker"
+  command: "php5.6 artisan migrate"
+  args:
+    chdir: "{{ learning_locker.web_root }}/learninglocker-{{ learning_locker.version }}"
+  become_user: "{{ learning_locker.owner }}"
+  become:      true
+  when: _ll_config|changed
+
+- name: "Check for LearningLocker Key"
+  command: "grep -q \"  'key' => 'yoursecretkey!',\" {{ learning_locker.web_root }}/learninglocker-{{ learning_locker.version }}/app/config/app.php"
+  changed_when: false
+  failed_when:  false
+  register: _ll_key_config
+
+- name: "Generate LearningLocker Key"
+  command: "php5.6 artisan key:generate"
+  args:
+    chdir: "{{ learning_locker.web_root }}/learninglocker-{{ learning_locker.version }}"
+  become_user: "{{ learning_locker.owner }}"
+  become:      true
+  when: _ll_key_config.rc == 0
+
+- name: "Add Learning Locker Listening Port to ports.conf"
+  become: true
+  lineinfile:
+    dest: "/etc/apache2/ports.conf"
+    line: "Listen {{ learning_locker.port }}"
+  notify: "Reload Apache"
+
+- name: "Enable Learning Locker VirtualHost"
+  shell: "a2ensite learning-locker"
+  args:
+    creates: "/etc/apache2/sites-enabled/learning-locker.conf"
+  notify: "Reload Apache"
+
+- meta: flush_handlers

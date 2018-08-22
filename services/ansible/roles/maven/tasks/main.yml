@@ -1,0 +1,28 @@
+---
+
+- name: "Initialize Maven Version"
+  set_fact:
+    maven_defaults: "{{ maven_defaults | combine({ 'folder_name': 'apache-maven-{{ maven.version }}', 'version': '{{ maven.version }}', 'download_url': \"http://apache.mirrors.ionfish.org/maven/maven-{{ maven.version.split('.')[0] }}/{{ maven.version }}/binaries/apache-maven-{{ maven.version }}-bin.tar.gz\" }) }}"
+  when: "maven.version is defined"
+
+- name: "Initialize Maven Configuration"
+  set_fact:
+    maven: "{{ maven_defaults | combine(maven | default({}), recursive=True) }}"
+
+- include: "maven-Linux.yml"
+
+- name: "Initialize .m2 Folder"
+  file: 
+    path:  "{{ item.dest }}"
+    state: directory
+    owner: "{{ item.owner }}"
+    group: "{{ item.group }}"
+  with_items: "{{ maven.copy_credentials }}"
+
+- name: "Copy Maven Credentials into Machine"
+  copy:
+    src:  "{{ item[0].source }}/{{ item[1] }}"
+    dest: "{{ item[0].dest }}/{{   item[1] }}" 
+  with_nested:
+    - "{{ maven.copy_credentials }}"
+    - [ "settings.xml", "settings-security.xml" ]

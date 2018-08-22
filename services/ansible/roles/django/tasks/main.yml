@@ -1,0 +1,2 @@
+---
+- include: "django-{{ ansible_os_family }}.yml"

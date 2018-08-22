@@ -1,0 +1,47 @@
+---
+
+- name: "Initialize Discovery Service Configuration"
+  set_fact:
+    discovery_service: "{{ discovery_service_defaults | combine(discovery_service | default({}), recursive=True) }}"
+
+- name: "Debug Role Configuration"
+  debug:
+    msg: "{{ discovery_service }}"
+
+- name: "Create Discovery Service Web Root Directory"
+  file:
+    path:  "{{ discovery_service.web_root }}"
+    state: directory
+    owner: "{{ discovery_service.owner }}"
+    group: "{{ discovery_service.group }}"
+
+- name: "Copy Code to Web Root"
+  copy:
+    src:  "{{ discovery_service.source_dir }}/"
+    dest: "{{ discovery_service.web_root }}"
+
+- name: "Resolve Discovery Service Configuration File"
+  template:
+    src:  "{{ discovery_service.config_template }}"
+    dest: "{{ discovery_service.web_root }}/{{ discovery_service.config_dest }}"
+
+- name: "Copy Discovery Service VirtualHost File"
+  template:
+    src:  "{{ discovery_service.vhost_file }}"
+    dest: "/etc/apache2/sites-available/discovery-service-vhost.conf"
+  notify: "Restart Apache"
+
+- name: "Add Listening Port to ports.conf"
+  lineinfile:
+    dest: "/etc/apache2/ports.conf"
+    line: "Listen {{ discovery_service.port }}"
+  notify: "Restart Apache"
+
+- name: "Enable Discovery Service VirtualHost"
+  shell: "a2ensite discovery-service-vhost"
+  args:
+    creates: "/etc/apache2/sites-enabled/discovery-service-vhost.conf"
+  notify: "Restart Apache"
+
+# Restart services if needed
+- meta: flush_handlers

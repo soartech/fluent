@@ -1,0 +1,65 @@
+---
+
+- name: "Add MongoDB APT Key"
+  apt_key:
+    id:        "0C49F3730359A14518585931BC711F9BA15703C6"
+    keyserver: "keyserver.ubuntu.com"
+
+- name: "Add MongoDB Apt Repository"
+  apt_repository:
+    repo: "deb [ arch=amd64 ] http://repo.mongodb.org/apt/{{ ansible_distribution | lower }} {{ ansible_distribution_release }}/mongodb-org/{{ mongodb.version }} multiverse"
+
+- name: "Install MongoDB"
+  apt:
+    name:  "{{ mongodb.package_name }}"
+    state: present
+    update_cache:     "{{ mongodb.apt.update_cache }}"
+    cache_valid_time: "{{ mongodb.apt.cache_valid_time }}"
+  register: _install_mongo
+  notify: "Restart MongoDB"
+
+- name: "Install any MongoDB Add-ons"
+  apt:
+    name:  "{{ item }}"
+    state: present
+    update_cache:     "{{ mongodb.apt.update_cache }}"
+    cache_valid_time: "{{ mongodb.apt.cache_valid_time }}"
+  with_items: "{{ mongodb.addon_packages }}"
+  notify: "Restart MongoDB"
+
+- name: "Generate MongoDB User Initialization File"
+  template:
+    src:   "templates/mongo-users-init.js.j2"
+    dest:  "{{ mongodb.init_cache_dir }}/mongo-users-init.js"
+    owner: "{{ mongodb.owner }}"
+    group: "{{ mongodb.group }}"
+  register: _gen_mongo_init_file
+
+- name: "Configure MongoDB Settings"
+  template:
+    src:   "templates/mongod.conf.j2"
+    dest:  "{{ mongodb.conf_path }}"
+
+#- name: "Configure MongoDB Settings"
+#  lineinfile:
+#    dest:   "{{ mongodb.conf_path }}"
+#    line:   '\g<1>: {{ item.value | to_yaml }}'
+#    regexp: "(\\s*{{ item.key }}\\s*):"
+#    backrefs: yes
+#    backup: yes
+#  with_dict: "{{ mongodb.config }}"
+#  notify: "Restart MongoDB"
+
+- meta: flush_handlers
+
+ # NOTE: The failed_when here will complicate things if you change mongodb creds & reprovision
+- name: "Create MongoDB Users"
+  command: "{{ mongodb.exe_path }} {{ mongodb.init_cache_dir }}/mongo-users-init.js"
+  when: _gen_mongo_init_file|changed or _install_mongo|changed
+  register: _mongodb_create_users
+  failed_when:  "_mongodb_create_users.rc != 0 and 'already exists' not in _mongodb_create_users.stdout"
+
+- name: "Enable MongoDB Start on Boot"
+  become: true
+  command: "systemctl enable mongod.service"
+  when: _install_mongo|changed

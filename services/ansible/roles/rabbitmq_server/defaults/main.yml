@@ -1,0 +1,10 @@
+---
+
+rabbitmq_defaults:
+  config_dir: "/etc/rabbitmq_server"
+  init_name:  "rabbitmq-server"
+  log_dir: "/var/log/rabbitmq_server"
+  version: "3.7.4"
+  apt:
+    update_cache:     yes
+    cache_valid_time: 3600

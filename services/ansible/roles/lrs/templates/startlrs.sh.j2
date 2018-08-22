@@ -1,0 +1,6 @@
+#!/bin/sh
+
+cd {{ lrs.home | dirname }}
+. env/bin/activate
+cd {{ lrs.home }}
+python manage.py runserver {{ lrs.bind_address }}:{{ lrs.ports.redirect }}

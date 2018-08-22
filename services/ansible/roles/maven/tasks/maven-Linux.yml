@@ -1,0 +1,40 @@
+---
+
+- name: "Generate Maven Home"
+  set_fact:
+    _maven_home: "{{ maven.dest }}/{{ maven.folder_name }}"
+
+- name: "Download Maven {{ maven.version }}" 
+  connection: local
+  become:     false
+  get_url:
+    url:      "{{ maven.download_url }}" 
+    dest:     "{{ maven.download_cache_dir }}/apache-maven-{{ maven.version }}-bin.tar.gz"
+    timeout:  60 
+    checksum: "{{ maven.checksum | default(omit) }}"
+
+- name: "Create Maven Directory"
+  file:
+    path:    "{{ maven.dest }}"
+    state:   directory
+    owner:   "{{ maven.owner }}"
+    group:   "{{ maven.group }}"
+    mode:    0755
+
+- name: "Decompress Maven Tarball"
+  unarchive:
+    src:     "{{ maven.download_cache_dir }}/apache-maven-{{ maven.version }}-bin.tar.gz"
+    dest:    "{{ maven.dest }}"
+    creates: "{{ _maven_home }}"
+
+- name: "Identify Maven Executables"
+  command: "ls {{ _maven_home }}/bin"
+  changed_when: False
+  register: maven_exe_files
+
+- name: "Install Maven Executables"
+  shell: "update-alternatives --install /usr/bin/{{ item }} {{ item }} {{ _maven_home }}/bin/{{ item }} {{ maven.priority_level }}"
+  args:
+    creates: "/usr/bin/{{ item }}"
+  with_items: "{{ maven_exe_files.stdout_lines }}"
+  when: " '.' not in item " # Limit to executables; there could be a couple non-executables in this directory

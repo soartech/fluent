@@ -1,0 +1,8 @@
+---
+
+recommendation_ui_config_defaults:
+  dest: "/vagrant/recommendation-ui/src/main/resources/com/soartech/fluent/recommendation-ui/network/config.properties"
+  config:
+    discovery_service: "{{ tla_config.discovery_service.base_url }}/list"
+    openID_provider: "keycloak-fluent"
+    device_poll_rate: "3600000"

@@ -1,0 +1,11 @@
+---
+
+- name: "Initialize Keycloak Config Configuration"
+  set_fact:
+    keycloak_config: "{{ keycloak_config_defaults | combine(keycloak_config | default({}), recursive=True) }}"
+
+- name: "Debug Role Configuration"
+  debug:
+    msg: "{{ keycloak_config }}"
+
+- include: "keycloak_config.yml"

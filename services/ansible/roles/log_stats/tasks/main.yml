@@ -1,0 +1,16 @@
+---
+
+- name: "Initialize Log Stats Configuration"
+  set_fact:
+    log_stats: "{{ log_stats_defaults | combine(log_stats | default({}), recursive=True) }}"
+
+- name: "Debug Role Configuration"
+  debug:
+    msg: "{{ log_stats }}"
+
+#- name: "Create Init Cache Directory"
+#  file:
+#    path:  "{{ log_stats.init_cache_dir }}"
+#    state: directory
+
+- include: "log_stats-{{ ansible_system }}.yml"

@@ -1,0 +1,3 @@
+---
+
+apt_caching_dir: "{{ download_cache_dir }}/apt"

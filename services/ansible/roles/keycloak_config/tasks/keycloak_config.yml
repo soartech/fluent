@@ -1,0 +1,66 @@
+---
+
+- name: "Check if Keycloak Administrator Account is Active"
+  uri:
+    url: "{{ keycloak_config.base_url }}/realms/master/protocol/openid-connect/token"
+    method: POST
+    HEADER_Content-Type: "application/x-www-form-urlencoded"
+    body: "client_id=admin-cli&username={{ keycloak_config.admin.username }}&password={{ keycloak_config.admin.password }}&grant_type=password"
+    status_code: 200
+    return_content: yes
+  register: _auth_result
+  failed_when: false
+
+- name: "Create Keycloak Administrator Account"
+  shell: "{{ keycloak_config.home }}/bin/add-user-keycloak.sh -u {{ keycloak_config.admin.username }} -p {{ keycloak_config.admin.password }}"
+  changed_when: true
+  failed_when:  "_add_user_result.rc != 0 and 'already added' not in _add_user_result.stderr"
+  register: _add_user_result
+  when: "'json' not in _auth_result"
+
+- name: "Stop Keycloak Server"
+  service:
+    name:  wildfly
+    state: stopped
+  when: "'json' not in _auth_result"
+
+# TODO: these credentials and paths are reasonably safe for a single version of
+# keycloak, but could perhaps stand to be made more robust in the case of a
+# Keycloak upgrade;
+- name: "Turn of sslRequired for Master Realm"
+  shell: |
+    java -cp {{ keycloak_config.home }}/modules/system/layers/base/com/h2database/h2/main/h2-1.3.173.jar \
+         org.h2.tools.Shell \
+         -url "jdbc:h2:{{ keycloak_config.home }}/standalone/data/keycloak" \
+         -user     "insertUsername" \
+         -password "insertPassword" \
+         -sql "UPDATE REALM SET SSL_REQUIRED='NONE' WHERE ID='master' AND SSL_REQUIRED<>'NONE';"
+  register: _sslrequired_turn_off
+  changed_when: "'Update count: 1' in _sslrequired_turn_off.stdout"
+  failed_when:  "'Update count: 0' not in _sslrequired_turn_off.stdout and 'Update count: 1' not in _sslrequired_turn_off.stdout"
+  when: "'json' not in _auth_result"
+
+- name: "Restart Keycloak Server"
+  service:
+    name:  wildfly
+    state: started
+  when: "'json' not in _auth_result"
+
+- name: "Get Access Token for Administering Keycloak"
+  uri:
+    url: "{{ keycloak_config.base_url }}/realms/master/protocol/openid-connect/token"
+    method: POST
+    HEADER_Content-Type: "application/x-www-form-urlencoded"
+    body: "client_id=admin-cli&username={{ keycloak_config.admin.username }}&password={{ keycloak_config.admin.password }}&grant_type=password"
+    status_code: 200
+    return_content: yes
+  register: _auth_result
+  retries: 5
+  until: "'json' in _auth_result"
+
+- include: "setup_realm.yml"
+  with_fileglob: "{{ keycloak_config.realms_path }}/realms/*.json"
+  when: "'realms_path' in keycloak_config"
+
+- include: "setup_client.yml"
+  with_items: "{{ keycloak_config.clients }}"

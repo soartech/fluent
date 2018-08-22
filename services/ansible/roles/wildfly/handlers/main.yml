@@ -1,0 +1,6 @@
+---
+- name: "Start Wildfly Server"
+  service: name=wildfly state=started
+
+- name: "Restart Wildfly Server"
+  service: name=wildfly state=restarted

@@ -1,0 +1,13 @@
+---
+
+- name: "Initialize Java Configuration"
+  tags: always
+  set_fact:
+    java: "{{ java_defaults | combine(java | default({}), recursive=True) }}"
+
+- name: "Debug Role Configuration"
+  tags: always
+  debug:
+    msg: "{{ java }}"
+
+- include: "java-{{ ansible_system }}.yml"

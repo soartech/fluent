@@ -1,0 +1,20 @@
+---
+
+- name: Install mod_wsgi
+  apt:
+    name=libapache2-mod-wsgi-py3
+    state=present
+    version="{{ mod_wsgi_version | default(omit) }}"
+  become: yes
+
+- name: Set up directory
+  file:
+    path="{{ mod_wsgi_dir_scripts }}"
+    state=directory
+    mode=0755
+  become: yes
+
+- name: "Restart Apache"
+  service:
+    name: "apache2"
+    state: restarted

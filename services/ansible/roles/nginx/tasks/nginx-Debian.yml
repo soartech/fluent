@@ -1,0 +1,13 @@
+---
+
+- name: "Install NGINX"
+  apt:
+    name: "nginx={{ nginx.version }}"
+    state: present
+    update_cache: "{{ nginx.apt.update_cache }}"
+    cache_valid_time: "{{ nginx.apt.cache_valid_time }}"
+
+- name: "Remove default NGINX configuration"
+  file:
+    path: "{{ nginx.config_dir }}/sites-enabled/default"
+    state: absent

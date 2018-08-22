@@ -1,0 +1,20 @@
+<VirtualHost *:{{ static_viewer.port }}>
+
+    DocumentRoot {{ static_viewer.web_root }}
+
+    ServerName {{ static_viewer.server_name }}
+    ServerPath "{{ static_viewer.server_path }}"
+
+    ServerAdmin webmaster@localhost
+
+    ErrorLog ${APACHE_LOG_DIR}/static-viewer.error.log
+    CustomLog ${APACHE_LOG_DIR}/static-viewer.access.log combined
+
+    <Directory {{ static_viewer.web_root }}>
+        AllowOverride All
+        Require all granted
+    </Directory>
+
+</VirtualHost>
+
+# vim: syntax=apache ts=4 sw=4 sts=4 sr noet

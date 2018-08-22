@@ -1,0 +1,16 @@
+---
+
+learning_locker_defaults:
+  install_dir: "/opt"
+  owner: "learninglocker"
+  version: "v2.1.4"
+  xapi_version: "v2.2.0"
+  save_creds_locations:
+    - "{{ deployment_base }}/ansible/.tmp/learning_locker_creds.json"
+  lrs:
+    store: "Default"
+    client: "Default Client"
+  admin: {} # SET ME IN PLAYBOOK OR INVENTORY
+    #organization: "" # SET ME IN PLAYBOOK OR INVENTORY
+    #email: "" # SET ME IN PLAYBOOK OR INVENTORY
+    #password: "" # SET ME IN PLAYBOOK OR INVENTORY

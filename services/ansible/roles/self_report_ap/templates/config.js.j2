@@ -1,0 +1,4 @@
+var config = {
+    "endpoint" : "{{ self_report_ap.service.endpoint }}",
+    "auth" : "Basic " + toBase64("{{ self_report_ap.service.username }}:{{ self_report_ap.service.password }}"),
+}

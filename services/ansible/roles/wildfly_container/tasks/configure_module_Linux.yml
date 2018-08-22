@@ -1,0 +1,64 @@
+---
+# Assumes module object has 
+#     name                                    (Ex: "org.postgresql")
+#     path          [OPTIONAL if url set]     (Ex: "postgresql-9.4.1208.jre7.jar")
+#     download_url  [OPTIONAL if path set]    (Ex: "https://jdbc.postgresql.org/download/postgresql-9.4.1208.jre7.jar")
+#     dependencies  (array)                   (Ex: ["javax.api", "javax.transaction.api"])
+
+
+- name: "Set Module '{{ item.name }}' Filename From path if Available"
+  set_fact:
+    moduleFileName: "{{ item.path | basename }}"
+  when: item.path is defined
+
+- name: "Set Module '{{ item.name }}' Filename From URL if Available"
+  set_fact:
+    moduleFileName: "{{ item.download_url | basename }}"
+  when: item.path is undefined
+
+- name: "Check if Module '{{ item.name }}' is Installed on Wildfly"
+  stat:
+    path: "{{ wildfly.home }}/modules/{{ item.name | regex_replace('\\.', '/') }}/main/{{ moduleFileName }}"
+  register: module_exists
+
+- name: "Download Module if Needed"
+  connection: local
+  become: false
+  get_url:
+    url: "{{ item.download_url }}"
+    dest: "{{ wildfly_container.download_cache_dir }}/{{ moduleFileName }}"
+    checksum: "{{ item.download_checksum | default(omit) }}"
+  when: (not module_exists.stat.exists and item.download_url is defined)
+
+- name: "Copy module file for '{{ item.name }}' from Download Cache"
+  copy:
+    src:   "{{ wildfly_container.download_cache_dir }}/{{ moduleFileName }}"
+    dest:  "/tmp/{{ moduleFileName }}"
+    owner: "{{ wildfly.owner }}"
+    group: "{{ wildfly.group }}"
+  when: (not module_exists.stat.exists) and (item.download_url is defined)
+
+- name: "Copy module file for '{{ item.name }}' from Source"
+  copy:
+    src:   "{{ item.path }}"
+    dest:  "/tmp/{{ moduleFileName }}"
+    owner: "{{ wildfly.owner }}"
+    group: "{{ wildfly.group }}"
+  when: (not module_exists.stat.exists) and (not item.download_url is defined)
+
+- name: "Start Wildfly if Needed"
+  service:
+    name:  "{{ wildfly.init_name }}"
+    state: started
+  when: not module_exists.stat.exists
+
+- name: "Add Module '{{ item.name }}' to Wildfly"
+  command: |
+    {{ wildfly.home }}/bin/jboss-cli.sh
+    --controller=localhost:{{ 9990 + wildfly.java_options['jboss.socket.binding.port-offset'] }}
+    -c
+    --command='module add \
+             --name={{ item.name }} \
+             --resources=/tmp/{{ moduleFileName }}\
+             --dependencies={{ item.dependencies | join(',') }}'
+  when: not module_exists.stat.exists

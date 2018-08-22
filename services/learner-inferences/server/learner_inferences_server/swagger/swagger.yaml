@@ -1,0 +1,781 @@
+---
+swagger: "2.0"
+info:
+  description: "This API is used to interact with the data stored in the TLA Learner\
+    \ Profile database."
+  version: "0.1.0"
+  title: "Learner API"
+host: "fluent.tla"
+basePath: "/learner-inferences"
+schemes:
+- "https"
+consumes:
+- "application/ld+json"
+produces:
+- "application/ld+json"
+paths:
+  /learners:
+    get:
+      tags:
+      - "Multiple Learners"
+      summary: "Obtains a collection of Learner objects from Learner Profile."
+      description: "Returns a collection of Learner objects; all learners are returned\
+        \ if \"limit\" and \"offset\" were not specified."
+      operationId: "get_learners"
+      parameters:
+      - name: "limit"
+        in: "query"
+        description: "The maximum number of objects that will be returned."
+        required: false
+        type: "integer"
+      - name: "offset"
+        in: "query"
+        description: "Determines the first object to be returned."
+        required: false
+        type: "integer"
+      responses:
+        200:
+          description: "Learner objects successfully returned."
+          schema:
+            type: "array"
+            items:
+              $ref: "#/definitions/Learner"
+        400:
+          description: "Invalid request."
+          schema:
+            $ref: "#/definitions/Error"
+        404:
+          description: "Not Found"
+        500:
+          description: "An unexpected server error occurred."
+          schema:
+            $ref: "#/definitions/Error"
+      x-swagger-router-controller: "learner_inferences_server.controllers.multiple_learners_controller"
+    post:
+      tags:
+      - "Single Learner"
+      summary: "Creates one Learner in Learner Profile."
+      description: "Creates a Learner, which is given as a whole object in the payload."
+      operationId: "post_learner"
+      parameters:
+      - in: "body"
+        name: "learnerObj"
+        description: "Learner object to add."
+        required: true
+        schema:
+          $ref: "#/definitions/Learner"
+      responses:
+        201:
+          description: "Learner object successfully created."
+          headers:
+            ETag:
+              type: "string"
+              description: "The ETag of the newly created learner object"
+        400:
+          description: "Invalid request."
+          schema:
+            $ref: "#/definitions/Error"
+        500:
+          description: "An unexpected server error occurred."
+          schema:
+            $ref: "#/definitions/Error"
+      x-swagger-router-controller: "learner_inferences_server.controllers.single_learner_controller"
+  /learners/{keycloakId}:
+    get:
+      tags:
+      - "Single Learner"
+      summary: "Obtains Learner info."
+      description: "Obtains the information of the corresponding Learner."
+      operationId: "get_learner"
+      parameters:
+      - name: "keycloakId"
+        in: "path"
+        description: "The Keycloak ID of the requested Learner."
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: "Learner object successfully returned."
+          schema:
+            $ref: "#/definitions/Learner"
+          headers:
+            ETag:
+              type: "string"
+              description: "The ETag of the requested learner object"
+        400:
+          description: "Invalid request."
+          schema:
+            $ref: "#/definitions/Error"
+        404:
+          description: "Not Found"
+        500:
+          description: "An unexpected server error occurred."
+          schema:
+            $ref: "#/definitions/Error"
+      x-swagger-router-controller: "learner_inferences_server.controllers.single_learner_controller"
+    delete:
+      tags:
+      - "Single Learner"
+      summary: "Deletes a Learner object."
+      description: "Removes the Learner from the database."
+      operationId: "delete_learner"
+      parameters:
+      - name: "keycloakId"
+        in: "path"
+        description: "The Keycloak ID of the Learner to be deleted."
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: "Learner object successfully deleted."
+        400:
+          description: "Invalid request."
+          schema:
+            $ref: "#/definitions/Error"
+        404:
+          description: "Not Found"
+        500:
+          description: "An unexpected server error occurred."
+          schema:
+            $ref: "#/definitions/Error"
+      x-swagger-router-controller: "learner_inferences_server.controllers.single_learner_controller"
+    patch:
+      tags:
+      - "Single Learner"
+      summary: "Updates Learner info."
+      description: "Updates the information of the Learner, which is given partially\
+        \ (one or more of the top-level properties) in the payload."
+      operationId: "update_learner"
+      parameters:
+      - name: "keycloakId"
+        in: "path"
+        description: "The Keycloak ID of the requested Learner."
+        required: true
+        type: "string"
+      - name: "If_Match"
+        in: "header"
+        description: "The ETag of the learner object when it was last fetched"
+        required: true
+        type: "string"
+      - in: "body"
+        name: "learnerObj"
+        description: "Learner object to update."
+        required: true
+        schema:
+          type: "object"
+          description: "The fields contained within this object should match a subset\
+            \ of those in the Learner schema"
+      responses:
+        200:
+          description: "Learner object successfully updated"
+          headers:
+            ETag:
+              type: "string"
+              description: "The ETag of the post-update learner object"
+        400:
+          description: "Invalid request."
+          schema:
+            $ref: "#/definitions/Error"
+        404:
+          description: "Not Found"
+        500:
+          description: "An unexpected server error occurred."
+          schema:
+            $ref: "#/definitions/Error"
+      x-swagger-router-controller: "learner_inferences_server.controllers.single_learner_controller"
+definitions:
+  Error:
+    type: "object"
+    required:
+    - "errorMessage"
+    properties:
+      errorMessage:
+        type: "string"
+      errorCode:
+        type: "string"
+      errorLink:
+        type: "string"
+        format: "url"
+      userMessage:
+        type: "string"
+  Learner:
+    allOf:
+    - $ref: "#/definitions/Person"
+    - type: "object"
+      required:
+      - "@context"
+      - "@type"
+      - "identifier"
+      - "name"
+      properties:
+        '@context':
+          type: "string"
+          description: "The constant link in this property should return file tla-declarations.jsonld.\
+            \ The value of this field will always be \"https://tla.adl.net/declarations\""
+        '@type':
+          type: "string"
+          description: "The value of this field will always be \"Learner\""
+        identifier:
+          type: "string"
+          description: "The string that identifies the learner. For the 2018 prototype,\
+            \ this will be the Keycloak-generated ID."
+        name:
+          type: "string"
+          description: "The full name of the learner."
+        competencyAttemptCounters:
+          type: "array"
+          description: "TODO"
+          items:
+            $ref: "#/definitions/CompetencyAttemptCounter"
+        goals:
+          type: "array"
+          description: "TODO"
+          items:
+            $ref: "#/definitions/Goal"
+        pastGoals:
+          type: "array"
+          items:
+            $ref: "#/definitions/Goal"
+        competencyAchievements:
+          type: "array"
+          description: "TODO"
+          items:
+            $ref: "#/definitions/CompetencyAchievement"
+        masteryEstimates:
+          type: "array"
+          description: "TODO"
+          items:
+            $ref: "#/definitions/MasteryEstimate"
+        pastMasteryEstimates:
+          type: "array"
+          description: "TODO"
+          items:
+            $ref: "#/definitions/MasteryEstimate"
+        masteryProbabilities:
+          type: "array"
+          description: "TODO"
+          items:
+            $ref: "#/definitions/MasteryProbability"
+        currentActivities:
+          type: "array"
+          description: "TODO"
+          items:
+            type: "string"
+            format: "uri"
+        currentDeviceCategories:
+          type: "array"
+          description: "TODO"
+          items:
+            type: "string"
+        currentPlatforms:
+          type: "array"
+          description: "TODO"
+          items:
+            type: "string"
+        bored:
+          type: "boolean"
+          description: "TODO"
+        confused:
+          type: "boolean"
+          description: "TODO"
+        frustrated:
+          type: "boolean"
+          description: "TODO"
+        flow:
+          type: "boolean"
+          description: "TODO"
+        eureka:
+          type: "boolean"
+          description: "TODO"
+        activityAttemptCounters:
+          type: "array"
+          description: "TODO"
+          items:
+            $ref: "#/definitions/ActivityAttemptCounter"
+        lastActivityHard:
+          type: "boolean"
+          description: "TODO"
+        lastActivityUseful:
+          type: "boolean"
+          description: "TODO"
+      description: "A representation of a learner in a Learner Profile."
+  Person:
+    properties:
+      spouse:
+        type: "object"
+        description: "The person s spouse."
+        properties: {}
+      funder:
+        type: "object"
+        description: "A person or organization that supports (sponsors) something\
+          \ through some kind of financial contribution."
+        properties: {}
+      colleague:
+        type: "object"
+        description: "A colleague of the person. Supersedes colleagues."
+        properties: {}
+      deathDate:
+        type: "string"
+        format: "date-time"
+        description: "Date of death."
+      memberOf:
+        type: "object"
+        description: "An Organization (or ProgramMembership) to which this Person\
+          \ or Organization belongs."
+        properties: {}
+      height:
+        type: "object"
+        description: "The height of the item."
+        properties: {}
+      workLocation:
+        type: "object"
+        description: "A contact location for a person s place of work."
+        properties: {}
+      netWorth:
+        type: "object"
+        description: "The total financial value of the person as calculated by subtracting\
+          \ assets from liabilities."
+        properties: {}
+      children:
+        type: "object"
+        description: "A child of the person."
+        properties: {}
+      jobTitle:
+        type: "string"
+        description: "The job title of the person (for example, Financial Manager)."
+      hasOfferCatalog:
+        type: "object"
+        description: "Indicates an OfferCatalog listing for this Organization, Person,\
+          \ or Service."
+        properties: {}
+      deathPlace:
+        type: "object"
+        description: "The place where the person died."
+        properties: {}
+      globalLocationNumber:
+        type: "string"
+        description: "The Global Location Number (GLN, sometimes also referred to\
+          \ as International Location Number or ILN) of the respective organization,\
+          \ person, or place. The GLN is a 13-digit number used to identify parties\
+          \ and physical locations."
+      birthPlace:
+        type: "object"
+        description: "The place where the person was born."
+        properties: {}
+      gender:
+        type: "string"
+        description: "Gender of the person. While http://schema.org/Male and http://schema.org/Female\
+          \ may be used, text strings are also acceptable for people who do not identify\
+          \ as a binary gender."
+      alumniOf:
+        type: "object"
+        description: "An organization that the person is an alumni of."
+        properties: {}
+      homeLocation:
+        type: "object"
+        description: "A contact location for a person s residence."
+        properties: {}
+      duns:
+        type: "string"
+        description: "The Dun & Bradstreet DUNS number for identifying an organization\
+          \ or business person."
+      taxID:
+        type: "string"
+        description: "The Tax / Fiscal ID of the organization or person, e.g. the\
+          \ TIN in the US or the CIF/NIF in Spain."
+      award:
+        type: "string"
+        description: "An award won by or for this item."
+      birthDate:
+        type: "string"
+        format: "date-time"
+        description: "Date of birth."
+      makesOffer:
+        type: "object"
+        description: "A pointer to products or services offered by the organization\
+          \ or person."
+        properties: {}
+      givenName:
+        type: "string"
+        description: "Given name. In the U.S., the first name of a Person. This can\
+          \ be used along with familyName instead of the name property."
+      contactPoints:
+        type: "object"
+        description: "A contact point for a person or organization."
+        properties: {}
+      awards:
+        type: "string"
+        description: "Awards won by or for this item."
+      familyName:
+        type: "string"
+        description: "Family name. In the U.S., the last name of an Person. This can\
+          \ be used along with givenName instead of the name property."
+      seeks:
+        type: "object"
+        description: "A pointer to products or services sought by the organization\
+          \ or person (demand)."
+        properties: {}
+      sibling:
+        type: "object"
+        description: "A sibling of the person."
+        properties: {}
+      address:
+        type: "object"
+        description: "Physical address of the item."
+        properties: {}
+      performerIn:
+        type: "object"
+        description: "Event that this person is a performer or participant in."
+        properties: {}
+      honorificPrefix:
+        type: "string"
+        description: "An honorific prefix preceding a Person s name such as Dr/Mrs/Mr."
+      additionalName:
+        type: "string"
+        description: "An additional name for a Person, can be used for a middle name."
+      siblings:
+        type: "object"
+        description: "A sibling of the person."
+        properties: {}
+      telephone:
+        type: "string"
+        description: "The telephone number."
+      email:
+        type: "string"
+        description: "Email address."
+      weight:
+        type: "object"
+        description: "The weight of the product or person."
+        properties: {}
+      contactPoint:
+        type: "object"
+        description: "A contact point for a person or organization."
+        properties: {}
+      parents:
+        type: "object"
+        description: "A parents of the person."
+        properties: {}
+      naics:
+        type: "string"
+        description: "The North American Industry Classification System (NAICS) code\
+          \ for a particular organization or business person."
+      hasPOS:
+        type: "object"
+        description: "Points-of-Sales operated by the organization or person."
+        properties: {}
+      parent:
+        type: "object"
+        description: "A parent of this person."
+        properties: {}
+      owns:
+        type: "object"
+        description: "Products owned by the organization or person."
+        properties: {}
+      affiliation:
+        type: "object"
+        description: "An organization that this person is affiliated with. For example,\
+          \ a school/university, a club, or a team."
+        properties: {}
+      publishingPrinciples:
+        type: "object"
+        description: "The publishingPrinciples property indicates (typically via URL)\
+          \ a document describing the editorial principles of an Organization (or\
+          \ individual e.g. a Person writing a blog) that relate to their activities\
+          \ as a publisher, e.g. ethics or diversity policies. When applied to a CreativeWork\
+          \ (e.g. NewsArticle) the principles are those of the party primarily responsible\
+          \ for the creation of the CreativeWork.  While such policies are most typically\
+          \ expressed in natural language, sometimes related information (e.g. indicating\
+          \ a funder) can be expressed using schema.org terminology."
+        properties: {}
+      sponsor:
+        type: "object"
+        description: "A person or organization that supports a thing through a pledge,\
+          \ promise, or financial contribution. e.g. a sponsor of a Medical Study\
+          \ or a corporate sponsor of an event."
+        properties: {}
+      isicV4:
+        type: "string"
+        description: "The International Standard of Industrial Classification of All\
+          \ Economic Activities (ISIC), Revision 4 code for a particular organization,\
+          \ business person, or place."
+      brand:
+        type: "object"
+        description: "The brand(s) associated with a product or service, or the brand(s)\
+          \ maintained by an organization or business person."
+        properties: {}
+      honorificSuffix:
+        type: "string"
+        description: "An honorific suffix preceding a Person s name such as M.D. /PhD/MSCSW."
+      vatID:
+        type: "string"
+        description: "The Value-added Tax ID of the organization or person."
+      nationality:
+        type: "object"
+        description: "Nationality of the person."
+        properties: {}
+      faxNumber:
+        type: "string"
+        description: "The fax number."
+      relatedTo:
+        type: "object"
+        description: "The most generic familial relation."
+        properties: {}
+      follows:
+        type: "object"
+        description: "The most generic uni-directional social relation."
+        properties: {}
+      knows:
+        type: "object"
+        description: "The most generic bi-directional social/work relation."
+        properties: {}
+      worksFor:
+        type: "object"
+        description: "Organizations that the person works for."
+        properties: {}
+      sameAs:
+        type: "string"
+        format: "uri"
+        description: "URL of a reference Web page that unambiguously indicates the\
+          \ item s identity. E.g. the URL of the item s Wikipedia page, Wikidata entry,\
+          \ or official website."
+      url:
+        type: "string"
+        format: "uri"
+        description: "URL of the item."
+      image:
+        type: "string"
+        format: "uri"
+        description: "An image of the item. This can be a URL or a fully described\
+          \ ImageObject."
+      additionalType:
+        type: "string"
+        format: "uri"
+        description: "An additional type for the item, typically used for adding more\
+          \ specific types from external vocabularies in microdata syntax. This is\
+          \ a relationship between something and a class that the thing is in. In\
+          \ RDFa syntax, it is better to use the native RDFa syntax - the  typeof\
+          \  attribute - for multiple types. Schema.org tools may have only weaker\
+          \ understanding of extra types, in particular those defined externally."
+      name:
+        type: "string"
+        description: "The name of the item."
+      identifier:
+        type: "string"
+        format: "uri"
+        description: "The identifier property represents any kind of identifier for\
+          \ any kind of Thing, such as ISBNs, GTIN codes, UUIDs etc. Schema.org provides\
+          \ dedicated properties for representing many of these, either as textual\
+          \ strings or as URL (URI) links. See background notes for more details."
+      potentialAction:
+        type: "object"
+        description: "Indicates a potential Action, which describes an idealized action\
+          \ in which this thing would play an  object  role."
+        properties: {}
+      mainEntityOfPage:
+        type: "string"
+        format: "uri"
+        description: "Indicates a page (or other CreativeWork) for which this thing\
+          \ is the main entity being described. See background notes for details."
+      description:
+        type: "string"
+        description: "A description of the item."
+      disambiguatingDescription:
+        type: "string"
+        description: "A sub property of description. A short description of the item\
+          \ used to disambiguate from other, similar items. Information from other\
+          \ properties (in particular, name) may be necessary for the description\
+          \ to be useful for disambiguation."
+      alternateName:
+        type: "string"
+        description: "An alias for the item."
+    description: "A person (alive, dead, undead, or fictional)."
+  CompetencyAttemptCounter:
+    type: "object"
+    required:
+    - "@context"
+    - "@type"
+    - "attempts"
+    - "competencyId"
+    properties:
+      '@context':
+        type: "string"
+        description: "The constant link in this property should return file tla-declarations.jsonld.\
+          \ The value of this field will always be \"https://tla.adl.net/declarations\"\
+          ."
+      '@type':
+        type: "string"
+        description: "The value of this field will always be \"CompetencyAttemptCounter\"\
+          ."
+      competencyId:
+        type: "string"
+        format: "uri"
+        description: "TODO"
+      attempts:
+        type: "number"
+      lastAttemptDateTime:
+        type: "string"
+        format: "date-time"
+        description: "TODO"
+    description: "TODO"
+  Goal:
+    type: "object"
+    required:
+    - "@context"
+    - "@type"
+    - "competencyId"
+    properties:
+      '@context':
+        type: "string"
+        description: "The constant link in this property should return file tla-declarations.jsonld.\
+          \ The value of this field will always be \"https://tla.adl.net/declarations\"\
+          ."
+      '@type':
+        type: "string"
+        description: "The value of this field will always be \"Goal\"."
+      competencyId:
+        type: "string"
+        format: "uri"
+        description: "TODO"
+      targetDate:
+        type: "string"
+        format: "date-time"
+        description: "TODO"
+      priority:
+        type: "string"
+        description: "TODO"
+    description: "TODO"
+  CompetencyAchievement:
+    type: "object"
+    required:
+    - "@context"
+    - "@type"
+    - "competencyId"
+    - "mastery"
+    - "timestamp"
+    properties:
+      '@context':
+        type: "string"
+        description: "The constant link in this property should return file tla-declarations.jsonld.\
+          \ The value of this field will always be \"https://tla.adl.net/declarations\"\
+          ."
+      '@type':
+        type: "string"
+        description: "The value of this field will always be \"CompetencyAchievement\"\
+          ."
+      competencyId:
+        type: "string"
+        format: "uri"
+        description: "TODO"
+      mastery:
+        type: "string"
+        description: "TODO"
+      timestamp:
+        type: "string"
+        format: "date-time"
+        description: "TODO"
+      goalId:
+        type: "string"
+        format: "uri"
+        description: "TODO"
+    description: "TODO"
+  MasteryEstimate:
+    type: "object"
+    required:
+    - "@context"
+    - "@type"
+    - "competencyId"
+    - "mastery"
+    - "timestamp"
+    properties:
+      '@context':
+        type: "string"
+        description: "The constant link in this property should return file tla-declarations.jsonld.\
+          \ The value of this field will always be \"https://tla.adl.net/declarations\"\
+          ."
+      '@type':
+        type: "string"
+        description: "The value of this field will always be \"MasteryEstimate\"."
+      competencyId:
+        type: "string"
+        format: "uri"
+        description: "TODO"
+      mastery:
+        type: "string"
+        description: "TODO"
+      timestamp:
+        type: "string"
+        format: "date-time"
+        description: "TODO"
+    description: "TODO"
+  MasteryProbability:
+    type: "object"
+    required:
+    - "@context"
+    - "@type"
+    - "competencyId"
+    - "probability"
+    - "source"
+    - "timestamp"
+    properties:
+      '@context':
+        type: "string"
+        description: "The constant link in this property should return file tla-declarations.jsonld.\
+          \ The value of this field will always be \"https://tla.adl.net/declarations\"\
+          ."
+      '@type':
+        type: "string"
+        description: "The value of this field will always be \"MasteryProbability\"\
+          ."
+      competencyId:
+        type: "string"
+        format: "uri"
+        description: "TODO"
+      probability:
+        type: "number"
+        description: "TODO"
+      timestamp:
+        type: "string"
+        format: "date-time"
+        description: "TODO"
+      source:
+        type: "string"
+        description: "Source of the probability estimate."
+    description: "TODO"
+  ActivityAttemptCounter:
+    type: "object"
+    required:
+    - "@context"
+    - "@type"
+    - "activityId"
+    - "attempts"
+    properties:
+      '@context':
+        type: "string"
+        description: "The constant link in this property should return file tla-declarations.jsonld.\
+          \ The value of this field will always be \"https://tla.adl.net/declarations\"\
+          ."
+      '@type':
+        type: "string"
+        description: "The value of this field will always be \"ActivityAttemptCounter\"\
+          ."
+      activityId:
+        type: "string"
+        format: "uri"
+        description: "TODO"
+      attempts:
+        type: "number"
+        description: "TODO"
+      lastAttemptDateTime:
+        type: "string"
+        format: "date-time"
+        description: "TODO"
+    description: "TODO"
+responses:
+  Standard400Response:
+    description: "Invalid request."
+    schema:
+      $ref: "#/definitions/Error"
+  Standard500Response:
+    description: "An unexpected server error occurred."
+    schema:
+      $ref: "#/definitions/Error"

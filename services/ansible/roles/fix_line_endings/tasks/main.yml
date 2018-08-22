@@ -1,0 +1,19 @@
+---
+
+- name: "Identify Ansible Non-Binary Files"
+  connection: local
+  become: false
+  shell: |
+    find {{ fix_line_endings.ansible_path }} -type f -exec sh -c "file -i '{}' | grep -q 'charset=us-ascii'" \; -print
+  args:
+    executable: "/bin/bash"
+  register: ansible_non_binaries
+  changed_when: False
+
+- name: "Fix Line Endings in Discovered Files"
+  connection: local
+  become: false
+  replace:
+    dest: "{{ item }}"
+    regexp: "\r"
+  with_items: "{{ ansible_non_binaries.stdout_lines }}"

@@ -1,0 +1,154 @@
+---
+
+- name: "Ensure user '{{ learning_locker.owner }}' exists"
+  user:
+    name: "{{ learning_locker.owner }}"
+    system: yes
+    state: present
+
+# Install Redis
+# (NOTE: This throws a warning cause we're using 'shell:', not 'apt:',
+#        but we need -y and I don't think there's a flag for that)
+- name: "Install Redis"
+  shell: "apt-get -y -qq install redis-tools redis-server"
+  become:
+  # apt:
+  #   name: "{{ item }}"
+  # with_items:
+  #   - "redis-tools"
+  #   - "redis-server"
+
+# Install dependencies
+- name: "Install Learning Locker 2.0 Dependencies"
+  apt:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - "build-essential"
+    - "curl"
+    - "git"
+    - "python"
+    - "xvfb"
+    - "apt-transport-https"
+
+# Install NPM Packages
+- name: "Install NPM Package Dependencies"
+  npm: 
+    name: "{{ item }}"
+    state: present
+    global: yes
+  with_items:
+    - yarn
+    - pm2
+    - pm2-logrotate
+
+# Set PM2-LogRotate setting
+- name: "Set pm2-logrotate:compress Var"
+  shell: "pm2 set pm2-logrotate:compress true"
+
+- set_fact:
+    _llv2_install_dir: "{{ learning_locker.install_dir }}/learning_locker_v2"
+
+# Create the LL install directory if it does not exist
+- name: "LearningLocker: Create Install Directory"
+  file:
+    path: "{{ _llv2_install_dir }}"
+    state: directory
+    owner: "{{ learning_locker.owner }}"
+
+# Clone the LL repository
+- name: "LearningLocker: Clone Repository"
+  git:
+    repo: "https://github.com/LearningLocker/learninglocker.git"
+    dest: "{{ _llv2_install_dir }}"
+    version: "{{ learning_locker.version }}"
+  become_user: "{{ learning_locker.owner }}"
+  become: true
+
+# Generate an APP_SECRET (256bit) used for the LL .env file
+- name: "Generate New App Secret Value For Hashing"
+  shell: "openssl rand -base64 32"
+  register: _openssl_result
+
+- set_fact:
+    _llv2_app_secret: "{{ _openssl_result.stdout }}"
+
+# Copy Templated .env File
+- name: "LearningLocker: Copy Env Template"
+  template:
+    src:  "llv2.env.j2"
+    dest: "{{ _llv2_install_dir }}/.env"
+
+# Run LL Yarn Install
+- name: "LearningLocker: Run Yarn Installer"
+  shell: "cd {{ _llv2_install_dir }} && yarn install"
+  become_user: "{{ learning_locker.owner }}"
+  become: true
+
+# Build Everything
+- name: "LearningLocker: Run Yarn Build-All"
+  shell: "cd {{ _llv2_install_dir }} && yarn build-all"
+  become_user: "{{ learning_locker.owner }}"
+  become: true
+
+- set_fact:
+    _llv2_xapi_install_dir: "{{ learning_locker.install_dir }}/learning_locker_xapi"
+
+# Create the LL install directory if it does not exist
+- name: "XAPI: Create Install Directory"
+  file:
+    path: "{{ _llv2_xapi_install_dir }}"
+    state: directory
+    owner: "{{ learning_locker.owner }}"
+
+# Clone XAPI Repository
+- name: "XAPI: Clone Repository"
+  git:
+    repo: "https://github.com/LearningLocker/xapi-service.git"
+    dest: "{{ _llv2_xapi_install_dir }}"
+    version: "{{ learning_locker.xapi_version }}"
+  become_user: "{{ learning_locker.owner }}"
+  become: true
+
+# Copy Templated .env File
+- name: "XAPI: Copy Env Template"
+  template:
+    src:  "xapi.env.j2"
+    dest: "{{ _llv2_xapi_install_dir }}/.env"
+
+# Run API Yarn Install
+- name: "XAPI: Run Installer"
+  shell: "cd {{ _llv2_xapi_install_dir }} && yarn install"
+  become_user: "{{ learning_locker.owner }}"
+  become: true
+
+# Build XAPI
+- name: "XAPI: Run Yarn Build"
+  shell: "cd {{ _llv2_xapi_install_dir }} && yarn build"
+  become_user: "{{ learning_locker.owner }}"
+  become: true
+
+# Start the services
+- name: "Start Learning Locker 2.0 Service"
+  shell: "cd {{ _llv2_install_dir }} && pm2 start pm2/all.json"
+  become_user: "{{ learning_locker.owner }}"
+  become: true
+
+- name: "Start XAPI Service"
+  shell: "cd {{ _llv2_xapi_install_dir }} && pm2 start pm2/xapi.json"
+  become_user: "{{ learning_locker.owner }}"
+  become: true
+
+# Set PM2 Startup Scripts
+# TODO: Does this need to be done for each individual service?
+- name: "Start PM2 Services to run on startup"
+  shell: "env PATH=$PATH:/usr/bin /usr/lib/node_modules/pm2/bin/pm2 startup systemd -u {{ learning_locker.owner }} --hp /home/{{ learning_locker.owner }}"
+  become: true
+
+# This errors out when creating a new org, but doesn't seem to have an adverse effect?
+- name: "Create Learning Locker 2.0 Site Admin"
+  shell: "cd {{ _llv2_install_dir }} && node cli/dist/server createSiteAdmin \"{{ learning_locker.admin.email }}\" \"{{ learning_locker.admin.organization }}\" \"{{ learning_locker.admin.password }}\""
+  become_user: "{{ learning_locker.owner }}"
+  become: true
+  register: _llv2_create_admin_result
+  failed_when: _llv2_create_admin_result.rc != 0 and "No matching document found for id" not in _llv2_create_admin_result.stderr

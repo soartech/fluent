@@ -1,0 +1,190 @@
+swagger: "2.0"
+
+info:
+  title: Learner API
+  description:
+    This API is used to interact with the data stored in the TLA Learner Profile database.
+  version: "0.1.0"
+
+host: "fluent.tla"
+  
+basePath: /learner-inferences
+
+schemes:
+- https
+
+consumes:
+- application/ld+json
+
+produces:
+- application/ld+json
+
+paths:
+  /learners:
+    get:
+      tags:
+      - Multiple Learners
+      summary: Obtains a collection of Learner objects from Learner Profile.
+      description: Returns a collection of Learner objects; all learners are returned if "limit" and "offset" were not specified.
+      operationId: getLearners
+      parameters:
+      - name: limit
+        in: query
+        description: The maximum number of objects that will be returned.
+        required: false
+        type: integer
+      - name: offset
+        in: query
+        description: Determines the first object to be returned.
+        required: false
+        type: integer
+      responses:
+        200:
+          description: Learner objects successfully returned.
+          schema:
+            type: array
+            items:
+              $ref: "../schemas/tla-definitions.yaml#/definitions/Learner"
+        400:
+          $ref: "#/responses/Standard400Response"
+        404:
+          description: Not Found
+        500:
+          $ref: "#/responses/Standard500Response"
+    post:
+      tags:
+      - Single Learner
+      summary: Creates one Learner in Learner Profile.
+      description: Creates a Learner, which is given as a whole object in the payload.
+      operationId: postLearner
+      parameters:
+      - name: learnerObj
+        in: body
+        description: Learner object to add.
+        required: true
+        schema:
+          $ref: "../schemas/tla-definitions.yaml#/definitions/Learner"
+      responses:
+        201:
+          description: Learner object successfully created.
+          headers:
+            ETag:
+              description: The ETag of the newly created learner object
+              type: string
+        400:
+          $ref: "#/responses/Standard400Response"
+        500:
+          $ref: "#/responses/Standard500Response"
+
+  /learners/{keycloakId}:
+    get:
+      tags:
+      - Single Learner
+      summary: Obtains Learner info.
+      description: Obtains the information of the corresponding Learner.
+      operationId: getLearner
+      parameters:
+        - name: keycloakId
+          in: path
+          description: The Keycloak ID of the requested Learner.
+          required: true
+          type: string
+      responses:
+        200:
+          description: Learner object successfully returned.
+          headers:
+            ETag:
+              description: The ETag of the requested learner object
+              type: string
+          schema:
+            $ref: "../schemas/tla-definitions.yaml#/definitions/Learner"
+        400:
+          $ref: "#/responses/Standard400Response"
+        404:
+          description: Not Found
+        500:
+          $ref: "#/responses/Standard500Response"
+    patch:
+      tags:
+      - Single Learner
+      summary: Updates Learner info.
+      description: Updates the information of the Learner, which is given partially (one or more of the top-level properties) in the payload.
+      operationId: updateLearner
+      parameters:
+        - name: keycloakId
+          in: path
+          description: The Keycloak ID of the requested Learner.
+          required: true
+          type: string
+        - name: If-Match
+          in: header
+          description: The ETag of the learner object when it was last fetched
+          required: true
+          type: string
+        - name: learnerObj
+          in: body
+          description: Learner object to update.
+          required: true
+          schema:
+            type: object
+            description: The fields contained within this object should match a subset of those in the Learner schema
+      responses:
+        200:
+          description: Learner object successfully updated
+          headers:
+            ETag:
+              description: The ETag of the post-update learner object
+              type: string
+        400:
+          $ref: "#/responses/Standard400Response"
+        404:
+          description: Not Found
+        500:
+          $ref: "#/responses/Standard500Response"
+    delete:
+      tags:
+      - Single Learner
+      summary: Deletes a Learner object.
+      description: Removes the Learner from the database.
+      operationId: deleteLearner
+      parameters:
+        - name: keycloakId
+          in: path
+          description: The Keycloak ID of the Learner to be deleted.
+          required: true
+          type: string
+      responses:
+        200:
+          description: Learner object successfully deleted.
+        400:
+          $ref: "#/responses/Standard400Response"
+        404:
+          description: Not Found
+        500:
+          $ref: "#/responses/Standard500Response"
+          
+definitions:
+  Error:
+   type: object
+   required:
+     - errorMessage
+   properties:
+     errorMessage:
+       type: string
+     errorCode:
+       type: string
+     errorLink:
+       type: string
+       format: url
+     userMessage:
+       type: string
+      
+responses:
+ Standard400Response:
+   description: Invalid request.
+   schema:
+     $ref: "#/definitions/Error"
+ Standard500Response:
+   description: An unexpected server error occurred.
+   schema:
+     $ref: "#/definitions/Error"

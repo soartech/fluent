@@ -1,0 +1,20 @@
+<VirtualHost *:{{ assessment_ap.port }}>
+
+    DocumentRoot {{ assessment_ap.web_root }}
+
+    ServerName {{ assessment_ap.server_name }}
+    ServerPath "{{ assessment_ap.server_path }}"
+
+    ServerAdmin webmaster@localhost
+
+    ErrorLog ${APACHE_LOG_DIR}/assessment-activity-provider.error.log
+    CustomLog ${APACHE_LOG_DIR}/assessment-activity-provider.access.log combined
+
+    <Directory {{ assessment_ap.web_root }}>
+        AllowOverride All
+        Require all granted
+    </Directory>
+
+</VirtualHost>
+
+# vim: syntax=apache ts=4 sw=4 sts=4 sr noet

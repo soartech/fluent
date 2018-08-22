@@ -1,0 +1,25 @@
+<VirtualHost *:{{ tla_config.statement_forwarding.port }}>
+
+    DocumentRoot /var/www/statementforwarding
+
+    WSGIDaemonProcess statementforwarding python-path=/usr/bin/python3
+    WSGIScriptAlias / /var/www/statementforwarding/statementforwarding.wsgi
+
+    # WSGIRestrictStdout Off
+    WSGIScriptReloading On
+
+    <Directory /var/www/statementforwarding>
+        WSGIProcessGroup statementforwarding
+        AllowOverride All
+        Require all granted
+    </Directory>
+
+    ServerName {{ tla_config.statement_forwarding.serverName }}
+    ServerPath "/statementforwarding/"
+
+    ServerAdmin webmaster@localhost
+
+    ErrorLog ${APACHE_LOG_DIR}/statementforwarding.error.log
+    CustomLog ${APACHE_LOG_DIR}/statementforwarding.access.log combined
+
+</VirtualHost>

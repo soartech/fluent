@@ -1,0 +1,64 @@
+---
+
+- name: "Initialize Static Viewer Configuration"
+  set_fact:
+    assessment_ap: "{{ assessment_ap_defaults | combine(assessment_ap | default({}), recursive=True) }}"
+
+- name: "Debug Role Configuration"
+  debug:
+    msg: "{{ assessment_ap }}"
+
+- name: "Create Static Viewer Web Root Directory"
+  file:
+    path:    "{{ assessment_ap.web_root }}"
+    state:   directory
+    owner:   "{{ assessment_ap.owner }}"
+    group:   "{{ assessment_ap.group }}"
+
+- name: "Copy Code to Web Root"
+  copy:
+    src:  "{{ assessment_ap.source_dir }}/"
+    dest: "{{ assessment_ap.web_root }}"
+
+- name: "Copy keycloak.json Web Root"
+  template:
+    src:  "keycloak.json.j2"
+    dest: "{{ assessment_ap.web_root }}/keycloak.json"
+
+#- name: "Configure LRS Endpoint Address"
+#  lineinfile:
+#    dest:     "{{ assessment_ap.web_root }}/index.html"
+#    line:     "        \"endpoint\" : \"{{ assessment_ap.lrs.endpoint_url }}\","
+#    regexp:   "['\"]endpoint['\"]\\s*:"
+#
+#- name: "Configure LRS Endpoint Credentials"
+#  lineinfile:
+#    dest:     "{{ assessment_ap.web_root }}/index.html"
+#    line:     "        \"auth\" : \"Basic \" + toBase64(\"{{ assessment_ap.lrs.username }}:{{ assessment_ap.lrs.password }}\"),"
+#    regexp:   "['\"]auth['\"]\\s*:"
+
+- name: "Configure LRS Endpoint"
+  template:
+    src:  "config.js.j2"
+    dest: "{{ assessment_ap.web_root }}/js/config.js"
+
+- name: "Copy Static Viewer VirtualHost File"
+  template:
+    src:  "{{ assessment_ap.vhost_file }}"
+    dest: "/etc/apache2/sites-available/assessment-activity-provider-vhost.conf"
+  notify: "Restart Apache"
+
+- name: "Add Listening Port to ports.conf"
+  lineinfile:
+    dest: "/etc/apache2/ports.conf"
+    line: "Listen {{ assessment_ap.port }}"
+  notify: "Restart Apache"
+
+- name: "Enable Moodle VirtualHost"
+  shell: "a2ensite assessment-activity-provider-vhost"
+  args:
+    creates: "/etc/apache2/sites-enabled/assessment-activity-provider-vhost.conf"
+  notify: "Restart Apache"
+
+# Restart services if needed
+- meta: flush_handlers

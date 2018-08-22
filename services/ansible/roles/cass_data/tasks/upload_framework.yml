@@ -1,0 +1,42 @@
+---
+
+- name: "Copy Competency files for '{{ item.name }}' into TLA Machine"
+  copy:
+    src:   "{{ item.competencies }}"
+    dest:  "{{ cass_data.init_cache_dir }}/{{ item.competencies | basename }}"
+    owner: tomcat7
+    group: tomcat7
+
+- name: "Copy Relation files for '{{ item.name }}' into TLA Machine"
+  copy:
+    src:   "{{ item.relations }}"
+    dest:  "{{ cass_data.init_cache_dir }}/{{ item.relations | basename }}"
+    owner: tomcat7
+    group: tomcat7
+
+- name: "Check if Framework has Already Been Uploaded"
+  uri:
+    url: "{{ cass_data.base_url }}/api/custom/data/insertCassSchemaUrl.0.2.Framework/{{ item.framework_id }}"
+    status_code: 200
+  register: _exists_result
+  changed_when: False
+  failed_when:  False
+
+- name: "Upload CASS Competencies for '{{ item.name }}'"
+  uri:
+    url: "{{ cass_data.base_url }}/api/custom/tla/import\
+           ?competencyPath={{ ( cass_data.init_cache_dir + '/' + (item.competencies | basename) ) | urlencode }}\
+           &relationPath={{   ( cass_data.init_cache_dir + '/' + (item.relations    | basename) ) | urlencode }}"
+    status_code: 200
+    return_content: yes
+    timeout: "{{ 10 * 60 }}" # Give it 10 minutes tops to be conservative
+  when: "_exists_result.status != 200"
+  register: _upload_result
+  until: "'failed' not in _upload_result"
+  changed_when: true
+  failed_when:  "'content' in _upload_result and ('Failed' in _upload_result.content or '{\"obj\": [' not in _upload_result.content)"
+
+- name: "Debug Upload Result"
+  debug:
+    msg: "Result: {{ _upload_result.content }}"
+  when: "_upload_result is defined and 'content' in _upload_result"

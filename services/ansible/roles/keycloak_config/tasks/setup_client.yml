@@ -1,0 +1,65 @@
+---
+
+- name: "Find Client Name"
+  set_fact:
+    # NOTE: this is parsed to JSON automatically for some reason...
+    _client_def: "{{ lookup('template', item.definition) }}"
+    #_client_def: "{{ lookup('template', item.definition) }}" # | from_json }}"
+
+- name: "Create OpenID Client '{{ _client_def.name }}'"
+  uri:
+    url: "{{ keycloak_config.base_url }}/admin/realms/{{ item.realm }}/clients"
+    method: POST
+    body_format: json
+    body: "{{ _client_def | to_json }}"
+    HEADER_Authorization: "bearer {{ _auth_result.json.access_token }}"
+    status_code: 201
+    return_content: yes
+  register: _create_client_result
+  changed_when: "_create_client_result.status == 201"
+  failed_when:  "_create_client_result.status != 201 and _create_client_result.status != 409"
+
+- name: "Get Client UUID"
+  uri:
+    url: "{{ keycloak_config.base_url }}/admin/realms/{{ item.realm }}/clients?clientId={{ _client_def.clientId }}"
+    method: GET
+    HEADER_Authorization: "bearer {{ _auth_result.json.access_token }}"
+    status_code: 200
+    return_content: yes
+  register: _scv_uuid
+
+- name: "Update OpenID Client '{{ _client_def.name }}'"
+  uri:
+    url: "{{ keycloak_config.base_url }}/admin/realms/{{ item.realm }}/clients/{{ _scv_uuid.json[0].id }}"
+    method: PUT
+    body_format: json
+    body: "{{ _client_def | to_json }}"
+    HEADER_Authorization: "bearer {{ _auth_result.json.access_token }}"
+    status_code: 204
+    return_content: yes
+  register: _update_client_result
+  when: "_create_client_result.status == 409"
+
+- name: "List Install JSON"
+  uri:
+    url: "{{ keycloak_config.base_url }}/admin/realms/{{ item.realm }}/clients/{{ _scv_uuid.json[0].id }}/installation/providers/keycloak-oidc-keycloak-json"
+    method: GET
+    HEADER_Authorization: "bearer {{ _auth_result.json.access_token }}"
+    status_code: 200
+    return_content: yes
+  register: _oidc_install_json
+
+- name: "Create JSON Deployment Directory"
+  file:
+    path:  "{{ item.install_json.dest | dirname }}"
+    state: "directory"
+    owner: "{{ item.install_json.owner | default('root') }}"
+    group: "{{ item.install_json.group | default('root') }}"
+
+- name: "Copy Install JSON to Directory"
+  copy:
+    content: "{{ _oidc_install_json.content }}"
+    dest:    "{{ item.install_json.dest }}"
+    owner:   "{{ item.install_json.owner | default('root') }}"
+    group:   "{{ item.install_json.group | default('root') }}"
+    mode:    "{{ item.install_json.mode  | default(omit) }}"

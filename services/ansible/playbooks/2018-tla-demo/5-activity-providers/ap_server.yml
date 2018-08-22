@@ -1,0 +1,99 @@
+---
+
+- name: "Provision Activity Provider Server"
+  hosts: ap_server
+  remote_user: root
+  become: yes
+  become_method: sudo
+
+  vars:
+    time_server:        "time.nist.gov"
+    download_cache_dir: "{{ deployment_base }}/.ansible_cache"
+    tla_configs_dir:    "/opt/tla/config"
+    # This file is generated in the TLA ansbile scripts during LRS config
+    lrs_creds_location: "{{ deployment_base }}/ansible/.tmp/learning_locker_creds.json"
+    lrs_credentials: "{{ lookup('file', '{{ lrs_creds_location }}') | from_json}}"
+
+  pre_tasks:
+    # If this becomes any more complicated, it should go into its own role
+    # Example: $ ANSIBLE_ARGS=-edev=true vagrant [up|provision]
+    - name: "Install Developer Tools"
+      apt:
+        name: "{{ item }}"
+        state: present
+        force: yes
+        update_cache:     true
+        cache_valid_time: 3600
+      with_items:
+        - "nmap"
+        - "phppgadmin"
+      when: "dev is defined"
+
+  roles:
+
+    - role: apache2
+      tags: [ sv, assessment_ap, vp ]
+      apache2:
+        module_dependencies:
+          - "rewrite"
+        virtual_hosts: {}
+
+    # Create an Apache Virtual Host for the Static Content Viewer
+    - role: static_viewer
+      tags: [ sv ]
+      static_viewer:
+        web_root:    "/var/www/static-viewer"
+        server_path: "/static-viewer/"
+        port:        "{{ ap_config.static_viewer.port }}"
+        source_dir:  "{{ deployment_base }}/static-viewer"
+        owner:       "{{ apache2.owner }}"
+        group:       "{{ apache2.group }}"
+        identity_provider: "acct:keycloak-server"
+        activity_index: "{{ tla_config.activity_index.activity_endpoint }}"
+        discovery_service_url: "{{ tla_config.discovery_service.base_url }}"
+        lrs:
+          endpoint_url: "{{ tla_config.lrs.xapi_base_url }}/"
+          username:     "{{ lrs_credentials.username }}"
+          password:     "{{ lrs_credentials.password }}"
+
+    # Assessment Activity Provider (Based off static, so install is similar)
+    - role: assessment_ap
+      tags: [ assessment_ap ]
+      assessment_ap:
+        web_root:    "/var/www/assessment-activity-provider"
+        server_path: "/assessment-activity-provider/"
+        port:        "{{ ap_config.assessment_ap.port }}"
+        source_dir:  "{{ deployment_base }}/assessment-activity-provider"
+        owner:       "{{ apache2.owner }}"
+        group:       "{{ apache2.group }}"
+        identity_provider: "acct:keycloak-server"
+        activity_index: "{{ tla_config.activity_index.activity_endpoint }}"
+        discovery_service_url: "{{ tla_config.discovery_service.base_url }}"
+        lrs:
+          endpoint_url: "{{ tla_config.lrs.xapi_base_url }}/"
+          username:     "{{ lrs_credentials.username }}"
+          password:     "{{ lrs_credentials.password }}"
+
+    # Create an Apache Virtual Host for the xAPI Video Player
+    - role: video_player
+      tags: [ vp ]
+      video_player:
+        web_root:    "/var/www/video-player"
+        server_path: "/video-player/"
+        port:        "{{ ap_config.video_player.port }}"
+        source_dir:  "{{ deployment_base }}/video-player"
+        owner:       "{{ apache2.owner }}"
+        group:       "{{ apache2.group }}"
+        identity_provider: "acct:keycloak-server"
+        activity_index: "{{ tla_config.activity_index.activity_endpoint }}"
+        discovery_service_url: "{{ tla_config.discovery_service.base_url }}"
+        lrs:
+          endpoint_url: "{{ tla_config.lrs.xapi_base_url }}/"
+          username:     "{{ lrs_credentials.username }}"
+          password:     "{{ lrs_credentials.password }}"
+
+    - role: content_host
+      tags: [ content_host ]
+      content_host:
+        port: "{{ ap_config.content_host.port }}"
+

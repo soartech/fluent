@@ -1,0 +1,35 @@
+---
+
+- name: Check that the provision success file exists
+  stat:
+    path: /var/log/LL_config_success.txt
+  register: LL_stat_result
+
+- name: "Initialize Learning Locker Configuration"
+  tags: always
+  set_fact:
+    learning_locker: "{{ learning_locker_defaults | combine(learning_locker | default({}), recursive=True) }}"
+  when: LL_stat_result is defined and LL_stat_result.stat.exists == False
+
+- name: "Debug Role Configuration"
+  tags: always
+  debug:
+    msg: "{{ learning_locker }}"
+
+- include: "learning-locker-2.0-{{ ansible_os_family }}.yml"
+  become:  true
+  when: LL_stat_result is defined and LL_stat_result.stat.exists == False
+
+- include: "learning-locker-2.0-configure-nginx-{{ ansible_os_family }}.yml"
+  become:  true
+  when: LL_stat_result is defined and LL_stat_result.stat.exists == False
+
+- include: "learning-locker-2.0-create-lrs-{{ ansible_os_family }}.yml"
+  become:  true
+  when: LL_stat_result is defined and LL_stat_result.stat.exists == False
+
+- name: "Restart NGINX"
+  service:
+    name:    "{{ nginx.init_name }}"
+    state:   started
+  when: LL_stat_result is defined and LL_stat_result.stat.exists == False

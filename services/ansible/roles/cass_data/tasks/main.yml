@@ -1,0 +1,17 @@
+---
+
+- name: "Initialize CASS Framework Uploader Configuration"
+  set_fact:
+    cass_data: "{{ cass_data_defaults | combine(cass_data | default({}), recursive=True) }}"
+
+- name: "Debug Role Configuration"
+  debug:
+    msg: "{{ cass_data }}"
+
+- name: "Create Init Cache Directory"
+  file:
+    path:  "{{ cass_data.init_cache_dir }}"
+    state: directory
+
+- include: "upload_framework.yml"
+  with_items: "{{ cass_data.frameworks }}"

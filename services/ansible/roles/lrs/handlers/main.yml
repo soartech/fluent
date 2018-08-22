@@ -1,0 +1,6 @@
+---
+
+- name: "Restart LRS"
+  service:
+    name:  "lrs"
+    state: restarted

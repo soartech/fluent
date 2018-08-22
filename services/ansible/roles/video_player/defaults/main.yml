@@ -1,0 +1,15 @@
+---
+
+video_player_defaults:
+  web_root:    "/var/www/video-player"
+  server_name: "{{ default_hostname | default('localhost') }}"
+  server_path: "/video-player/"
+  port:        80
+  source_dir:  "video-player"
+  vhost_file:  "video-player-vhost.conf.j2"
+  owner:       "www-data"
+  group:       "www-data"
+  lrs: {}
+    #endpoint: "" # SET ME IN PLAYBOOK OR INVENTORY
+    #username:     "" # SET ME IN PLAYBOOK OR INVENTORY
+    #password:     "" # SET ME IN PLAYBOOK OR INVENTORY

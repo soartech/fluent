@@ -1,0 +1,14 @@
+---
+
+dependencies: []
+#  - role: sysvinit_service
+#    sysvinit_service:
+#      display_name:      "Wildfly {{ wildfly.version }}"
+#      name:              "{{ wildfly.init_name }}"
+#      init_template:     "wildfly.init.j2"
+#      defaults_template: "wildfly.default.j2"
+#  - role: create_users
+#    create_users_users:
+#      "{{ wildfly.owner }}":
+#          group: "{{ wildfly.group }}"
+#          create_home: false

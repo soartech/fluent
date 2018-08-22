@@ -1,0 +1,25 @@
+---
+
+- name: "Prepare to Deploy Container '{{ item | basename }}'"
+  copy:
+    src:   "{{ item }}"
+    dest:  "{{ wildfly.home }}/standalone/deployments/{{ item | basename }}"
+    owner: "{{ wildfly.owner }}"
+    group: "{{ wildfly.group }}"
+    force: yes
+  register: wildfly_container_prepared
+
+- name: "Deploy Container '{{ item | basename }}'"
+  file:
+    path:  "{{ wildfly.home }}/standalone/deployments/{{ item | basename }}.dodeploy"
+    owner: "{{ wildfly.owner }}"
+    group: "{{ wildfly.group }}"
+    state: touch
+  when: wildfly_container_prepared|changed
+
+- name: "Confirm Successful Deployment of '{{ item | basename }}'"
+  wait_for:
+    path:         "{{ wildfly.log_dir }}"
+    search_regex: "Deployed \"{{ item | basename }}\""
+    timeout:      300 # This is the default
+  when: wildfly_container_prepared|changed

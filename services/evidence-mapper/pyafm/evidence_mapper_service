@@ -1,0 +1,27 @@
+#!/bin/sh
+### BEGIN INIT INFO
+# Provides:          evidence_mapper_service
+# Required-Start:    $all
+# Required-Stop:
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: The evidence mapper service
+# Description:       This is the evidence mapper service that listens on the AMQP stack for statements.
+### END INIT INFO
+
+case "$1" in
+    start)
+        echo "Starting evidence mapper service..."
+        python3 /var/lib/evidence-mapper/evidence_mapper_listener.py start >> /var/log/evidence-mapper/log
+        ;;
+    stop)
+        echo "Stopping evidence mapper service..."
+        python3 /var/lib/evidence-mapper/evidence_mapper_listener.py stop >> /var/log/evidence-mapper/log
+        ;;
+    *)
+        echo "Useage: /etc/init.d/evidence_mapper_service {start|stop}"
+        exit 1
+        ;;
+esac
+
+exit 0

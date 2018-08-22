@@ -1,0 +1,55 @@
+---
+
+- name: "Find Realm Name"
+  set_fact:
+    _realm_def: "{{ lookup('template', item) | from_json }}"
+    _max_users: 1000
+
+- name: "Create Realm '{{ _realm_def.realm }}'"
+  uri:
+    url: "{{ keycloak_config.base_url }}/admin/realms"
+    method: POST
+    body_format: json
+    body: "{{ _realm_def | to_json }}"
+    HEADER_Authorization: "bearer {{ _auth_result.json.access_token }}"
+    status_code: 201
+    return_content: yes
+  register: _create_realm_result
+  changed_when: "_create_realm_result.status == 201"
+  failed_when:  "_create_realm_result.status != 201 and _create_realm_result.status != 409"
+
+- name: "Update Realm '{{ _realm_def.realm }}'"
+  uri:
+    url: "{{ keycloak_config.base_url }}/admin/realms/{{ _realm_def.realm }}"
+    method: PUT
+    body_format: json
+    body: "{{ _realm_def | to_json }}"
+    HEADER_Authorization: "bearer {{ _auth_result.json.access_token }}"
+    status_code: 204
+    return_content: yes
+  when: "_create_realm_result.status == 409"
+
+- name: "Check for Existing Users in Realm '{{ _realm_def.realm }}' "
+  uri:
+    url: "{{ keycloak_config.base_url }}/admin/realms/{{ _realm_def.realm }}/users?max={{ _max_users }}"
+    method: GET
+    HEADER_Authorization: "bearer {{ _auth_result.json.access_token }}"
+    status_code: 200
+    return_content: yes
+  register: _existing_users_check
+  changed_when: false
+
+- name: "Create Users for '{{ _realm_def.realm }}' Realm"
+  uri:
+    url: "{{ keycloak_config.base_url }}/admin/realms/{{ _realm_def.realm }}/users"
+    method: POST
+    body_format: json
+    body: "{{ lookup('file','{{ item }}') }}"
+    HEADER_Authorization: "bearer {{ _auth_result.json.access_token }}"
+    status_code: 201
+    return_content: yes
+  with_fileglob: "{{ keycloak_config.realms_path }}/{{ _realm_def.realm }}/users/*.json"
+  when: "'\"username\"=\"{{ (item | splitext)[0] }}\"' not in _existing_users_check.content"
+  register: _create_user_result
+  changed_when: "_create_user_result.status == 201"
+  failed_when:  "_create_user_result.status != 201 and _create_user_result.status != 409"

@@ -1,0 +1,166 @@
+---
+
+- name: "Install LRS Dependencies"
+  apt: name={{ item }} state=present update_cache=true cache_valid_time=3600
+  with_items:
+    - "git"
+    - "fabric"
+    - "python-setuptools"
+    - "postgresql-server-dev-all"
+    - "python-dev"
+    - "libxml2-dev"
+    - "libxslt-dev"
+    - "python-pip"
+
+- name: "Install virtualenv for Python"
+  pip: name=virtualenv 
+
+- name: "Create LRS User Group"
+  group: name="{{ lrs.group }}"
+
+- name: "Create LRS User"
+  user:
+    name:  '{{ lrs.user }}'
+    group: '{{ lrs.group }}'
+
+- name: "Download ADL LRS Zip File" 
+  connection: local
+  become: false
+  get_url:
+    url:  "https://github.com/adlnet/ADL_LRS/archive/{{ lrs.version }}.tar.gz"
+    dest: '{{ download_cache_dir }}/adl_lrs_{{ lrs.version }}.tar.gz'
+
+- name: "Prepare TLA Directory"
+  file:
+  args:
+    path:    '{{ lrs.home }}'
+    state:   directory
+    owner:   '{{ lrs.user }}'
+    group:   '{{ lrs.group }}'
+
+- name: "Unzip ADL LRS"
+  unarchive:
+    src:     "{{ download_cache_dir }}/adl_lrs_{{ lrs.version }}.tar.gz"
+    dest:    "{{ lrs.home | dirname }}"
+    creates: "{{ lrs.home | dirname }}/ADL_LRS-{{ lrs.version }}"
+    owner:   "{{ lrs.user }}"
+    group:   "{{ lrs.group }}"
+
+- name: "Fix LRS Pathname"
+  shell: "mv {{ lrs.home | dirname }}/ADL_LRS-{{ lrs.version }}/* {{ lrs.home }}/"
+  args:
+    creates: "{{ lrs.home }}/manage.py"
+
+- name: "Patch LRS Account Validation Code"
+  lineinfile:
+    dest:   "{{ lrs.home }}/lrs/utils/StatementValidator.py"
+    line:   "                iriparse(iri_value, rule='IRI_reference')"
+    regexp: "iriparse\\(iri_value, rule="
+    backup: yes
+
+- name: "Set LRS Database Engine"
+  lineinfile:
+    dest:   '{{ lrs.home }}/adl_lrs/settings.py'
+    line:   "        'ENGINE': 'django.db.backends.postgresql_psycopg2',"
+    regexp: 'ENGINE'
+    backup: yes
+
+- name: "Set LRS Database Owner Name"
+  lineinfile:
+    dest:   '{{ lrs.home }}/adl_lrs/settings.py'
+    line:   "        'USER': '{{ lrs.db_credentials.username }}',"
+    regexp: "        'USER': '[^']*',"
+    backup: yes
+
+- name: "Set LRS Database Owner Password"
+  lineinfile:
+  args:
+    dest:   '{{ lrs.home }}/adl_lrs/settings.py'
+    line:   "        'PASSWORD': '{{ lrs.db_credentials.password }}',"
+    regexp: "        'PASSWORD': '[^']*',"
+    backup: yes
+
+- name: "Set RabbitMQ Celery User in LRS"
+  lineinfile:
+    dest:   '{{ lrs.home }}/lrs/celery.py'
+    line:   "             broker='amqp://{{ lrs.celery.username }}:{{ lrs.celery.password }}@localhost:5672/{{ lrs.celery.vhost }}',"
+    regexp: 'broker='
+    backup: yes
+
+- name: "Set LRS Celery Daemon Config File"
+  template:
+  args:
+    src:   'celeryd.conf'
+    dest:  '{{ lrs.home }}/celeryd.conf'
+    owner: '{{ lrs.user }}'
+    group: '{{ lrs.group }}'
+    mode:  0644
+
+- name: "Set LRS Supervisor Daemon Config File"
+  template:
+  args:
+    src:   'supervisord.conf'
+    dest:  '{{ lrs.home }}/supervisord.conf'
+    owner: '{{ lrs.user }}'
+    group: '{{ lrs.group }}'
+    mode:  0644
+    
+- name: "Set up Python Virtual Environment for LRS"
+  command: "fab setup_env"
+  args:
+    chdir: "{{ lrs.home }}"
+  register: lrs_env_setup
+  changed_when: "'Successfully installed ' in lrs_env_setup.stdout"
+
+  # Echo may be needed for this to skip prompting for a username and password
+- name: "Initialize the LRS"
+  shell: "source ../env/bin/activate; echo \"no\" | fab setup_lrs > {{ lrs.home }}/initialized.out"
+  args:
+    chdir: "{{ lrs.home }}"
+    creates: "{{ lrs.home }}/initialized.out"
+    executable: "/bin/bash"
+  register: lrs_general_setup
+  failed_when:  "not lrs_general_setup|success and 'Error' in lrs_general_setup.stderr"
+
+- name: "Create LRS Superuser"
+  shell: "source ../env/bin/activate; echo \"from django.contrib.auth.models import User; User.objects.create_superuser('{{ lrs.site_credentials.username }}', 'none', '{{ lrs.site_credentials.password }}')\" | python manage.py shell"
+  args:
+    chdir: "{{ lrs.home }}"
+    executable: "/bin/bash"
+  register: lrs_create_admin
+  changed_when: "'Error' not in lrs_create_admin.stderr"
+  failed_when:  "'Error' in lrs_create_admin.stderr and 'already exists' not in lrs_create_admin.stderr"
+
+- name: "Create SYSVInit Script for the LRS"
+  become: true
+  template:
+    src:   "lrs.init.j2"
+    dest:  "/etc/init.d/{{ lrs.init_name }}"
+    owner: "{{ lrs.user }}"
+    group: "{{ lrs.user }}"
+    mode:  0755
+  register: lrs_sysvinit_generated
+  notify: "Restart LRS"
+
+- name: "Create Shell Script for Starting the LRS"
+  become: true
+  template:
+    src:   "startlrs.sh.j2"
+    dest:  "{{ lrs.home }}/startlrs.sh"
+    owner: "{{ lrs.user }}"
+    group: "{{ lrs.group }}"
+    mode:  0744
+  register: lrs_sysvinit_generated
+  notify: "Restart LRS"
+
+- name: "Remove old Upstart Script for the LRS"
+  become: true
+  file:
+    path:  "/etc/init/lrs.conf"
+    state: absent
+  notify: "Restart LRS"
+
+- name: "Set update-rc.d for the LRS"
+  become: true
+  command: "update-rc.d {{ lrs.init_name }} defaults"
+  when: lrs_sysvinit_generated|changed

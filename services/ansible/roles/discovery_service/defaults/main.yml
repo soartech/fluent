@@ -1,0 +1,13 @@
+---
+
+discovery_service_defaults:
+  web_root:        "/var/www/discovery-service"
+  server_name:     "{{ default_hostname | default('localhost') }}"
+  server_path:     "/"
+  port:            80
+  source_dir:      "discovery-service"
+  config_template: "tladiscovery.ini.j2"
+  config_dest:     "tladiscovery.ini"
+  vhost_file:      "discovery-service-vhost.conf.j2"
+  owner:           "www-data"
+  group:           "www-data"

@@ -1,0 +1,20 @@
+class Config(object):
+    BASE_URL = '{{ tla_config.recommender_ui_support.base_url }}'
+    ACTIVITY_RESPONSES_ENDPOINT = BASE_URL + '/activity-responses/'
+    LEARNER_PREFERENCES_ENDPOINT = BASE_URL + '/learner-preferences/'
+    PAGE_STATE_ENDPOINT = BASE_URL + '/page-state/'
+
+    ACTIVITY_INDEX_ENDPOINT = '{{ tla_config.activity_index.activity_endpoint }}'
+    LEARNER_INFERENCES_ENDPOINT = '{{ tla_config.learner_inferences.learner_endpoint }}'
+    KEYCLOAK_ENDPOINT = '{{ tla_config.keycloak.base_url }}'
+
+    MONGO_HOST = '127.0.0.1'
+    MONGO_PORT = 27017
+    MONGO_DB = 'rui_support'
+
+class LRSConfig(object):
+    USERNAME = '{{ lrs_credentials.username }}'
+    PASSWORD = '{{ lrs_credentials.password }}'
+    HOST = 'http://{{ lrs_hostname }}'
+    PORT = '{{ tla_config.lrs.ports.redirect }}'
+    ENDPOINT = 'data/xAPI/statements'

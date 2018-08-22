@@ -1,0 +1,27 @@
+---
+
+- name: "Initialize Platform-Specific Learning Locker Configuration"
+  tags: always
+  set_fact:
+    learning_locker_platform_specific: "{{ learning_locker_defaults | combine(_learning_locker_platform_specific_defaults[ansible_distribution][ansible_distribution_release] | default({}), recursive=True) }}"
+
+- name: "Initialize Learning Locker Configuration"
+  tags: always
+  set_fact:
+    learning_locker: "{{ learning_locker_platform_specific | combine(learning_locker | default({}), recursive=True) }}"
+
+- name: "Debug Role Configuration"
+  tags: always
+  debug:
+    msg: "{{ learning_locker }}"
+
+- name: "Create Init Cache Directory"
+  file:
+    path:  "{{ learning_locker.init_cache_dir }}"
+    state: directory
+
+- include: "learning-locker-{{ ansible_os_family }}.yml"
+  become:  true
+
+- include: "learning-locker-create-lrs-{{ ansible_os_family }}.yml"
+  become:  true

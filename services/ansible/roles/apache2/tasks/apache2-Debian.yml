@@ -1,0 +1,65 @@
+---
+
+- name: "Install Apache 2"
+  apt:
+    name:  "apache2"
+    state: present
+    update_cache:     "{{ apache2.apt.update_cache }}"
+    cache_valid_time: "{{ apache2.apt.cache_valid_time }}"
+
+- name: "Set Apache Run User to '{{ apache2.owner }}'"
+  replace:
+    dest:    "{{ apache2.config_dir }}/envvars"
+    regexp:  "^(.*){{ item.key }}.*$"
+    replace: "\\g<1>{{ item.key }}={{ item.value }}"
+    backup:  yes
+  with_dict:
+    APACHE_RUN_USER:  "{{ apache2.owner }}"
+    APACHE_RUN_GROUP: "{{ apache2.group }}"
+  notify: "Restart Apache"
+
+- name: "Enable Module Dependencies"
+  apache2_module:
+    name:  "{{ item }}"
+    state: present
+  with_items: "{{ apache2.module_dependencies }}"
+  notify: "Restart Apache"
+  
+- name: "Make Website Root Directory"
+  file:
+    path:  "{{ item.value.root }}"
+    state: directory
+    owner: "{{ apache2.owner }}"
+    group: "{{ apache2.group }}"
+  with_dict: "{{ apache2.virtual_hosts }}"
+  notify: "Reload Apache"
+
+- name: "Set {{ apache2.owner }} as Owner of Log Directory"
+  file:
+    path:  "{{ apache2.log_dir }}"
+    owner: "{{ apache2.owner }}"
+    group: "{{ apache2.group }}"
+  notify: "Restart Apache"
+
+- name: "Generate Virtual Sites Configuration"
+  template:
+    src:  "{{ apache2.default_template_file }}"
+    dest: "{{ apache2.config_dir }}/sites-available/{{ item.key }}.conf"
+  with_dict: "{{ apache2.virtual_hosts }}"
+  notify: "Reload Apache"
+
+- name: "Disable Default Site"
+  shell: "a2dissite {{ apache2.default_site_name }}" 
+  args:
+    removes: "{{ apache2.config_dir }}/sites-enabled/{{ apache2.default_site_name }}.conf"
+  when: "not apache2.keep_default_site"
+  notify: "Reload Apache"
+
+- name: "Enable Configured Sites"
+  shell: "a2ensite {{ item.key }}"
+  args:
+    creates: "{{ apache2.config_dir }}/sites-enabled/{{ item.key }}.conf"
+  with_dict: "{{ apache2.virtual_hosts }}"
+  notify: "Reload Apache"
+
+- meta: flush_handlers

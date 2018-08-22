@@ -1,0 +1,1660 @@
+---
+swagger: "2.0"
+info:
+  description: "This API is used to interact with the data stored in the TLA Activity\
+    \ Index database."
+  version: "0.1.0"
+  title: "Asset API"
+host: "fluent.tla"
+basePath: "/activity-index"
+schemes:
+- "https"
+consumes:
+- "application/ld+json"
+produces:
+- "application/ld+json"
+paths:
+  /activities:
+    get:
+      tags:
+      - "Multiple Activities"
+      summary: "Obtains multiple LearningActivity objects"
+      description: "Returns a collection of LearningActivity objects; all activities\
+        \ are returned if \"limit\" and \"offset\" were not specified"
+      operationId: "get_activities"
+      parameters:
+      - name: "limit"
+        in: "query"
+        description: "The maximum number of objects that will be returned"
+        required: false
+        type: "integer"
+      - name: "offset"
+        in: "query"
+        description: "Determines the first object to be returned"
+        required: false
+        type: "integer"
+      responses:
+        200:
+          description: "LearningActivity objects successfully returned"
+          schema:
+            type: "array"
+            items:
+              $ref: "#/definitions/LearningActivity"
+        400:
+          description: "Invalid request."
+          schema:
+            $ref: "#/definitions/Error"
+        404:
+          description: "Not Found"
+        500:
+          description: "An unexpected server error occurred."
+          schema:
+            $ref: "#/definitions/Error"
+      x-swagger-router-controller: "activity_index_server.controllers.multiple_activities_controller"
+    post:
+      tags:
+      - "Single Activity"
+      summary: "Creates a LearningActivity."
+      description: "Creates a new LearningActivity, which is given as a whole object\
+        \ in the payload."
+      operationId: "post_activity"
+      parameters:
+      - in: "body"
+        name: "activityObj"
+        description: "LearningActivity object to add."
+        required: true
+        schema:
+          $ref: "#/definitions/LearningActivity"
+      responses:
+        201:
+          description: "LearningActivity object successfully created"
+        400:
+          description: "Invalid request."
+          schema:
+            $ref: "#/definitions/Error"
+        500:
+          description: "An unexpected server error occurred."
+          schema:
+            $ref: "#/definitions/Error"
+      x-swagger-router-controller: "activity_index_server.controllers.single_activity_controller"
+  /activities/{activityId}:
+    get:
+      tags:
+      - "Single Activity"
+      summary: "Obtains LearningActivity info"
+      description: "Obtains the information of the corresponding LearningActivity"
+      operationId: "get_activity"
+      parameters:
+      - name: "activityId"
+        in: "path"
+        description: "The ID of the requested LearningActivity"
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: "LearningActivity object successfully returned"
+          schema:
+            $ref: "#/definitions/LearningActivity"
+        400:
+          description: "Invalid request."
+          schema:
+            $ref: "#/definitions/Error"
+        404:
+          description: "Not Found"
+        500:
+          description: "An unexpected server error occurred."
+          schema:
+            $ref: "#/definitions/Error"
+      x-swagger-router-controller: "activity_index_server.controllers.single_activity_controller"
+    delete:
+      tags:
+      - "Single Activity"
+      summary: "Deletes a LearningActivity object"
+      description: "Removes the LearningActivity from the database"
+      operationId: "delete_activity"
+      parameters:
+      - name: "activityId"
+        in: "path"
+        description: "The ID of the requested LearningActivity"
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: "LearningActivity object successfully deleted"
+        400:
+          description: "Invalid request."
+          schema:
+            $ref: "#/definitions/Error"
+        404:
+          description: "Not Found"
+        500:
+          description: "An unexpected server error occurred."
+          schema:
+            $ref: "#/definitions/Error"
+      x-swagger-router-controller: "activity_index_server.controllers.single_activity_controller"
+    patch:
+      tags:
+      - "Single Activity"
+      summary: "Updates LearningActivity info"
+      description: "Updates the information of the LearningActivity, which is given\
+        \ partially (one or more of the top-level properties) in the payload"
+      operationId: "update_activity"
+      parameters:
+      - name: "activityId"
+        in: "path"
+        description: "The ID of the requested LearningActivity"
+        required: true
+        type: "string"
+      - in: "body"
+        name: "activityObj"
+        description: "LearningActivity object to update"
+        required: true
+        schema:
+          type: "object"
+          description: "The fields contained within this object should match a subset\
+            \ of those in the LearningActivity schema"
+      responses:
+        200:
+          description: "LearningActivity object successfully updated"
+        400:
+          description: "Invalid request."
+          schema:
+            $ref: "#/definitions/Error"
+        404:
+          description: "Not Found"
+        500:
+          description: "An unexpected server error occurred."
+          schema:
+            $ref: "#/definitions/Error"
+      x-swagger-router-controller: "activity_index_server.controllers.single_activity_controller"
+  /associations:
+    post:
+      tags:
+      - "Associations"
+      summary: "Generates mapping from TLOs/ELOs to activities and token types to\
+        \ activities"
+      description: "Generates a list of all activities mapped to their corresponding\
+        \ TLOs/ELOs and a list of all activities mapped to their corresponding token\
+        \ types"
+      operationId: "generate_associations"
+      parameters: []
+      responses:
+        201:
+          description: "Competency and token associations successfully created"
+        400:
+          description: "Invalid request."
+          schema:
+            $ref: "#/definitions/Error"
+        500:
+          description: "An unexpected server error occurred."
+          schema:
+            $ref: "#/definitions/Error"
+      x-swagger-router-controller: "activity_index_server.controllers.associations_controller"
+  /competency-associations:
+    get:
+      tags:
+      - "Associations"
+      summary: "Obtains mapping of TLOs/ELOs to activities"
+      description: "Obtains the list of all activities mapped to their corresponding\
+        \ TLOs/ELOs"
+      operationId: "get_competency_associations"
+      parameters: []
+      responses:
+        200:
+          description: "Competency associations successfully returned"
+          schema:
+            type: "array"
+            items:
+              $ref: "#/definitions/CompetencyAssociations"
+        400:
+          description: "Invalid request."
+          schema:
+            $ref: "#/definitions/Error"
+        404:
+          description: "Not Found"
+        500:
+          description: "An unexpected server error occurred."
+          schema:
+            $ref: "#/definitions/Error"
+      x-swagger-router-controller: "activity_index_server.controllers.associations_controller"
+  /token-associations:
+    get:
+      tags:
+      - "Associations"
+      summary: "Obtains mapping of token types to activities"
+      description: "Obtains the list of all activities mapped to their corresponding\
+        \ token types"
+      operationId: "get_token_associations"
+      parameters: []
+      responses:
+        200:
+          description: "Token associations successfully returned"
+          schema:
+            type: "array"
+            items:
+              $ref: "#/definitions/TokenAssociations"
+        400:
+          description: "Invalid request."
+          schema:
+            $ref: "#/definitions/Error"
+        404:
+          description: "Not Found"
+        500:
+          description: "An unexpected server error occurred."
+          schema:
+            $ref: "#/definitions/Error"
+      x-swagger-router-controller: "activity_index_server.controllers.associations_controller"
+definitions:
+  CompetencyAssociations:
+    type: "object"
+    required:
+    - "activities"
+    - "competency"
+    properties:
+      competency:
+        type: "string"
+        format: "url"
+        description: "URL reference to TLO or ELO"
+      activities:
+        type: "array"
+        description: "IDs of activities associated with the TLO/ELO"
+        items:
+          type: "string"
+    example:
+      competency: "http://example.com/aeiou"
+      activities:
+      - "activities"
+      - "activities"
+  Error:
+    type: "object"
+    required:
+    - "errorMessage"
+    properties:
+      errorMessage:
+        type: "string"
+      errorCode:
+        type: "string"
+      errorLink:
+        type: "string"
+        format: "url"
+      userMessage:
+        type: "string"
+  TokenAssociations:
+    type: "object"
+    required:
+    - "activities"
+    - "tokenType"
+    properties:
+      tokenType:
+        type: "string"
+        description: "String representing the token type"
+      activities:
+        type: "array"
+        description: "IDs of activities associated with the token type"
+        items:
+          type: "string"
+    example:
+      activities:
+      - "activities"
+      - "activities"
+      tokenType: "tokenType"
+  LearningActivity:
+    allOf:
+    - $ref: "#/definitions/CreativeWork"
+    - type: "object"
+      required:
+      - "@context"
+      - "@type"
+      - "accessibilityFeature"
+      - "dateCreated"
+      - "description"
+      - "educationalAlignment"
+      - "educationalUse"
+      - "identifier"
+      - "image"
+      - "interactivityType"
+      - "learningResourceType"
+      - "learningStage"
+      - "metadataFile"
+      - "name"
+      - "provider"
+      - "timeRequired"
+      - "url"
+      properties:
+        '@context':
+          type: "string"
+          description: "The constant link in this property should return file tla-declarations.jsonld.\
+            \ The value of this field will always be \"https://tla.adl.net/declarations\"\
+            ."
+        '@type':
+          type: "string"
+          description: "The value of this field will always be \"LearningActivity\"\
+            ."
+        identifier:
+          type: "string"
+          format: "uri"
+          description: "The URL that identifies the learning activity. For the 2018\
+            \ prototype, this URL will include the value of the _id field from MongoDB."
+        name:
+          type: "string"
+          description: "The title of the Learning Activity."
+        description:
+          type: "string"
+          description: "A description of the Learning Activity."
+        text:
+          type: "string"
+          description: "The textual content of this CreativeWork."
+        version:
+          type: "string"
+          description: "The version of the CreativeWork embodied by the Learning Activity."
+        about:
+          type: "string"
+          description: "The subject of the content provided by the Learning Activity."
+        license:
+          type: "string"
+          format: "uri"
+          description: "The license of the Learning Activity."
+        dateCreated:
+          type: "string"
+          format: "date-time"
+          description: "The date on which the resource was created."
+        author:
+          description: "The author of the Learning Activity."
+          $ref: "#/definitions/Person"
+        publisher:
+          description: "The organization credited with publishing the Learning Activity."
+          $ref: "#/definitions/Organization"
+        provider:
+          description: "The provider of the Learning Activity."
+          $ref: "#/definitions/Organization"
+        educationalUse:
+          type: "array"
+          description: "The purposes of the activity in the context of education."
+          items:
+            type: "string"
+        timeRequired:
+          type: "string"
+          description: "Approximate or typical time it takes to work with or through\
+            \ this learning resource for the typical intended target audience."
+        learningResourceType:
+          type: "string"
+          description: "The predominant type or kind characterizing the learning resource."
+        learningStage:
+          type: "string"
+          description: "Categories that are used to order the presentation order of\
+            \ activities."
+        aggregateRating:
+          description: "The overall rating, based on a collection of reviews or ratings,\
+            \ of the item."
+          $ref: "#/definitions/AggregateRating"
+        attemptRate:
+          type: "number"
+          description: "TBD (TODO ASAP)"
+        keywords:
+          type: "string"
+          description: "Keywords or tags used to describe this content. Multiple entries\
+            \ in a keywords list are typically delimited by commas."
+        url:
+          type: "string"
+          format: "uri"
+          description: "Launch URL to lanuch the learning activity."
+        additionaltype:
+          type: "string"
+          format: "uri"
+          description: "In Schema.org, an additional type for this item. Used here\
+            \ to contain Launch URL with params included."
+        image:
+          type: "string"
+          format: "uri"
+          description: "A URL of the activity's image."
+        motivationImage:
+          type: "string"
+          format: "uri"
+          description: "An image showing motivation for performing the activity, where\
+            \ you can get to in the future if you learn the basics now."
+        contentURLs:
+          type: "array"
+          description: "The url for any content that the activity uses such as a video\
+            \ or powerpoint."
+          items:
+            type: "string"
+            format: "uri"
+        accessibilityAPI:
+          type: "string"
+          description: "In Schema.org, indicates that the resource is compatible with\
+            \ the referenced accessibility API. Used here to list compatible platforms."
+        accessibilityFeature:
+          type: "string"
+          description: "In Schema.org, content features that support accessibility.\
+            \ Used here to list compatible devices."
+        metadataFile:
+          type: "string"
+          description: "Name of the file used to add/update the activity metadata\
+            \ in the Activity Index database."
+        interactivityType:
+          type: "string"
+          description: "The predominant mode of learning supported by the learning\
+            \ resource. Acceptable values are active, expositive, or mixed."
+        educationalAlignment:
+          type: "array"
+          items:
+            $ref: "#/definitions/AlignmentObject"
+        popularityRating:
+          type: "number"
+          description: "Population level statistic on whether the activity is found\
+            \ to be popular among learners."
+        emotionRating:
+          type: "string"
+          description: "Population level statistic on which emotion this activity\
+            \ evokes most often in learners."
+      description: "A learning activity in TLA."
+  CreativeWork:
+    properties:
+      about:
+        type: "object"
+        description: "The subject matter of the content."
+        properties: {}
+      educationalAlignment:
+        type: "array"
+        description: "An alignment to an established educational framework."
+        items:
+          $ref: "#/definitions/AlignmentObject"
+      associatedMedia:
+        type: "object"
+        description: "A media object that encodes this CreativeWork. This property\
+          \ is a synonym for encoding."
+        properties: {}
+      funder:
+        type: "object"
+        description: "A person or organization that supports (sponsors) something\
+          \ through some kind of financial contribution."
+        properties: {}
+      position:
+        type: "integer"
+        format: "int32"
+        description: "The position of an item in a series or sequence of items."
+      audio:
+        type: "object"
+        description: "An embedded audio object."
+        properties: {}
+      workExample:
+        type: "object"
+        description: "Example/instance/realization/derivation of the concept of this\
+          \ creative work. eg. The paperback edition, first edition, or eBook."
+        properties: {}
+      provider:
+        type: "object"
+        description: "The service provider, service operator, or service performer;\
+          \ the goods producer. Another party (a seller) may offer those services\
+          \ or goods on behalf of the provider. A provider may also serve as the seller."
+        properties: {}
+      encoding:
+        type: "object"
+        description: "A media object that encodes this CreativeWork. This property\
+          \ is a synonym for associatedMedia."
+        properties: {}
+      interactivityType:
+        type: "string"
+        description: "The predominant mode of learning supported by the learning resource.\
+          \ Acceptable values are  active ,  expositive , or  mixed ."
+      accessibilitySummary:
+        type: "string"
+        description: "A human-readable summary of specific accessibility features\
+          \ or deficiencies, consistent with the other accessibility metadata but\
+          \ expressing subtleties such as  short descriptions are present but long\
+          \ descriptions will be needed for non-visual users  or  short descriptions\
+          \ are present and no long descriptions are needed. "
+      character:
+        type: "object"
+        description: "Fictional person connected with a creative work."
+        properties: {}
+      audience:
+        type: "object"
+        description: "An intended audience, i.e. a group for whom something was created."
+        properties: {}
+      sourceOrganization:
+        type: "object"
+        description: "The Organization on whose behalf the creator was working."
+        properties: {}
+      isPartOf:
+        type: "object"
+        description: "Indicates a CreativeWork that this CreativeWork is (in some\
+          \ sense) part of."
+        properties: {}
+      video:
+        type: "object"
+        description: "An embedded video object."
+        properties: {}
+      publisher:
+        type: "object"
+        description: "The publisher of the creative work."
+        properties: {}
+      publication:
+        type: "object"
+        description: "A publication event associated with the item."
+        properties: {}
+      text:
+        type: "string"
+        description: "The textual content of this CreativeWork."
+      expires:
+        type: "string"
+        format: "date-time"
+        description: "Date the content expires and is no longer useful or available.\
+          \ For example a VideoObject or NewsArticle whose availability or relevance\
+          \ is time-limited, or a ClaimReview fact check whose publisher wants to\
+          \ indicate that it may no longer be relevant (or helpful to highlight) after\
+          \ some date."
+      contributor:
+        type: "object"
+        description: "A secondary contributor to the CreativeWork or Event."
+        properties: {}
+      reviews:
+        type: "object"
+        description: "Review of the item."
+        properties: {}
+      typicalAgeRange:
+        type: "string"
+        description: "The typical expected age range, e.g.  7-9 ,  11- ."
+      releasedEvent:
+        type: "object"
+        description: "The place and time the release was issued, expressed as a PublicationEvent."
+        properties: {}
+      educationalUse:
+        type: "array"
+        description: "The purpose of a work in the context of education; for example,\
+          \  assignment ,  group work ."
+        items:
+          type: "string"
+      contentLocation:
+        type: "object"
+        description: "The location depicted or described in the content. For example,\
+          \ the location in a photograph or painting."
+        properties: {}
+      schemaVersion:
+        type: "string"
+        format: "uri"
+        description: "Indicates (by URL or string) a particular version of a schema\
+          \ used in some CreativeWork. For example, a document could declare a schemaVersion\
+          \ using an URL such as http://schema.org/version/2.0/ if precise indication\
+          \ of schema version was required by some application."
+      accessibilityFeature:
+        type: "string"
+        description: "Content features of the resource, such as accessible media,\
+          \ alternatives and supported enhancements for accessibility (WebSchemas\
+          \ wiki lists possible values)."
+      aggregateRating:
+        type: "object"
+        description: "The overall rating, based on a collection of reviews or ratings,\
+          \ of the item."
+        properties: {}
+      alternativeHeadline:
+        type: "string"
+        description: "A secondary title of the CreativeWork."
+      locationCreated:
+        type: "object"
+        description: "The location where the CreativeWork was created, which may not\
+          \ be the same as the location depicted in the CreativeWork."
+        properties: {}
+      accessModeSufficient:
+        type: "string"
+        description: "A list of single or combined accessModes that are sufficient\
+          \ to understand all the intellectual content of a resource. Expected values\
+          \ include:  auditory, tactile, textual, visual."
+      temporalCoverage:
+        type: "string"
+        format: "date-time"
+        description: "The temporalCoverage of a CreativeWork indicates the period\
+          \ that the content applies to, i.e. that it describes, either as a DateTime\
+          \ or as a textual string indicating a time period in ISO 8601 time interval\
+          \ format. In       the case of a Dataset it will typically indicate the\
+          \ relevant time period in a precise notation (e.g. for a 2011 census dataset,\
+          \ the year 2011 would be written  2011/2012 ). Other forms of content e.g.\
+          \ ScholarlyArticle, Book, TVSeries or TVEpisode may indicate their temporalCoverage\
+          \ in broader terms - textually or via well-known URL.       Written works\
+          \ such as books may sometimes have precise temporal coverage too, e.g. a\
+          \ work set in 1939 - 1945 can be indicated in ISO 8601 interval format format\
+          \ via  1939/1945 ."
+      accountablePerson:
+        type: "object"
+        description: "Specifies the Person that is legally accountable for the CreativeWork."
+        properties: {}
+      spatialCoverage:
+        type: "object"
+        description: "The spatialCoverage of a CreativeWork indicates the place(s)\
+          \ which are the focus of the content. It is a subproperty of       contentLocation\
+          \ intended primarily for more technical and detailed materials. For example\
+          \ with a Dataset, it indicates       areas that the dataset describes: a\
+          \ dataset of New York weather would have spatialCoverage which was the place:\
+          \ the state of New York."
+        properties: {}
+      offers:
+        type: "object"
+        description: "An offer to provide this item—for example, an offer to sell\
+          \ a product, rent the DVD of a movie, perform a service, or give away tickets\
+          \ to an event."
+        properties: {}
+      editor:
+        type: "object"
+        description: "Specifies the Person who edited the CreativeWork."
+        properties: {}
+      discussionUrl:
+        type: "string"
+        format: "uri"
+        description: "A link to the page containing the comments of the CreativeWork."
+      award:
+        type: "string"
+        description: "An award won by or for this item."
+      copyrightHolder:
+        type: "object"
+        description: "The party holding the legal copyright to the CreativeWork."
+        properties: {}
+      accessibilityHazard:
+        type: "string"
+        description: "A characteristic of the described resource that is physiologically\
+          \ dangerous to some users. Related to WCAG 2.0 guideline 2.3 (WebSchemas\
+          \ wiki lists possible values)."
+      copyrightYear:
+        type: "number"
+        format: "float"
+        description: "The year during which the claimed copyright for the CreativeWork\
+          \ was first asserted."
+      awards:
+        type: "string"
+        description: "Awards won by or for this item."
+      recordedAt:
+        type: "object"
+        description: "The Event where the CreativeWork was recorded. The CreativeWork\
+          \ may capture all or part of the event."
+        properties: {}
+      commentCount:
+        type: "integer"
+        format: "int32"
+        description: "The number of comments this CreativeWork (e.g. Article, Question\
+          \ or Answer) has received. This is most applicable to works published in\
+          \ Web sites with commenting system; additional comments may exist elsewhere."
+      fileFormat:
+        type: "string"
+        format: "uri"
+        description: "Media type, typically MIME format (see IANA site) of the content\
+          \ e.g. application/zip of a SoftwareApplication binary. In cases where a\
+          \ CreativeWork has several media type representations,  encoding  can be\
+          \ used to indicate each MediaObject alongside particular fileFormat information.\
+          \ Unregistered or niche file formats can be indicated instead via the most\
+          \ appropriate URL, e.g. defining Web page or a Wikipedia entry."
+      inLanguage:
+        type: "object"
+        description: "The language of the content or performance or used in an action.\
+          \ Please use one of the language codes from the IETF BCP 47 standard. See\
+          \ also availableLanguage."
+        properties: {}
+      accessibilityAPI:
+        type: "string"
+        description: "Indicates that the resource is compatible with the referenced\
+          \ accessibility API (WebSchemas wiki lists possible values)."
+      interactionStatistic:
+        type: "object"
+        description: "The number of interactions for the CreativeWork using the WebSite\
+          \ or SoftwareApplication. The most specific child type of InteractionCounter\
+          \ should be used."
+        properties: {}
+      contentRating:
+        type: "string"
+        description: "Official rating of a piece of content—for example, MPAA PG-13\
+          \ ."
+      learningResourceType:
+        type: "string"
+        description: "The predominant type or kind characterizing the learning resource.\
+          \ For example,  presentation ,  handout ."
+      accessMode:
+        type: "string"
+        description: "The human sensory perceptual system or cognitive faculty through\
+          \ which a person may process or perceive information. Expected values include:\
+          \ auditory, tactile, textual, visual, colorDependent, chartOnVisual, chemOnVisual,\
+          \ diagramOnVisual, mathOnVisual, musicOnVisual, textOnVisual."
+      material:
+        type: "string"
+        description: "A material that something is made from, e.g. leather, wool,\
+          \ cotton, paper."
+      isFamilyFriendly:
+        type: "boolean"
+        description: "Indicates whether this content is family friendly."
+      exampleOfWork:
+        type: "object"
+        description: "A creative work that this work is an example/instance/realization/derivation\
+          \ of."
+        properties: {}
+      version:
+        type: "string"
+        description: "The version of the CreativeWork embodied by a specified resource."
+      dateModified:
+        type: "string"
+        format: "date-time"
+        description: "The date on which the CreativeWork was most recently modified\
+          \ or when the item s entry was modified within a DataFeed."
+      mainEntity:
+        type: "object"
+        description: "Indicates the primary entity described in some page or other\
+          \ CreativeWork."
+        properties: {}
+      genre:
+        type: "string"
+        format: "uri"
+        description: "Genre of the creative work, broadcast channel or group."
+      keywords:
+        type: "string"
+        description: "Keywords or tags used to describe this content. Multiple entries\
+          \ in a keywords list are typically delimited by commas."
+      author:
+        type: "object"
+        description: "The author of this content or rating. Please note that author\
+          \ is special in that HTML 5 provides a special mechanism for indicating\
+          \ authorship via the rel tag. That is equivalent to this and may be used\
+          \ interchangeably."
+        properties: {}
+      isBasedOnUrl:
+        type: "object"
+        description: "A resource that was used in the creation of this resource. This\
+          \ term can be repeated for multiple sources. For example, http://example.com/great-multiplication-intro.html."
+        properties: {}
+      timeRequired:
+        type: "string"
+        description: "Approximate or typical time it takes to work with or through\
+          \ this learning resource for the typical intended target audience, e.g.\
+          \  P30M ,  P1H25M."
+      translator:
+        type: "object"
+        description: "Organization or person who adapts a creative work to different\
+          \ languages, regional differences and technical requirements of a target\
+          \ market, or that translates during some event."
+        properties: {}
+      thumbnailUrl:
+        type: "string"
+        format: "uri"
+        description: "A thumbnail image relevant to the Thing."
+      hasPart:
+        type: "object"
+        description: "Indicates a CreativeWork that is (in some sense) a part of this\
+          \ CreativeWork."
+        properties: {}
+      comment:
+        type: "object"
+        description: "Comments, typically from users."
+        properties: {}
+      review:
+        type: "object"
+        description: "A review of the item."
+        properties: {}
+      license:
+        type: "object"
+        description: "A license document that applies to this content, typically indicated\
+          \ by URL."
+        properties: {}
+      accessibilityControl:
+        type: "string"
+        description: "Identifies input methods that are sufficient to fully control\
+          \ the described resource (WebSchemas wiki lists possible values)."
+      encodings:
+        type: "object"
+        description: "A media object that encodes this CreativeWork."
+        properties: {}
+      isBasedOn:
+        type: "object"
+        description: "A resource that was used in the creation of this resource. This\
+          \ term can be repeated for multiple sources. For example, http://example.com/great-multiplication-intro.html."
+        properties: {}
+      creator:
+        type: "object"
+        description: "The creator/author of this CreativeWork. This is the same as\
+          \ the Author property for CreativeWork."
+        properties: {}
+      publishingPrinciples:
+        type: "object"
+        description: "The publishingPrinciples property indicates (typically via URL)\
+          \ a document describing the editorial principles of an Organization (or\
+          \ individual e.g. a Person writing a blog) that relate to their activities\
+          \ as a publisher, e.g. ethics or diversity policies. When applied to a CreativeWork\
+          \ (e.g. NewsArticle) the principles are those of the party primarily responsible\
+          \ for the creation of the CreativeWork.  While such policies are most typically\
+          \ expressed in natural language, sometimes related information (e.g. indicating\
+          \ a funder) can be expressed using schema.org terminology."
+        properties: {}
+      sponsor:
+        type: "object"
+        description: "A person or organization that supports a thing through a pledge,\
+          \ promise, or financial contribution. e.g. a sponsor of a Medical Study\
+          \ or a corporate sponsor of an event."
+        properties: {}
+      producer:
+        type: "object"
+        description: "The person or organization who produced the work (e.g. music\
+          \ album, movie, tv/radio series etc.)."
+        properties: {}
+      mentions:
+        type: "object"
+        description: "Indicates that the CreativeWork contains a reference to, but\
+          \ is not necessarily about a concept."
+        properties: {}
+      dateCreated:
+        type: "string"
+        format: "date-time"
+        description: "The date on which the CreativeWork was created or the item was\
+          \ added to a DataFeed."
+      datePublished:
+        type: "string"
+        format: "date-time"
+        description: "Date of first broadcast/publication."
+      isAccessibleForFree:
+        type: "boolean"
+        description: "A flag to signal that the item, event, or place is accessible\
+          \ for free."
+      headline:
+        type: "string"
+        description: "Headline of the article."
+      citation:
+        type: "object"
+        description: "A citation or reference to another creative work, such as another\
+          \ publication, web page, scholarly article, etc."
+        properties: {}
+      sameAs:
+        type: "string"
+        format: "uri"
+        description: "URL of a reference Web page that unambiguously indicates the\
+          \ item s identity. E.g. the URL of the item s Wikipedia page, Wikidata entry,\
+          \ or official website."
+      url:
+        type: "string"
+        format: "uri"
+        description: "URL of the item."
+      image:
+        type: "string"
+        format: "uri"
+        description: "An image of the item. This can be a URL or a fully described\
+          \ ImageObject."
+      additionalType:
+        type: "string"
+        format: "uri"
+        description: "An additional type for the item, typically used for adding more\
+          \ specific types from external vocabularies in microdata syntax. This is\
+          \ a relationship between something and a class that the thing is in. In\
+          \ RDFa syntax, it is better to use the native RDFa syntax - the  typeof\
+          \  attribute - for multiple types. Schema.org tools may have only weaker\
+          \ understanding of extra types, in particular those defined externally."
+      name:
+        type: "string"
+        description: "The name of the item."
+      identifier:
+        type: "string"
+        format: "uri"
+        description: "The identifier property represents any kind of identifier for\
+          \ any kind of Thing, such as ISBNs, GTIN codes, UUIDs etc. Schema.org provides\
+          \ dedicated properties for representing many of these, either as textual\
+          \ strings or as URL (URI) links. See background notes for more details."
+      potentialAction:
+        type: "object"
+        description: "Indicates a potential Action, which describes an idealized action\
+          \ in which this thing would play an  object  role."
+        properties: {}
+      mainEntityOfPage:
+        type: "string"
+        format: "uri"
+        description: "Indicates a page (or other CreativeWork) for which this thing\
+          \ is the main entity being described. See background notes for details."
+      description:
+        type: "string"
+        description: "A description of the item."
+      disambiguatingDescription:
+        type: "string"
+        description: "A sub property of description. A short description of the item\
+          \ used to disambiguate from other, similar items. Information from other\
+          \ properties (in particular, name) may be necessary for the description\
+          \ to be useful for disambiguation."
+      alternateName:
+        type: "string"
+        description: "An alias for the item."
+    description: "The most generic kind of creative work, including books, movies,\
+      \ photographs, software programs, etc."
+  AlignmentObject:
+    properties:
+      targetDescription:
+        type: "string"
+        description: "The description of a node in an established educational framework."
+      alignmentType:
+        type: "string"
+        description: "A category of alignment between the learning resource and the\
+          \ framework node. Recommended values include:  assesses ,  teaches ,  requires\
+          \ ,  textComplexity ,  readingLevel ,  educationalSubject , and  educationalLevel\
+          \ ."
+      targetUrl:
+        type: "string"
+        format: "uri"
+        description: "The URL of a node in an established educational framework."
+      targetName:
+        type: "string"
+        description: "The name of a node in an established educational framework."
+      educationalFramework:
+        type: "string"
+        description: "The framework to which the resource being described is aligned."
+      sameAs:
+        type: "string"
+        format: "uri"
+        description: "URL of a reference Web page that unambiguously indicates the\
+          \ item s identity. E.g. the URL of the item s Wikipedia page, Wikidata entry,\
+          \ or official website."
+      url:
+        type: "string"
+        format: "uri"
+        description: "URL of the item."
+      image:
+        type: "object"
+        description: "An image of the item. This can be a URL or a fully described\
+          \ ImageObject."
+        properties: {}
+      additionalType:
+        type: "string"
+        format: "uri"
+        description: "An additional type for the item, typically used for adding more\
+          \ specific types from external vocabularies in microdata syntax. This is\
+          \ a relationship between something and a class that the thing is in. In\
+          \ RDFa syntax, it is better to use the native RDFa syntax - the  typeof\
+          \  attribute - for multiple types. Schema.org tools may have only weaker\
+          \ understanding of extra types, in particular those defined externally."
+      name:
+        type: "string"
+        description: "The name of the item."
+      identifier:
+        type: "string"
+        format: "uri"
+        description: "The identifier property represents any kind of identifier for\
+          \ any kind of Thing, such as ISBNs, GTIN codes, UUIDs etc. Schema.org provides\
+          \ dedicated properties for representing many of these, either as textual\
+          \ strings or as URL (URI) links. See background notes for more details."
+      potentialAction:
+        type: "object"
+        description: "Indicates a potential Action, which describes an idealized action\
+          \ in which this thing would play an  object  role."
+        properties: {}
+      mainEntityOfPage:
+        type: "string"
+        format: "uri"
+        description: "Indicates a page (or other CreativeWork) for which this thing\
+          \ is the main entity being described. See background notes for details."
+      description:
+        type: "string"
+        description: "A description of the item."
+      disambiguatingDescription:
+        type: "string"
+        description: "A sub property of description. A short description of the item\
+          \ used to disambiguate from other, similar items. Information from other\
+          \ properties (in particular, name) may be necessary for the description\
+          \ to be useful for disambiguation."
+      alternateName:
+        type: "string"
+        description: "An alias for the item."
+    description: "An intangible item that describes an alignment between a learning\
+      \ resource and a node in an educational framework."
+  Person:
+    properties:
+      spouse:
+        type: "object"
+        description: "The person s spouse."
+        properties: {}
+      funder:
+        type: "object"
+        description: "A person or organization that supports (sponsors) something\
+          \ through some kind of financial contribution."
+        properties: {}
+      colleague:
+        type: "object"
+        description: "A colleague of the person. Supersedes colleagues."
+        properties: {}
+      deathDate:
+        type: "string"
+        format: "date-time"
+        description: "Date of death."
+      memberOf:
+        type: "object"
+        description: "An Organization (or ProgramMembership) to which this Person\
+          \ or Organization belongs."
+        properties: {}
+      height:
+        type: "object"
+        description: "The height of the item."
+        properties: {}
+      workLocation:
+        type: "object"
+        description: "A contact location for a person s place of work."
+        properties: {}
+      netWorth:
+        type: "object"
+        description: "The total financial value of the person as calculated by subtracting\
+          \ assets from liabilities."
+        properties: {}
+      children:
+        type: "object"
+        description: "A child of the person."
+        properties: {}
+      jobTitle:
+        type: "string"
+        description: "The job title of the person (for example, Financial Manager)."
+      hasOfferCatalog:
+        type: "object"
+        description: "Indicates an OfferCatalog listing for this Organization, Person,\
+          \ or Service."
+        properties: {}
+      deathPlace:
+        type: "object"
+        description: "The place where the person died."
+        properties: {}
+      globalLocationNumber:
+        type: "string"
+        description: "The Global Location Number (GLN, sometimes also referred to\
+          \ as International Location Number or ILN) of the respective organization,\
+          \ person, or place. The GLN is a 13-digit number used to identify parties\
+          \ and physical locations."
+      birthPlace:
+        type: "object"
+        description: "The place where the person was born."
+        properties: {}
+      gender:
+        type: "string"
+        description: "Gender of the person. While http://schema.org/Male and http://schema.org/Female\
+          \ may be used, text strings are also acceptable for people who do not identify\
+          \ as a binary gender."
+      alumniOf:
+        type: "object"
+        description: "An organization that the person is an alumni of."
+        properties: {}
+      homeLocation:
+        type: "object"
+        description: "A contact location for a person s residence."
+        properties: {}
+      duns:
+        type: "string"
+        description: "The Dun & Bradstreet DUNS number for identifying an organization\
+          \ or business person."
+      taxID:
+        type: "string"
+        description: "The Tax / Fiscal ID of the organization or person, e.g. the\
+          \ TIN in the US or the CIF/NIF in Spain."
+      award:
+        type: "string"
+        description: "An award won by or for this item."
+      birthDate:
+        type: "string"
+        format: "date-time"
+        description: "Date of birth."
+      makesOffer:
+        type: "object"
+        description: "A pointer to products or services offered by the organization\
+          \ or person."
+        properties: {}
+      givenName:
+        type: "string"
+        description: "Given name. In the U.S., the first name of a Person. This can\
+          \ be used along with familyName instead of the name property."
+      contactPoints:
+        type: "object"
+        description: "A contact point for a person or organization."
+        properties: {}
+      awards:
+        type: "string"
+        description: "Awards won by or for this item."
+      familyName:
+        type: "string"
+        description: "Family name. In the U.S., the last name of an Person. This can\
+          \ be used along with givenName instead of the name property."
+      seeks:
+        type: "object"
+        description: "A pointer to products or services sought by the organization\
+          \ or person (demand)."
+        properties: {}
+      sibling:
+        type: "object"
+        description: "A sibling of the person."
+        properties: {}
+      address:
+        type: "object"
+        description: "Physical address of the item."
+        properties: {}
+      performerIn:
+        type: "object"
+        description: "Event that this person is a performer or participant in."
+        properties: {}
+      honorificPrefix:
+        type: "string"
+        description: "An honorific prefix preceding a Person s name such as Dr/Mrs/Mr."
+      additionalName:
+        type: "string"
+        description: "An additional name for a Person, can be used for a middle name."
+      siblings:
+        type: "object"
+        description: "A sibling of the person."
+        properties: {}
+      telephone:
+        type: "string"
+        description: "The telephone number."
+      email:
+        type: "string"
+        description: "Email address."
+      weight:
+        type: "object"
+        description: "The weight of the product or person."
+        properties: {}
+      contactPoint:
+        type: "object"
+        description: "A contact point for a person or organization."
+        properties: {}
+      parents:
+        type: "object"
+        description: "A parents of the person."
+        properties: {}
+      naics:
+        type: "string"
+        description: "The North American Industry Classification System (NAICS) code\
+          \ for a particular organization or business person."
+      hasPOS:
+        type: "object"
+        description: "Points-of-Sales operated by the organization or person."
+        properties: {}
+      parent:
+        type: "object"
+        description: "A parent of this person."
+        properties: {}
+      owns:
+        type: "object"
+        description: "Products owned by the organization or person."
+        properties: {}
+      affiliation:
+        type: "object"
+        description: "An organization that this person is affiliated with. For example,\
+          \ a school/university, a club, or a team."
+        properties: {}
+      publishingPrinciples:
+        type: "object"
+        description: "The publishingPrinciples property indicates (typically via URL)\
+          \ a document describing the editorial principles of an Organization (or\
+          \ individual e.g. a Person writing a blog) that relate to their activities\
+          \ as a publisher, e.g. ethics or diversity policies. When applied to a CreativeWork\
+          \ (e.g. NewsArticle) the principles are those of the party primarily responsible\
+          \ for the creation of the CreativeWork.  While such policies are most typically\
+          \ expressed in natural language, sometimes related information (e.g. indicating\
+          \ a funder) can be expressed using schema.org terminology."
+        properties: {}
+      sponsor:
+        type: "object"
+        description: "A person or organization that supports a thing through a pledge,\
+          \ promise, or financial contribution. e.g. a sponsor of a Medical Study\
+          \ or a corporate sponsor of an event."
+        properties: {}
+      isicV4:
+        type: "string"
+        description: "The International Standard of Industrial Classification of All\
+          \ Economic Activities (ISIC), Revision 4 code for a particular organization,\
+          \ business person, or place."
+      brand:
+        type: "object"
+        description: "The brand(s) associated with a product or service, or the brand(s)\
+          \ maintained by an organization or business person."
+        properties: {}
+      honorificSuffix:
+        type: "string"
+        description: "An honorific suffix preceding a Person s name such as M.D. /PhD/MSCSW."
+      vatID:
+        type: "string"
+        description: "The Value-added Tax ID of the organization or person."
+      nationality:
+        type: "object"
+        description: "Nationality of the person."
+        properties: {}
+      faxNumber:
+        type: "string"
+        description: "The fax number."
+      relatedTo:
+        type: "object"
+        description: "The most generic familial relation."
+        properties: {}
+      follows:
+        type: "object"
+        description: "The most generic uni-directional social relation."
+        properties: {}
+      knows:
+        type: "object"
+        description: "The most generic bi-directional social/work relation."
+        properties: {}
+      worksFor:
+        type: "object"
+        description: "Organizations that the person works for."
+        properties: {}
+      sameAs:
+        type: "string"
+        format: "uri"
+        description: "URL of a reference Web page that unambiguously indicates the\
+          \ item s identity. E.g. the URL of the item s Wikipedia page, Wikidata entry,\
+          \ or official website."
+      url:
+        type: "string"
+        format: "uri"
+        description: "URL of the item."
+      image:
+        type: "string"
+        format: "uri"
+        description: "An image of the item. This can be a URL or a fully described\
+          \ ImageObject."
+      additionalType:
+        type: "string"
+        format: "uri"
+        description: "An additional type for the item, typically used for adding more\
+          \ specific types from external vocabularies in microdata syntax. This is\
+          \ a relationship between something and a class that the thing is in. In\
+          \ RDFa syntax, it is better to use the native RDFa syntax - the  typeof\
+          \  attribute - for multiple types. Schema.org tools may have only weaker\
+          \ understanding of extra types, in particular those defined externally."
+      name:
+        type: "string"
+        description: "The name of the item."
+      identifier:
+        type: "string"
+        format: "uri"
+        description: "The identifier property represents any kind of identifier for\
+          \ any kind of Thing, such as ISBNs, GTIN codes, UUIDs etc. Schema.org provides\
+          \ dedicated properties for representing many of these, either as textual\
+          \ strings or as URL (URI) links. See background notes for more details."
+      potentialAction:
+        type: "object"
+        description: "Indicates a potential Action, which describes an idealized action\
+          \ in which this thing would play an  object  role."
+        properties: {}
+      mainEntityOfPage:
+        type: "string"
+        format: "uri"
+        description: "Indicates a page (or other CreativeWork) for which this thing\
+          \ is the main entity being described. See background notes for details."
+      description:
+        type: "string"
+        description: "A description of the item."
+      disambiguatingDescription:
+        type: "string"
+        description: "A sub property of description. A short description of the item\
+          \ used to disambiguate from other, similar items. Information from other\
+          \ properties (in particular, name) may be necessary for the description\
+          \ to be useful for disambiguation."
+      alternateName:
+        type: "string"
+        description: "An alias for the item."
+    description: "A person (alive, dead, undead, or fictional)."
+  Organization:
+    properties:
+      serviceArea:
+        type: "object"
+        description: "The geographic area where the service is provided."
+        properties: {}
+      funder:
+        type: "object"
+        description: "A person or organization that supports (sponsors) something\
+          \ through some kind of financial contribution."
+        properties: {}
+      areaServed:
+        type: "object"
+        description: "The geographic area where a service or offered item is provided."
+        properties: {}
+      memberOf:
+        type: "object"
+        description: "An Organization (or ProgramMembership) to which this Person\
+          \ or Organization belongs."
+        properties: {}
+      events:
+        type: "object"
+        description: "Upcoming or past events associated with this place or organization."
+        properties: {}
+      subOrganization:
+        type: "object"
+        description: "A relationship between two organizations where the first includes\
+          \ the second, e.g., as a subsidiary. See also: the more specific  department\
+          \  property."
+        properties: {}
+      hasOfferCatalog:
+        type: "object"
+        description: "Indicates an OfferCatalog listing for this Organization, Person,\
+          \ or Service."
+        properties: {}
+      globalLocationNumber:
+        type: "string"
+        description: "The Global Location Number (GLN, sometimes also referred to\
+          \ as International Location Number or ILN) of the respective organization,\
+          \ person, or place. The GLN is a 13-digit number used to identify parties\
+          \ and physical locations."
+      reviews:
+        type: "object"
+        description: "Review of the item."
+        properties: {}
+      members:
+        type: "object"
+        description: "A member of this organization."
+        properties: {}
+      aggregateRating:
+        type: "object"
+        description: "The overall rating, based on a collection of reviews or ratings,\
+          \ of the item."
+        properties: {}
+      duns:
+        type: "string"
+        description: "The Dun & Bradstreet DUNS number for identifying an organization\
+          \ or business person."
+      taxID:
+        type: "string"
+        description: "The Tax / Fiscal ID of the organization or person, e.g. the\
+          \ TIN in the US or the CIF/NIF in Spain."
+      award:
+        type: "string"
+        description: "An award won by or for this item."
+      makesOffer:
+        type: "object"
+        description: "A pointer to products or services offered by the organization\
+          \ or person."
+        properties: {}
+      contactPoints:
+        type: "object"
+        description: "A contact point for a person or organization."
+        properties: {}
+      awards:
+        type: "string"
+        description: "Awards won by or for this item."
+      seeks:
+        type: "object"
+        description: "A pointer to products or services sought by the organization\
+          \ or person (demand)."
+        properties: {}
+      member:
+        type: "object"
+        description: "A member of an Organization or a ProgramMembership. Organizations\
+          \ can be members of organizations; ProgramMembership is typically for individuals."
+        properties: {}
+      founders:
+        type: "object"
+        description: "A person who founded this organization."
+        properties: {}
+      alumni:
+        type: "object"
+        description: "Alumni of an organization."
+        properties: {}
+      dissolutionDate:
+        type: "string"
+        format: "date-time"
+        description: "The date that this organization was dissolved."
+      address:
+        type: "object"
+        description: "Physical address of the item."
+        properties: {}
+      logo:
+        type: "string"
+        format: "uri"
+        description: "An associated logo."
+      employees:
+        type: "object"
+        description: "People working for this organization."
+        properties: {}
+      telephone:
+        type: "string"
+        description: "The telephone number."
+      email:
+        type: "string"
+        description: "Email address."
+      department:
+        type: "object"
+        description: "A relationship between an organization and a department of that\
+          \ organization, also described as an organization (allowing different urls,\
+          \ logos, opening hours). For example: a store with a pharmacy, or a bakery\
+          \ with a cafe."
+        properties: {}
+      contactPoint:
+        type: "object"
+        description: "A contact point for a person or organization."
+        properties: {}
+      parentOrganization:
+        type: "object"
+        description: "The larger organization that this organization is a subOrganization\
+          \ of, if any."
+        properties: {}
+      legalName:
+        type: "string"
+        description: "The official name of the organization, e.g. the registered company\
+          \ name."
+      foundingDate:
+        type: "string"
+        format: "date-time"
+        description: "The date that this organization was founded."
+      employee:
+        type: "object"
+        description: "Someone working for this organization."
+        properties: {}
+      numberOfEmployees:
+        type: "object"
+        description: "The number of employees in an organization e.g. business."
+        properties: {}
+      naics:
+        type: "string"
+        description: "The North American Industry Classification System (NAICS) code\
+          \ for a particular organization or business person."
+      hasPOS:
+        type: "object"
+        description: "Points-of-Sales operated by the organization or person."
+        properties: {}
+      review:
+        type: "object"
+        description: "A review of the item."
+        properties: {}
+      foundingLocation:
+        type: "object"
+        description: "The place where the Organization was founded."
+        properties: {}
+      owns:
+        type: "object"
+        description: "Products owned by the organization or person."
+        properties: {}
+      event:
+        type: "object"
+        description: "Upcoming or past event associated with this place, organization,\
+          \ or action."
+        properties: {}
+      founder:
+        type: "object"
+        description: "A person who founded this organization."
+        properties: {}
+      publishingPrinciples:
+        type: "object"
+        description: "The publishingPrinciples property indicates (typically via URL)\
+          \ a document describing the editorial principles of an Organization (or\
+          \ individual e.g. a Person writing a blog) that relate to their activities\
+          \ as a publisher, e.g. ethics or diversity policies. When applied to a CreativeWork\
+          \ (e.g. NewsArticle) the principles are those of the party primarily responsible\
+          \ for the creation of the CreativeWork.  While such policies are most typically\
+          \ expressed in natural language, sometimes related information (e.g. indicating\
+          \ a funder) can be expressed using schema.org terminology."
+        properties: {}
+      sponsor:
+        type: "object"
+        description: "A person or organization that supports a thing through a pledge,\
+          \ promise, or financial contribution. e.g. a sponsor of a Medical Study\
+          \ or a corporate sponsor of an event."
+        properties: {}
+      isicV4:
+        type: "string"
+        description: "The International Standard of Industrial Classification of All\
+          \ Economic Activities (ISIC), Revision 4 code for a particular organization,\
+          \ business person, or place."
+      location:
+        type: "object"
+        description: "The location of for example where the event is happening, an\
+          \ organization is located, or where an action takes place."
+        properties: {}
+      brand:
+        type: "object"
+        description: "The brand(s) associated with a product or service, or the brand(s)\
+          \ maintained by an organization or business person."
+        properties: {}
+      vatID:
+        type: "string"
+        description: "The Value-added Tax ID of the organization or person."
+      leiCode:
+        type: "string"
+        description: "An organization identifier that uniquely identifies a legal\
+          \ entity as defined in ISO 17442."
+      faxNumber:
+        type: "string"
+        description: "The fax number."
+      sameAs:
+        type: "string"
+        format: "uri"
+        description: "URL of a reference Web page that unambiguously indicates the\
+          \ item s identity. E.g. the URL of the item s Wikipedia page, Wikidata entry,\
+          \ or official website."
+      url:
+        type: "string"
+        format: "uri"
+        description: "URL of the item."
+      image:
+        type: "object"
+        description: "An image of the item. This can be a URL or a fully described\
+          \ ImageObject."
+        properties: {}
+      additionalType:
+        type: "string"
+        format: "uri"
+        description: "An additional type for the item, typically used for adding more\
+          \ specific types from external vocabularies in microdata syntax. This is\
+          \ a relationship between something and a class that the thing is in. In\
+          \ RDFa syntax, it is better to use the native RDFa syntax - the  typeof\
+          \  attribute - for multiple types. Schema.org tools may have only weaker\
+          \ understanding of extra types, in particular those defined externally."
+      name:
+        type: "string"
+        description: "The name of the item."
+      identifier:
+        type: "string"
+        format: "uri"
+        description: "The identifier property represents any kind of identifier for\
+          \ any kind of Thing, such as ISBNs, GTIN codes, UUIDs etc. Schema.org provides\
+          \ dedicated properties for representing many of these, either as textual\
+          \ strings or as URL (URI) links. See background notes for more details."
+      potentialAction:
+        type: "object"
+        description: "Indicates a potential Action, which describes an idealized action\
+          \ in which this thing would play an  object  role."
+        properties: {}
+      mainEntityOfPage:
+        type: "string"
+        format: "uri"
+        description: "Indicates a page (or other CreativeWork) for which this thing\
+          \ is the main entity being described. See background notes for details."
+      description:
+        type: "string"
+        description: "A description of the item."
+      disambiguatingDescription:
+        type: "string"
+        description: "A sub property of description. A short description of the item\
+          \ used to disambiguate from other, similar items. Information from other\
+          \ properties (in particular, name) may be necessary for the description\
+          \ to be useful for disambiguation."
+      alternateName:
+        type: "string"
+        description: "An alias for the item."
+    description: "An organization such as a school, NGO, corporation, club, etc."
+  AggregateRating:
+    properties:
+      itemReviewed:
+        type: "object"
+        description: "The item that is being reviewed/rated."
+        properties: {}
+      reviewCount:
+        type: "integer"
+        format: "int32"
+        description: "The count of total number of reviews."
+      ratingCount:
+        type: "integer"
+        format: "int32"
+        description: "The count of total number of ratings."
+      ratingValue:
+        type: "number"
+        format: "float"
+        description: "The rating for the content."
+      bestRating:
+        type: "string"
+        description: "The highest value allowed in this rating system. If bestRating\
+          \ is omitted, 5 is assumed."
+      author:
+        type: "object"
+        description: "The author of this content or rating. Please note that author\
+          \ is special in that HTML 5 provides a special mechanism for indicating\
+          \ authorship via the rel tag. That is equivalent to this and may be used\
+          \ interchangeably."
+        properties: {}
+      worstRating:
+        type: "string"
+        description: "The lowest value allowed in this rating system. If worstRating\
+          \ is omitted, 1 is assumed."
+      sameAs:
+        type: "string"
+        format: "uri"
+        description: "URL of a reference Web page that unambiguously indicates the\
+          \ item s identity. E.g. the URL of the item s Wikipedia page, Wikidata entry,\
+          \ or official website."
+      url:
+        type: "string"
+        format: "uri"
+        description: "URL of the item."
+      image:
+        type: "object"
+        description: "An image of the item. This can be a URL or a fully described\
+          \ ImageObject."
+        properties: {}
+      additionalType:
+        type: "string"
+        format: "uri"
+        description: "An additional type for the item, typically used for adding more\
+          \ specific types from external vocabularies in microdata syntax. This is\
+          \ a relationship between something and a class that the thing is in. In\
+          \ RDFa syntax, it is better to use the native RDFa syntax - the  typeof\
+          \  attribute - for multiple types. Schema.org tools may have only weaker\
+          \ understanding of extra types, in particular those defined externally."
+      name:
+        type: "string"
+        description: "The name of the item."
+      identifier:
+        type: "string"
+        format: "uri"
+        description: "The identifier property represents any kind of identifier for\
+          \ any kind of Thing, such as ISBNs, GTIN codes, UUIDs etc. Schema.org provides\
+          \ dedicated properties for representing many of these, either as textual\
+          \ strings or as URL (URI) links. See background notes for more details."
+      potentialAction:
+        type: "object"
+        description: "Indicates a potential Action, which describes an idealized action\
+          \ in which this thing would play an  object  role."
+        properties: {}
+      mainEntityOfPage:
+        type: "string"
+        format: "uri"
+        description: "Indicates a page (or other CreativeWork) for which this thing\
+          \ is the main entity being described. See background notes for details."
+      description:
+        type: "string"
+        description: "A description of the item."
+      disambiguatingDescription:
+        type: "string"
+        description: "A sub property of description. A short description of the item\
+          \ used to disambiguate from other, similar items. Information from other\
+          \ properties (in particular, name) may be necessary for the description\
+          \ to be useful for disambiguation."
+      alternateName:
+        type: "string"
+        description: "An alias for the item."
+    description: "The average rating based on multiple ratings or reviews."
+responses:
+  Standard400Response:
+    description: "Invalid request."
+    schema:
+      $ref: "#/definitions/Error"
+  Standard500Response:
+    description: "An unexpected server error occurred."
+    schema:
+      $ref: "#/definitions/Error"

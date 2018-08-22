@@ -1,0 +1,19 @@
+<VirtualHost *:{{ ap_config.content_host.port }}>
+
+    DocumentRoot "/var/www/content-host"
+
+    <Directory /var/www/content-host>
+        Order deny,allow
+        Allow from all
+        SetHandler default-handler
+    </Directory>
+
+    ServerName "localhost"
+    ServerPath "/content-host/"
+
+    ServerAdmin webmaster@localhost
+
+    ErrorLog ${APACHE_LOG_DIR}/content-host.error.log
+    CustomLog ${APACHE_LOG_DIR}/content-host.access.log combined
+
+</VirtualHost>

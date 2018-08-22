@@ -1,0 +1,29 @@
+---
+
+moodle:
+  data_dir:   "/opt/tla/moodle_data"
+  web_root:   "/var/www/moodle"
+  root_url:   "http://{{ default_hostname | default('localhost') }}"
+  port:       8090
+  version:    "MOODLE_31_STABLE"
+  vhost_conf: "moodle_vhost.conf.j2"
+  owner:      "{{ apache2.owner }}"
+  group:      "{{ apache2.group }}"
+  admin: {}
+    #username: "" # SET ME IN PLAYBOOK OR INVENTORY
+    #password: "" # SET ME IN PLAYBOOK OR INVENTORY
+    #email: "" # SET ME IN PLAYBOOK OR INVENTORY
+
+  init_cache_dir: "{{ init_cache_dir | default('/var/cache/ansible') }}/moodle_xapi"
+
+moodle_xapi:
+  source_dir: "moodle-xapi"
+  config:
+    idprovider:     "keycloak-server"
+    backgroundmode: 0
+    maxbatchsize:   0
+    lrs: {}
+      # endpoint: ""
+      # username: ""
+      # password: ""
+    version: "2016060200"

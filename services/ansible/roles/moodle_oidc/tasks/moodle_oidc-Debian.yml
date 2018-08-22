@@ -1,0 +1,112 @@
+---
+
+- name: "Download Moodle OpenID Connect Plugin ({{ moodle_oidc.download_url }})" 
+  connection: local
+  become:     false
+  get_url:
+    url:  "{{ moodle_oidc.download_url }}"
+    dest: "{{ moodle_oidc.download_cache_dir }}/{{ moodle_oidc.download_url | basename }}"
+    checksum: "{{ moodle_oidc.checksum | default(omit) }}"
+
+# Directory should already exist, since it is installed with Moodle
+#- name: "Create Moodle Auth Directory"
+#  file:
+#    path:    "{{ moodle_oidc.web_root }}/auth"
+#    state:   "directory"
+#    owner:   "{{ moodle_oidc.owner }}"
+#    group:   "{{ moodle_oidc.group }}"
+
+- name: "Install Unzip Tool"
+  apt: name="unzip" state=present update_cache=true cache_valid_time=3600
+
+- name: "Decompress OpenID Plugin Tarball"
+  unarchive:
+    src:     "{{ moodle_oidc.download_cache_dir }}/{{ moodle_oidc.download_url | basename }}"
+    dest:    "{{ moodle_oidc.web_root }}/auth"
+    creates: "{{ moodle_oidc.web_root }}/auth/oidc"
+    owner:   "{{ moodle_oidc.owner }}"
+    group:   "{{ moodle_oidc.group }}"
+    copy:    yes
+
+- name: "Log In to Moodle"
+  shell: |
+    curl -v -L -X POST \
+         -c {{ moodle_oidc.data_dir }}/cookies.txt \
+         -F "username={{ moodle_oidc.admin.username }}" \
+         -F "password={{ moodle_oidc.admin.password }}" \
+         "{{ moodle_oidc.base_url }}/login/index.php" \
+         2>&1 \
+         > {{ moodle_oidc.data_dir }}/cookies.txt
+  args:
+    creates:    "{{ moodle_oidc.data_dir }}/cookies.txt"
+    executable: "/bin/bash"
+    warn: no
+
+- name: "Install OpenID Plugin to Moodle"
+  shell: |
+    curl -v -L -X GET \
+         -b {{ moodle_oidc.data_dir }}/cookies.txt \ 
+         -c {{ moodle_oidc.data_dir }}/cookies.txt \
+         "{{ moodle_oidc.base_url }}/admin/index.php?cache=0&confirmplugincheck=1" \
+         2>&1 \
+         > {{ moodle_oidc.data_dir }}/oidc_plugin_install.txt
+  args:
+    creates:    "{{ moodle_oidc.data_dir }}/oidc_plugin_install.txt"
+    executable: "/bin/bash"
+    warn: no
+
+- name: "Get Session Key from Response"
+  shell: |
+    grep -Po "(?<=\"sesskey\":\")(.*?)(?=\")" {{ moodle.data_dir }}/oidc_plugin_install.txt
+  args:
+    executable: "/bin/bash"
+  register: _moodle_session_key
+  changed_when: False 
+
+- name: Debug
+  debug: msg="{{_moodle_session_key}}"
+
+- name: "Configure Moodle xAPI Plugin"
+  shell: |
+    curl -v -L -X POST \
+         -b {{ moodle_oidc.data_dir }}/cookies.txt \ 
+         -c {{ moodle_oidc.data_dir }}/cookies.txt \
+         -F "sesskey={{ _moodle_session_key.stdout }}" \
+         -F "return=" \
+         -F "s_auth_oidc_opname={{ _moodle_oidc_config.s_auth_oidc_opname }}" \
+         -F "s_auth_oidc_clientid={{ _moodle_oidc_config.s_auth_oidc_clientid }}" \
+         -F "s_auth_oidc_clientsecret={{ _moodle_oidc_config.s_auth_oidc_clientsecret }}" \
+         -F "s_auth_oidc_authendpoint={{ _moodle_oidc_config.s_auth_oidc_authendpoint }}" \
+         -F "s_auth_oidc_tokenendpoint={{ _moodle_oidc_config.s_auth_oidc_tokenendpoint }}" \
+         -F "s_auth_oidc_oidcresource={{ _moodle_oidc_config.s_auth_oidc_oidcresource }}" \
+         -F "s_auth_oidc_autoappend={{ _moodle_oidc_config.s_auth_oidc_autoappend }}" \
+         -F "s_auth_oidc_domainhint={{ _moodle_oidc_config.s_auth_oidc_domainhint }}" \
+         -F "s_auth_oidc_loginflow={{ _moodle_oidc_config.s_auth_oidc_loginflow }}" \
+         -F "s_auth_oidc_userrestrictions={{ _moodle_oidc_config.s_auth_oidc_userrestrictions }}" \
+         -F "s_auth_oidc_debugmode={{ _moodle_oidc_config.s_auth_oidc_debugmode }}" \
+         -F "s_auth_oidc_icon={{ _moodle_oidc_config.s_auth_oidc_icon }}" \
+         -F "s_auth_oidc_customicon={{ _moodle_oidc_config.s_auth_oidc_customicon }}" \
+         "{{ moodle_oidc.base_url }}/admin/settings.php?section=authsettingoidc" \
+         2>&1 \
+         > {{ moodle_oidc.data_dir }}/oidc_plugin_config.txt
+  args:
+    creates:    "{{ moodle_oidc.data_dir }}/oidc_plugin_config.txt"
+    executable: "/bin/bash"
+    warn: no
+
+- name: "Enable Moodle OpenID Plugin"
+  shell: |
+    curl -v -L -X GET \
+         -b {{ moodle_oidc.data_dir }}/cookies.txt \ 
+         -c {{ moodle_oidc.data_dir }}/cookies.txt \
+         "{{ moodle_oidc.base_url }}/admin/auth.php?sesskey={{ _moodle_session_key.stdout }}&action=enable&auth=oidc" \
+         2>&1 \
+         > {{ moodle_oidc.data_dir }}/oidc_plugin_enable.txt
+  args:
+    creates:    "{{ moodle_oidc.data_dir }}/oidc_plugin_enable.txt"
+    executable: "/bin/bash"
+    warn: no
+
+#- name: "Configure Login Page to Redirect to OIDC"
+# TODO:
+#update mdl_config set value='http://<our-ip>:8090/auth/oidc/' where name='alternateloginurl';

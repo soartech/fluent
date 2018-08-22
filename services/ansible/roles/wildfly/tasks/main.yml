@@ -1,0 +1,25 @@
+---
+
+- name: "Initialize Wildfly Home"
+  tags: always
+  set_fact:
+    wildfly_defaults: "{{ wildfly_defaults | combine({ 'home': '/opt/wildfly/wildfly-' + wildfly.version, 'download_url': 'http://download.jboss.org/wildfly/{{ wildfly.version }}/wildfly-{{ wildfly.version }}.tar.gz' }) }}"
+  when: "wildfly.version is defined"
+
+- name: "Initialize Wildfly Unzip Directory"
+  tags: always
+  set_fact:
+    wildfly_defaults: "{{ wildfly_defaults | combine({ 'unzip_dir': '{{ wildfly.home | dirname }}' }) }}"
+  when: "wildfly.home is defined"
+
+- name: "Initialize Wildfly Configuration"
+  tags: always
+  set_fact:
+    wildfly: "{{ wildfly_defaults | combine(wildfly | default({}), recursive=True) }}"
+
+- name: "Debug Role Configuration"
+  tags: always
+  debug:
+    msg: "{{ wildfly }}"
+
+- include: "wildfly9-{{ ansible_os_family }}.yml"

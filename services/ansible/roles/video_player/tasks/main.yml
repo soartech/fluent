@@ -1,0 +1,65 @@
+---
+
+- name: "Initialize xAPI Video Player Configuration"
+  set_fact:
+    video_player: "{{ video_player_defaults | combine(video_player | default({}), recursive=True) }}"
+
+- name: "Debug Role Configuration"
+  debug:
+    msg: "{{ video_player }}"
+
+- name: "Create Static Viewer Web Root Directory"
+  file:
+    path:    "{{ video_player.web_root }}"
+    state:   directory
+    owner:   "{{ video_player.owner }}"
+    group:   "{{ video_player.group }}"
+
+- name: "Copy Code to Web Root"
+  copy:
+    src:  "{{ video_player.source_dir }}/"
+    dest: "{{ video_player.web_root }}"
+
+- name: "Copy keycloak.json Web Root"
+  template:
+    src:  "keycloak.json.j2"
+    dest: "{{ video_player.web_root }}/keycloak.json"
+
+# These are replaced by the task below
+#- name: "Configure LRS Endpoint Address"
+#  lineinfile:
+#    dest:     "{{ video_player.web_root }}/index.html"
+#    line:     "        \"endpoint\" : \"{{ video_player.lrs.endpoint_url }}\","
+#    regexp:   "['\"]endpoint['\"]\\s*:"
+#
+#- name: "Configure LRS Endpoint Credentials"
+#  lineinfile:
+#    dest:     "{{ video_player.web_root }}/index.html"
+#    line:     "        \"auth\" : \"Basic \" + toBase64(\"{{ video_player.lrs.username }}:{{ video_player.lrs.password }}\"),"
+#    regexp:   "['\"]auth['\"]\\s*:"
+
+- name: "Configure LRS Endpoint"
+  template:
+    src:  "config.js.j2"
+    dest: "{{ video_player.web_root }}/config.js"
+
+- name: "Copy Video Player VirtualHost File"
+  template:
+    src:  "{{ video_player.vhost_file }}"
+    dest: "/etc/apache2/sites-available/video-player-vhost.conf"
+  notify: "Restart Apache"
+
+- name: "Add Listening Port to ports.conf"
+  lineinfile:
+    dest: "/etc/apache2/ports.conf"
+    line: "Listen {{ video_player.port }}"
+  notify: "Restart Apache"
+
+- name: "Enable Moodle VirtualHost"
+  shell: "a2ensite video-player-vhost"
+  args:
+    creates: "/etc/apache2/sites-enabled/video-player-vhost.conf"
+  notify: "Restart Apache"
+
+# Restart services if needed
+- meta: flush_handlers

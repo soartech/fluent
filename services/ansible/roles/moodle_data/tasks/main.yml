@@ -1,0 +1,404 @@
+---
+
+- name: "Get Course ID"
+  shell: "psql moodle -c \"select id from mdl_course where shortname='{{ moodle_data.courses.shortname }}';\" | sed -ne '3p'"
+  become_user: postgres
+  register: check_for_moodle_course_id
+  changed_when: False
+  #failed_when:  "'(0 rows)' in moodle_course_id.stdout"
+
+- name: "Set Course Exists Fact"
+  set_fact:
+    course_doesnt_exist: "{{ '(0 rows)' in check_for_moodle_course_id.stdout }}"
+
+- name: "Log In to Moodle"
+  shell: |
+    curl -v -L -X POST \
+         -c {{ moodle.data_dir }}/cookies.txt \
+         -F "username={{ moodle.admin.username }}" \
+         -F "password={{ moodle.admin.password }}" \
+         "{{ moodle.root_url }}:{{ moodle.port }}/login/index.php" \
+         2>&1 \
+         > {{ moodle.data_dir }}/login_result.txt
+  args:
+    executable: "/bin/bash"
+    warn: no
+
+- name: "Get Session Key from Response"
+  shell: |
+    grep -m1 -Po "(?<=\"sesskey\":\")(.*?)(?=\")" {{ moodle.data_dir }}/login_result.txt
+  args:
+    executable: "/bin/bash"
+  register: moodle_session_key
+  changed_when: False 
+
+- name: "Get Upload Info for Moodle"
+  shell: |
+    curl -v -L -X POST \
+         -b {{ moodle.data_dir }}/cookies.txt \
+         -c {{ moodle.data_dir }}/cookies.txt \
+         "{{ moodle.root_url }}:{{ moodle.port }}/backup/restorefile.php?contextid=1" \
+         2>&1 \
+         > {{ moodle.data_dir }}/restore_result.txt
+  args:
+    executable: "/bin/bash"
+    warn: no
+  when: "course_doesnt_exist"
+
+- name: "Get Client ID from Response"
+  shell: |
+    grep -m1 -Po "(?<=\"client_id\":\")(.*?)(?=\")" {{ moodle.data_dir }}/restore_result.txt
+  args:
+    executable: "/bin/bash"
+  register: moodle_client_id
+  changed_when: False 
+  when: "course_doesnt_exist"
+
+- name: "Get Item ID from Response"
+  shell: |
+    grep -m1 -Po "(?<=\"itemid\":)(.*?)(?=,)" {{ moodle.data_dir }}/restore_result.txt
+  args:
+    executable: "/bin/bash"
+  register: moodle_item_id
+  changed_when: False 
+  when: "course_doesnt_exist"
+
+- name: "Copy Moodle Course to Server"
+  copy:
+    src:  "{{ moodle_data.courses.backup_file | mandatory }}"
+    dest: "{{ moodle.init_cache_dir }}/{{ moodle_data.courses.backup_file | basename }}"
+  when: "course_doesnt_exist"
+
+- name: "Upload Pen Testing Course File"
+  shell: |
+    curl '{{ moodle.root_url }}:{{ moodle.port }}/repository/repository_ajax.php?action=upload' \
+         -v -L -X POST \
+         -b {{ moodle.data_dir }}/cookies.txt \ 
+         -c {{ moodle.data_dir }}/cookies.txt \
+         -F repo_upload_file=@{{ moodle.init_cache_dir }}/{{ moodle_data.courses.backup_file | basename }} \
+         -F title=pen-testing-class \
+         -F author='Admin User' \
+         -F license=allrightsreserved \
+         -F repo_id=4 \
+         -F p='' \
+         -F page='' \
+         -F env=filepicker \
+         -F sesskey={{ moodle_session_key.stdout }} \
+         -F client_id='{{ moodle_client_id.stdout }}' \
+         -F itemid={{ moodle_item_id.stdout }} \
+         -F maxbytes=-1 \
+         -F areamaxbytes=-1 \
+         -F ctx_id=1 \
+         -F savepath=/ \
+         2>&1 \
+         > {{ moodle.data_dir }}/course_upload_result.txt
+  args:
+    executable: "/bin/bash"
+    warn: no
+  when: "course_doesnt_exist"
+
+- name: "Retrieve File ID"
+  shell: |
+    curl '{{ moodle.root_url }}:{{ moodle.port }}/backup/restorefile.php' \
+         -v -L \
+         -b {{ moodle.data_dir }}/cookies.txt \ 
+         -c {{ moodle.data_dir }}/cookies.txt \
+         -d contextid=1 \
+         -d sesskey={{ moodle_session_key.stdout }} \
+         -d _qf__course_restore_form=1 \
+         -d backupfile={{ moodle_item_id.stdout }} \
+         -d submitbutton=Restore \
+         2>> {{ moodle.data_dir }}/file_id.txt \
+          >> {{ moodle.data_dir }}/file_id.txt; \
+         grep -m1 -Po "(?<=name=\"filepath\" value=\")[a-z0-9]+" {{ moodle.data_dir }}/file_id.txt
+  args:
+    executable: "/bin/bash"
+    warn: no
+  register: moodle_backup_file_id
+  when: "course_doesnt_exist"
+
+- name: "Do Step 1 of Moodle Course Restore"
+  shell: |
+    curl '{{ moodle.root_url }}:{{ moodle.port }}/backup/restore.php' \
+         -v -L \
+         -X POST \
+         -b {{ moodle.data_dir }}/cookies.txt \ 
+         -c {{ moodle.data_dir }}/cookies.txt \
+         -d 'contextid=1' \
+         -d 'filepath={{ moodle_backup_file_id.stdout }}' \
+         -d 'stage=2' \
+         -d 'sesskey={{ moodle_session_key.stdout }}' \
+         2>> {{ moodle.data_dir }}/moodle_restore_1.txt \
+          >> {{ moodle.data_dir }}/moodle_restore_1.txt
+  args:
+    executable: "/bin/bash"
+    warn: no
+  register: moodle_restore_res
+  when: "course_doesnt_exist"
+
+- name: "Do Step 2 of Moodle Course Restore"
+  shell: |
+    curl '{{ moodle.root_url }}:{{ moodle.port }}/backup/restore.php'  \
+         -v -L \
+         -X POST \
+         -b {{ moodle.data_dir }}/cookies.txt \ 
+         -c {{ moodle.data_dir }}/cookies.txt \
+         -d 'contextid=1' \
+         -d 'filepath={{ moodle_backup_file_id.stdout }}' \
+         -d 'stage=4' \
+         -d 'sesskey={{ moodle_session_key.stdout }}' \
+         -d 'target=2' \
+         -d 'targetid=1' \
+         -d 'catsearch=' \
+         2>> {{ moodle.data_dir }}/moodle_restore_2.txt \
+          >> {{ moodle.data_dir }}/moodle_restore_2.txt
+  args:
+    executable: "/bin/bash"
+    warn: no
+  when: "course_doesnt_exist"
+
+- name: "Get Restore ID from Response"
+  shell: |
+    grep -m1 -Po "(?<= name=\"restore\" type=\"hidden\" value=\")[a-z0-9]+" {{ moodle.data_dir }}/moodle_restore_2.txt
+  args:
+    executable: "/bin/bash"
+  register: moodle_restore_id
+  changed_when: False 
+  when: "course_doesnt_exist"
+
+- name: "Do Step 3 of Moodle Course Restore"
+  shell: |
+    curl '{{ moodle.root_url }}:{{ moodle.port }}/backup/restore.php'  \
+         -v -L \
+         -X POST \
+         -b {{ moodle.data_dir }}/cookies.txt \ 
+         -c {{ moodle.data_dir }}/cookies.txt \
+         -d 'contextid=1' \
+         -d 'filepath={{ moodle_backup_file_id.stdout }}' \
+         -d 'stage=4' \
+         -d 'restore={{ moodle_restore_id.stdout }}' \
+         -d 'sesskey={{ moodle_session_key.stdout }}' \
+         -d '_qf__restore_settings_form=1' \
+         -d 'setting_root_users=0' \
+         -d 'setting_root_enrol_migratetomanual=0' \
+         -d 'setting_root_role_assignments=0' \
+         -d 'setting_root_comments=0' \
+         -d 'setting_root_badges=0' \
+         -d 'setting_root_userscompletion=0' \
+         -d 'setting_root_logs=0' \
+         -d 'setting_root_grade_histories=0' \
+         -d 'setting_root_activities=1' \
+         -d 'setting_root_blocks=1' \
+         -d 'setting_root_filters=1' \
+         -d 'setting_root_calendarevents=1' \
+         -d 'setting_root_groups=1' \
+         -d 'setting_root_competencies=1' \
+         -d 'submitbutton=Next' \
+         2>> {{ moodle.data_dir }}/moodle_restore_3.txt \
+          >> {{ moodle.data_dir }}/moodle_restore_3.txt
+  args:
+    executable: "/bin/bash"
+    warn: no
+  when: "course_doesnt_exist"
+
+- name: "Do Step 4 of Moodle Course Restore"
+  shell: |
+    curl '{{ moodle.root_url }}:{{ moodle.port }}/backup/restore.php'  \
+         -b {{ moodle.data_dir }}/cookies.txt \ 
+         -c {{ moodle.data_dir }}/cookies.txt \
+         -d 'contextid=1' \
+         -d 'stage=16' \
+         -d 'restore={{ moodle_restore_id.stdout }}' \
+         -d 'contextid=1' \
+         -d 'sesskey={{ moodle_session_key.stdout }}' \
+         -d '_qf__restore_review_form=1' \
+         -d 'setting_root_users=0' \
+         -d 'setting_root_enrol_migratetomanual=0' \
+         -d 'setting_root_role_assignments=0' \
+         -d 'setting_root_activities=1' \
+         -d 'setting_root_blocks=1' \
+         -d 'setting_root_filters=1' \
+         -d 'setting_root_comments=0' \
+         -d 'setting_root_badges=0' \
+         -d 'setting_root_calendarevents=1' \
+         -d 'setting_root_userscompletion=0' \
+         -d 'setting_root_logs=0' \
+         -d 'setting_root_grade_histories=0' \
+         -d 'setting_root_groups=1' \
+         -d 'setting_root_competencies=1' \
+         -d 'setting_course_course_fullname={{  moodle_data.courses.fullname  | urlencode }}' \
+         -d 'setting_course_course_shortname={{ moodle_data.courses.shortname | urlencode }}' \
+         -d 'setting_course_course_startdate=1470870000' \
+         -d 'setting_course_keep_roles_and_enrolments=0' \
+         -d 'setting_course_keep_groups_and_groupings=0' \
+         -d 'setting_course_overwrite_conf=1' \
+         -d 'setting_section_section_1_included=1' \
+         -d 'setting_section_section_1_userinfo=0' \
+         -d 'setting_activity_forum_1_included=1' \
+         -d 'setting_activity_forum_1_userinfo=0' \
+         -d 'setting_section_section_2_included=1' \
+         -d 'setting_section_section_2_userinfo=0' \
+         -d 'setting_activity_quiz_2_included=1' \
+         -d 'setting_activity_quiz_2_userinfo=0' \
+         -d 'setting_activity_quiz_3_included=1' \
+         -d 'setting_activity_quiz_3_userinfo=0' \
+         -d 'setting_section_section_3_included=1' \
+         -d 'setting_section_section_3_userinfo=0' \
+         -d 'setting_section_section_4_included=1' \
+         -d 'setting_section_section_4_userinfo=0' \
+         -d 'setting_section_section_5_included=1' \
+         -d 'setting_section_section_5_userinfo=0' \
+         -d 'setting_section_section_6_included=1' \
+         -d 'setting_section_section_6_userinfo=0' \
+         -d 'setting_section_section_7_included=1' \
+         -d 'setting_section_section_7_userinfo=0' \
+         -d 'setting_section_section_8_included=1' \
+         -d 'setting_section_section_8_userinfo=0' \
+         -d 'setting_section_section_9_included=1' \
+         -d 'setting_section_section_9_userinfo=0' \
+         -d 'setting_section_section_10_included=1' \
+         -d 'setting_section_section_10_userinfo=0' \
+         -d 'setting_section_section_11_included=1' \
+         -d 'setting_section_section_11_userinfo=0' \
+         -d 'submitbutton=Perform+restore' \
+         2>> {{ moodle.data_dir }}/moodle_restore_4.txt \
+          >> {{ moodle.data_dir }}/moodle_restore_4.txt
+  args:
+    executable: "/bin/bash"
+    warn: no
+  when: "course_doesnt_exist"
+
+- name: "Do Step 5 of Moodle Course Restore"
+  shell: |
+    curl '{{ moodle.root_url }}:{{ moodle.port }}/backup/restore.php'  \
+         -b {{ moodle.data_dir }}/cookies.txt \ 
+         -c {{ moodle.data_dir }}/cookies.txt \
+         -d 'contextid=1' \
+         -d 'restore={{ moodle_restore_id.stdout }}' \
+         -d 'stage=32' \
+         -d 'substage=2' \
+         -d 'sesskey={{ moodle_session_key.stdout }}' \
+         -d 'mapping5=5' \
+         2>> {{ moodle.data_dir }}/moodle_restore_end.txt \
+          >> {{ moodle.data_dir }}/moodle_restore_end.txt
+  args:
+    executable: "/bin/bash"
+    warn: no
+  when: "course_doesnt_exist"
+
+- set_fact:
+    moodle_users:
+      'angela.diablo':
+        password:   "insertPassword"
+        first_name: "Angela"
+        last_name:  "Diablo"
+        email:      "angela.diablo@soartech.com"
+
+- name: "Get Course ID Post Install"
+  shell: "psql moodle -c \"select id from mdl_course where shortname='{{ moodle_data.courses.shortname }}';\" | sed -ne '3p'"
+  become_user: postgres
+  register: moodle_course_id
+  changed_when: False
+  failed_when:  "'(0 rows)' in moodle_course_id.stdout"
+
+- name: "Get Enrol ID"
+  shell: "psql moodle -c \"select id from mdl_enrol where enrol='manual' and courseid={{ moodle_course_id.stdout }};\" | sed -ne '3p'"
+  become_user: postgres
+  register: moodle_enrol_id
+  changed_when: False
+  failed_when:  "'(0 rows)' in moodle_enrol_id.stdout"
+
+- name: "Create Moodle Users"
+  shell: |
+    curl '{{ moodle.root_url }}:{{ moodle.port }}/user/editadvanced.php' \
+         -X POST \
+         -b {{ moodle.data_dir }}/cookies.txt \ 
+         -c {{ moodle.data_dir }}/cookies.txt \
+         -d 'id=-1' \
+         -d 'returnto=' \
+         -d 'course=1' \
+         -d 'mform_isexpanded_id_moodle_picture=1' \
+         -d 'sesskey={{ moodle_session_key.stdout }}' \
+         -d '_qf__user_editadvanced_form=1' \
+         -d 'mform_isexpanded_id_moodle=1' \
+         -d 'mform_isexpanded_id_moodle_additional_names=0' \
+         -d 'mform_isexpanded_id_moodle_interests=0' \
+         -d 'mform_isexpanded_id_moodle_optional=0' \
+         -d 'username={{ item.key }}' \
+         -d 'auth=manual' \
+         -d 'suspended=0' \
+         -d 'newpassword={{ item.value.password }}' \
+         -d 'preference_auth_forcepasswordchange=0' \
+         -d 'firstname={{ item.value.first_name }}' \
+         -d 'lastname={{ item.value.last_name }}' \
+         -d 'email={{ item.value.email }}' \
+         -d 'maildisplay=2' \
+         -d 'city=' \
+         -d 'country=' \
+         -d 'timezone=99' \
+         -d 'description_editor%5Btext%5D=' \
+         -d 'description_editor%5Bformat%5D=1' \
+         -d 'imagefile=242822952' \
+         -d 'imagealt=' \
+         -d 'firstnamephonetic=' \
+         -d 'lastnamephonetic=' \
+         -d 'middlename=' \
+         -d 'alternatename=' \
+         -d 'interests=_qf__force_multiselect_submission' \
+         -d 'url=' \
+         -d 'icq=' \
+         -d 'skype=' \
+         -d 'aim=' \
+         -d 'yahoo=' \
+         -d 'msn=' \
+         -d 'idnumber=' \
+         -d 'institution=' \
+         -d 'department=' \
+         -d 'phone1=' \
+         -d 'phone2=' \
+         -d 'address=' \
+         -d 'submitbutton=Create+user' \
+         2>> {{ moodle.data_dir }}/moodle_user_{{ item.key }}.txt \
+          >> {{ moodle.data_dir }}/moodle_user_{{ item.key }}.txt
+  args:
+    creates:    "{{ moodle.data_dir }}/moodle_user_{{ item.key }}.txt"
+    executable: "/bin/bash"
+    warn: no
+  with_dict: "{{ moodle_users }}"
+
+- name: "Get User IDs"
+  shell: "psql moodle -c \"select id from mdl_user where username='{{ item.key }}';\" | sed -ne '3p'"
+  with_dict: "{{ moodle_users }}"
+  become_user: postgres
+  register: moodle_user_ids
+  changed_when: False
+  failed_when:  "'(0 rows)' in moodle_user_ids.stdout"
+
+- name: "Enroll Moodle Users In Course"
+  shell: |
+    curl '{{ moodle.root_url }}:{{ moodle.port }}/enrol/manual/ajax.php' \
+         -X POST \
+         -b {{ moodle.data_dir }}/cookies.txt \ 
+         -c {{ moodle.data_dir }}/cookies.txt \
+         -H 'X-Requested-With: XMLHttpRequest' \
+         -d 'id={{ moodle_course_id.stdout }}' \
+         -d 'userid={{ item.stdout }}' \
+         -d 'enrolid={{ moodle_enrol_id.stdout }}' \
+         -d 'sesskey={{ moodle_session_key.stdout }}' \
+         -d 'action=enrol' \
+         -d 'role=5' \
+         -d 'startdate=4' \
+         -d 'duration=0' \
+         -d 'recovergrades=0' \
+         2>> {{ moodle.data_dir }}/moodle_user_{{ item.item.key }}_enroll.txt \
+          >> {{ moodle.data_dir }}/moodle_user_{{ item.item.key }}_enroll.txt
+  args:
+    creates:    "{{ moodle.data_dir }}/moodle_user_{{ item.item.key }}_enroll.txt"
+    executable: "/bin/bash"
+    warn: no
+  with_items: "{{ moodle_user_ids.results }}"
+
+- name: "Create Flag File"
+  file:
+    path: "{{ moodle.data_dir }}/moodle_course_installed.txt"
+    state: touch

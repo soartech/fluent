@@ -1,0 +1,19 @@
+---
+
+- name: "Copy log_stats script to machine"
+  copy:
+    src:  "{{ log_stats.script_src }}"
+    dest: "{{ log_stats.script_dst }}"
+    mode: 0700
+
+- name: "Set cron job for log_stats script"
+  become: true
+  cron:
+    name: "AWS Monitoring Logging"
+    job:  "{{ log_stats.script_dst }} {{ log_stats.log_file }}"
+    hour:         "{{ log_stats.time.hour         | default(omit) }}"
+    minute:       "{{ log_stats.time.minute       | default(omit) }}"
+    day:          "{{ log_stats.time.day          | default(omit) }}"
+    month:        "{{ log_stats.time.month        | default(omit) }}"
+    weekday:      "{{ log_stats.time.weekday      | default(omit) }}"
+    special_time: "{{ log_stats.time.special_time | default(omit) }}"

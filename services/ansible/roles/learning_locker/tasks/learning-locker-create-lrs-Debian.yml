@@ -1,0 +1,163 @@
+# Create temporary directory to put files
+- file: 
+    path: "{{ learning_locker.tmp_dir }}"
+    state: directory
+
+# Create Admin account for Learning Locker
+- name: "Attempt to create Learning Locker admin account"
+  shell: |
+    curl -v -L \
+         -c {{ learning_locker.tmp_dir }}/cookies \
+         -F "name={{ learning_locker.admin.username }}" \
+         -F "email={{ learning_locker.admin.username }}@soartech.com" \
+         -F "password={{ learning_locker.admin.password }}" \
+         -F "password_confirmation={{ learning_locker.admin.password }}" \
+         "{{ learning_locker.config.app.url }}register" \
+         2>&1 \
+         > {{ learning_locker.tmp_dir }}/learning_locker_result.txt
+  args:
+    executable: "/bin/bash"
+    warn: no
+
+# Make sure we aren't already registered (The result will be htm lof the login page)
+- name: "Check if LRS has already been configured"
+  shell: |
+    grep -m1 -Po "<form method=\"POST\" action=\"{{ learning_locker.config.app.url }}login\"" {{ learning_locker.tmp_dir }}/learning_locker_result.txt
+  args:
+    executable: "/bin/bash"
+  register: _learning_locker_preconfigured_result
+  failed_when: False
+
+- set_fact:
+    learning_locker_unconfigured: "{{ _learning_locker_preconfigured_result.rc == 1 }}"
+
+# Grab the User ID from the response
+- name: "Get admin UID from Response"
+  shell: |
+    grep -m1 -Po "(?<={{ learning_locker.config.app.url }}users/)(.*?)(?=/edit)" {{ learning_locker.tmp_dir }}/learning_locker_result.txt
+  args:
+    executable: "/bin/bash"
+  register: _learning_locker_admin_result
+  changed_when: False 
+  when: learning_locker_unconfigured
+
+- set_fact:
+    learning_locker_admin_uid: "{{ _learning_locker_admin_result.stdout }}"
+  when: learning_locker_unconfigured
+
+# Get the CSRF Token from the response
+- name: "Get CSRF Token from Response"
+  shell: |
+    grep -m1 -Po "(?<=<meta name=\"token\" content=\")(.*?)(?=\">)" {{ learning_locker.tmp_dir }}/learning_locker_result.txt
+  args:
+    executable: "/bin/bash"
+  register: _learning_locker_csrf_token_result
+  changed_when: False
+  when: learning_locker_unconfigured
+
+- set_fact:
+    learning_locker_csrf_token: "{{ _learning_locker_csrf_token_result.stdout }}"
+  when: learning_locker_unconfigured
+
+# Set email as verified (Required to create LRS)
+- name: "\"Verify\" email address for admin account (Required to create LRS)"
+  shell: |
+    curl -v -L -X PUT \
+        -b {{ learning_locker.tmp_dir }}/cookies \
+        -c {{ learning_locker.tmp_dir }}/cookies \
+        -H 'X-CSRF-Token: {{ learning_locker_csrf_token }}' \
+        -H 'X-Requested-With: XMLHttpRequest' \
+        '{{ learning_locker.config.app.url }}site/users/verify/{{ learning_locker_admin_uid }}'
+  args:
+    executable: "/bin/bash"
+    warn: no
+  when: learning_locker_unconfigured
+
+# Create new LRS
+- name: "Create New LRS"
+  shell: |
+    curl -v -L \
+         -b {{ learning_locker.tmp_dir }}/cookies \
+         -c {{ learning_locker.tmp_dir }}/cookies \
+         -F "title={{ learning_locker.lrs_name }}" \
+         -F "description=" \
+         -H 'X-CSRF-Token: {{ learning_locker_csrf_token }}' \
+         -H 'X-Requested-With: XMLHttpRequest' \
+         "{{ learning_locker.config.app.url }}lrs"
+  args:
+    executable: "/bin/bash"
+    warn: no
+  when: learning_locker_unconfigured
+
+# Get the list of LRSes
+- name: "Retrieve list of LRSes"
+  shell: |
+    curl -v -L -X GET \
+         -b {{ learning_locker.tmp_dir }}/cookies \
+         -c {{ learning_locker.tmp_dir }}/cookies \
+         "{{ learning_locker.config.app.url }}site/lrs" \
+         2>&1 \
+         > {{ learning_locker.tmp_dir }}/learning_locker_result.txt
+  args:
+    executable: "/bin/bash"
+    warn: no
+  when: learning_locker_unconfigured
+
+# Get the LRS UID from result
+- name: "Get LRS UID from Response"
+  shell: |
+    grep -m1 -Po "(?<=\"_id\":\")(.*?)(?=\")" {{ learning_locker.tmp_dir }}/learning_locker_result.txt
+  args:
+    executable: "/bin/bash"
+  register: _learning_locker_lrs_result
+  changed_when: False 
+  when: learning_locker_unconfigured
+
+- set_fact:
+    learning_locker_lrs_uid: "{{ _learning_locker_lrs_result.stdout }}"
+  when: learning_locker_unconfigured
+
+# Get client credentials page
+- name: "Get page detailing client credentials"
+  shell: |
+    curl -v -L -X GET \
+         -b {{ learning_locker.tmp_dir }}/cookies \
+         -c {{ learning_locker.tmp_dir }}/cookies \
+         "{{ learning_locker.config.app.url }}lrs/{{ learning_locker_lrs_uid }}/client/manage" \
+         2>&1 \
+         > {{ learning_locker.tmp_dir }}/learning_locker_result.txt
+  args:
+    executable: "/bin/bash"
+    warn: no
+  when: learning_locker_unconfigured
+
+# Parse out the client username & pw
+- name: "Get Username & Password from Response"
+  shell: |
+    grep -m2 -Po "(?<=<a href=\"#\" class=\"copyable\" title=\"Click to copy\">)(.*?)(?=</a>)" {{ learning_locker.tmp_dir }}/learning_locker_result.txt
+  args:
+    executable: "/bin/bash"
+  register: _learning_locker_client_result
+  changed_when: False 
+  when: learning_locker_unconfigured
+
+# Parse out the creds to an object
+- set_fact:
+    learning_locker_client_creds:
+        username: "{{ _learning_locker_client_result.stdout.split('\n')[0] }}"
+        password: "{{ _learning_locker_client_result.stdout.split('\n')[1] }}"
+  when: learning_locker_unconfigured
+
+# Write endpoints file to set the credentials
+- copy:
+    content: "{{ learning_locker_client_creds | to_json }}"
+    dest: "{{ item }}"
+  with_items: "{{ learning_locker.save_creds_locations }}"
+  when: learning_locker_unconfigured
+
+# Delete the temp folder
+- name: "Delete temporary output folder used by this role"
+  file:
+    path: "{{ learning_locker.tmp_dir }}/"
+    state: absent
+  when: learning_locker_unconfigured

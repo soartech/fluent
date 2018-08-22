@@ -1,0 +1,27 @@
+<VirtualHost *:{{ tla_config.recommender_ui_support.port }}>
+
+    DocumentRoot /var/www/recommender-ui-support
+
+    WSGIDaemonProcess recommender-ui-support python-path=/usr/bin/python3
+    WSGIScriptAlias / /var/www/recommender-ui-support/recommender_ui_support.wsgi
+
+    # WSGIRestrictStdout Off
+    WSGIScriptReloading On
+
+    <Directory /var/www/recommender-ui-support>
+        WSGIProcessGroup recommender-ui-support
+        AllowOverride All
+        Require all granted
+    </Directory>
+
+    ServerName {{ st_server_hostname }}
+
+    ServerAdmin webmaster@localhost
+
+    Header add Access-Control-Allow-Origin "*"
+    Header set Access-Control-Allow-Headers "GET, POST, PATCH, DELETE, Content-Type"
+
+    ErrorLog ${APACHE_LOG_DIR}/recommender-ui-support.error.log
+    CustomLog ${APACHE_LOG_DIR}/recommender-ui-support.access.log combined
+
+</VirtualHost>

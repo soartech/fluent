@@ -1,0 +1,20 @@
+<VirtualHost *:{{ discovery_service.port }}>
+
+    DocumentRoot {{ discovery_service.web_root }}
+
+    ServerName {{ discovery_service.server_name }}
+    ServerPath "{{ discovery_service.server_path }}"
+
+    ServerAdmin webmaster@localhost
+
+    ErrorLog ${APACHE_LOG_DIR}/discovery-service.error.log
+    CustomLog ${APACHE_LOG_DIR}/discovery-service.access.log combined
+
+    <Directory {{ discovery_service.web_root }}>
+        AllowOverride All
+        Require all granted
+    </Directory>
+
+</VirtualHost>
+
+# vim: syntax=apache ts=4 sw=4 sts=4 sr noet

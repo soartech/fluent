@@ -1,0 +1,40 @@
+---
+
+mongodb_defaults:
+  package_name: "mongodb-org"
+  version:      "3.4"
+  exe_path:  "/usr/bin/mongo"
+
+  addon_packages: []
+
+  dbs: []
+
+  conf_path: "/etc/mongod.conf"
+  config:
+    storage:
+      dbPath: /var/lib/mongodb
+      journal:
+        enabled: true
+    systemLog:
+      destination: file
+      logAppend: true
+      path: /var/log/mongodb/mongod.log
+    net:
+      port: 27017 # This is the default port
+      bindIp: 127.0.0.1
+
+  owner: root
+  group: root
+
+  init_name: "mongod"
+  init_cache_dir: "{{ init_cache_dir | default('/var/cache/ansible') }}/mongodb"
+  download_cache_dir: "{{ download_cache_dir | default('/tmp') }}"
+
+  apt:
+    update_cache:     true
+    cache_valid_time: 3600
+
+_mongodb_platform_specific_defaults:
+  Ubuntu:
+    trusty: {}
+    xenial: {}

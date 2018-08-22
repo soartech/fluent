@@ -1,0 +1,57 @@
+REMOVE_CONSECUTIVE_ATTEMPTS = False
+
+ACTIVITY_INDEX_ENDPOINT = "{{ tla_config.activity_index.base_url }}"
+
+STUDY_ID = 'FLUENT_2018'
+
+
+class CompetencyCounterConfig(object):
+    class Types(object):
+        ONLINE = "online"
+        OFFLINE = "offline"
+
+    SOURCE = Types.ONLINE
+
+
+class AMQPConfig(object):
+    class Experiences(object):
+        AMQP_HOST = "{{ lrs_hostname }}"
+        AMQP_EXCHANGE = "experiences"
+        AMQP_NAME = "experiences-evidence-mapper"
+        AMQP_USR = "insertUsername"
+        AMQP_PWD = "insertPassword"
+        CONNECTION_ATTEMPTS = 3
+
+    class RawInferences(object):
+        AMQP_HOST = "localhost"
+        AMQP_USR = "insertUsername"
+        AMQP_PWD = "insertPassword"
+        RAW_EXCHANGE_NAME = "raw-inferences"
+
+
+class XApiConfig(object):
+    class Verbs(object):
+        PASSED_VERB_ID = "http://adlnet.gov/expapi/verbs/passed"
+        FAILED_VERB_ID = "http://adlnet.gov/expapi/verbs/failed"
+
+
+# Note - below are only used in testing functions that are not used in the base evidence mapper component.
+class LRSConfig(object):
+    USR = "insertUsername"
+    PWD = "insertPassword"
+    HOST = "http://{{ lrs_hostname }}"
+    PORT = "{{tla_config.lrs.ports.redirect}}"
+    ENDPOINT = "data/xAPI/statements"
+
+
+class LearnerInferenceConfig(object):
+    HOST = "{{ st_server_hostname }}"
+    PORT = "8999"
+    ENDPOINT = "learner-inferences/learners"
+    FULL_PATH = "{{ tla_config.learner_inferences.learner_endpoint }}"
+
+AFM_ENABLED = True
+TRANSFER_LEARNING_ENABLED = False
+BCSE_ENABLED = False
+
+BCSE_THRESHOLD = .8

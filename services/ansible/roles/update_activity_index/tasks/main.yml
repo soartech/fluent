@@ -1,0 +1,27 @@
+---
+
+# Check if flag file exists
+- name: "Check if the .index_populated flag file exists"
+  stat:
+    path: /activity-index/activity-index/.index_populated
+  register: stat_result
+
+# Overwrite activities
+- name: "Overwrite & Add new Activities to Index"
+  shell: "python3 loadActivities.py o"
+  args:
+    chdir: "/activity-index/activity-index/server"
+  when: stat_result.stat.exists == False
+
+# Update activities
+- name: "Update Existing Activities in Index"
+  shell: "python3 loadActivities.py u"
+  args:
+    chdir: "/activity-index/activity-index/server"
+  when: stat_result.stat.exists == True
+
+# Make sure our flag file exists
+- name: "Create .index_populated flag file"
+  file:
+    path: /activity-index/activity-index/.index_populated
+    state: touch

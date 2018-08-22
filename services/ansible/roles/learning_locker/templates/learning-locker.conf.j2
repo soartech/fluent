@@ -1,0 +1,16 @@
+<VirtualHost *:{{ learning_locker.port }}>
+
+    ServerAdmin webmaster@localhost
+    DocumentRoot {{ learning_locker.web_root }}/learninglocker-{{ learning_locker.version }}/public
+
+    ErrorLog ${APACHE_LOG_DIR}/learning_locker.error.log
+    CustomLog ${APACHE_LOG_DIR}/learning_locker.access.log combined
+
+    <Directory {{ learning_locker.web_root }}/learninglocker-{{ learning_locker.version }}>
+        AllowOverride All
+        Require all granted
+    </Directory>
+
+</VirtualHost>
+
+# vim: syntax=apache ts=4 sw=4 sts=4 sr noet

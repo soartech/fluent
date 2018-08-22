@@ -1,0 +1,87 @@
+---
+
+- name: "Initialize Variable Configuration"
+  set_fact:
+    configure_adl_server: "{{ configure_adl_server_defaults | combine(configure_adl_server | default({}), recursive=True) }}"
+
+- name: "Copy adl-launch-server dir to machine"
+  copy:
+    src:  "{{ deployment_base }}/adl-launch-server"
+    dest: "{{ configure_adl_server.install_dir }}"
+
+- name: "Copy templated fluent realm json file"
+  template:
+    src:  "fluent-realm.json.j2"
+    dest: "{{ configure_adl_server.install_dir }}/adl-launch-server/application-launcher/keycloak-config/realms/fluent-realm.json"
+
+- name: "Set Executable Permissions"
+  become: yes
+  file:
+    path: "{{ configure_adl_server.install_dir }}/adl-launch-server/{{ item }}"
+    mode: "a+x"
+  with_items:
+    - "application-launcher/wildfly-setup/cli/execute.sh"
+    - "application-launcher/docker-entry.sh"
+
+- name: "Add Docker GPG Key"
+  apt_key:
+    url: https://download.docker.com/linux/ubuntu/gpg
+    state: present
+
+- name: "get lsb_relase"
+  command: "lsb_release -cs"
+  register: _lsb_release
+
+- name: "Add Docker repository for dist '{{ _lsb_release.stdout }}'"
+  apt_repository:
+    repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ _lsb_release.stdout }} stable"
+    state: present
+
+- name: "Install Dependencies"
+  become: yes
+  apt:
+    name: "{{ item }}"
+    state: present
+    cache_valid_time: 60
+  with_items:
+    - "curl"
+    - "maven"
+    - "docker-ce"
+
+- name: "get uname -s param"
+  command: "uname -s"
+  register: _uname_s
+
+- name: "get uname -m param"
+  command: "uname -m"
+  register: _uname_m
+
+- name: "Download Docker-Compose from 'https://github.com/docker/compose/releases/download/1.18.0/docker-compose-{{ _uname_s.stdout }}-{{ _uname_m.stdout }}'"
+  get_url:
+    url: "https://github.com/docker/compose/releases/download/1.18.0/docker-compose-{{ _uname_s.stdout }}-{{ _uname_m.stdout }}"
+    dest: "/usr/local/bin/docker-compose"
+
+- name: "Set Docker-Compose Executable"
+  become: yes
+  file:
+    path: "/usr/local/bin/docker-compose"
+    mode: "a+x"
+
+- name: "Maven Install"
+  command: "mvn clean install"
+  args:
+    chdir: "{{ configure_adl_server.install_dir }}/adl-launch-server/"
+
+# script + chdir was failing, just gonna manually do it
+- name: "Run ADL Rebuild Script"
+  become: yes
+  command: "bash ./rebuild.sh"
+  args:
+    chdir: "{{ configure_adl_server.install_dir }}/adl-launch-server/"
+
+# script + chdir was failing, just gonna manually do it
+- name: "Run ADL Script to Disable Keycloak SSL Req"
+  become: yes
+  command: "bash ./fix-ssl.sh"
+  args:
+    chdir: "{{ configure_adl_server.install_dir }}/adl-launch-server/"

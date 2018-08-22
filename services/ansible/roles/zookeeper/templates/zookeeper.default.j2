@@ -1,0 +1,24 @@
+# General configuration for the init.d scripts,
+# not necessarily for Zookeeper itself.
+# default location: /etc/default/zookeeper
+
+## Location of JDK
+JAVA_HOME="/usr/lib/jvm/default-java"
+
+## The home directory of your Zookeeper installation
+ZOOKEEPER_HOME={{ zookeeper.home }}
+
+## Additionals args for JVM
+#SERVER_JVM_FLAGS="x"
+
+## The username who should own the process.
+ZOOKEEPER_USER={{ zookeeper.owner }}
+
+## Configuration for standalone mode
+ZOOCFG={{ zookeeper.config_filename }}
+
+## Log4j properties
+ZOO_LOG4J_PROP="{{ zookeeper.log_prop | join(',') }}"
+
+## Location to keep the console log
+ZOO_LOG_DIR="{{ zookeeper.log_dir }}"

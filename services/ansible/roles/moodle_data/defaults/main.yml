@@ -1,0 +1,12 @@
+---
+
+moodle:
+  data_dir:   "/opt/tla/moodle_data"
+  web_root:   "/var/www/moodle"
+  root_url:   "http://{{ default_hostname | default('localhost') }}"
+  port:       8090
+  version:    "MOODLE_31_STABLE"
+  vhost_conf: "moodle_vhost.conf.j2"
+  admin:
+    #username: "" # SET ME IN PLAYBOOK OR INVENTORY
+    #password: "" # SET ME IN PLAYBOOK OR INVENTORY

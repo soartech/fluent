@@ -1,0 +1,89 @@
+---
+
+- name: "Provision TLA Main-LRS Server"
+  hosts: lrs_server
+  remote_user: root
+  become: yes
+  become_method: sudo
+
+  vars:
+    download_cache_dir: "{{ deployment_base }}/.ansible_cache"
+    tla_staging_dir:    "{{ deployment_base }}/tla-soartech/target"
+    tla_configs_dir:    "/opt/tla/config"
+
+  pre_tasks:
+    - name: "Create TLA Directories"
+      file:
+        path:  "{{ item }}"
+        state: "directory"
+      with_items:
+        - "{{ tla_configs_dir }}"
+
+    - name: "Copy TLA Configuration Files to Server"
+      template:
+        src:   "{{ item  }}"
+        dest:  "{{ tla_configs_dir }}/{{ item | basename | splitext | first }}"
+      with_fileglob: "config_templates/*.properties.j2"
+
+  roles:
+
+    ## Sort of needed by Learning Locker, but doesn't seem to be a strict requirement
+    #- role: postfix
+    #  tags: [ postfix, lrs ]
+
+    - role: mongodb
+      tags: [ mongodb, lrs ]
+      mongodb:
+        dbs:
+          - name: learninglocker_v2
+            users:
+              - user: "{{ tla_config.lrs.db.owner }}"
+                pwd:  "{{ tla_config.lrs.db.password }}"
+                roles:
+                  - "readWrite"
+        config:
+          net:
+            port: 27017 # This is the default port
+            bindIp: 127.0.0.1
+          #security: # This seemed to cause some issues when used
+          #  authorization: true
+
+    - role: apache2
+      tags: [ statement_forwarding ]
+      apache2:
+        module_dependencies:
+          - "rewrite"
+        virtual_hosts: {}
+
+    - role: nginx
+      tags: [ lrs ]
+
+    - role: rabbitmq_server
+      tags: [ rabbitmq, rabbitmq_server, statement_forwarding ]
+
+    - role: mod_wsgi
+      tags: [ mod_wsgi, statement_forwarding, activity_index ]
+
+    - role: statement_forwarding
+      tags: [ statement_forwarding ]
+
+    - role: nodejs
+      tags: [ lrs, cass ]
+
+    # LRS (Fact Exchange)
+    - role: learning_locker_2.0
+      tags: [ lrs ]
+      learning_locker:
+        install_dir: "/opt"
+        version: "v2.1.4"
+        xapi_version: "v2.2.0"
+        save_creds_locations:
+          - "{{ deployment_base }}/ansible/.tmp/learning_locker_creds.json"
+        lrs:
+          store: "Default"
+          client: "Default Client"
+          title: "Default LRS"
+        admin:
+          organization: "{{ tla_config.lrs.admin.organization }}"
+          email: "{{ tla_config.lrs.admin.email }}"
+          password: "{{ tla_config.lrs.admin.password }}"

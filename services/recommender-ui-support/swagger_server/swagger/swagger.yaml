@@ -1,0 +1,516 @@
+---
+swagger: "2.0"
+info:
+  description: "This API is used to interact with the data stored in the Recommender\
+    \ UI Support Service database."
+  version: "0.1.0"
+  title: "Recommender UI Support Service API"
+host: "fluent.tla"
+basePath: "/rui-support"
+schemes:
+- "https"
+consumes:
+- "application/ld+json"
+produces:
+- "application/ld+json"
+paths:
+  /activity-responses:
+    post:
+      tags:
+      - "Activity Responses"
+      summary: "Stores an activity self-report response"
+      description: "Adds a new activity response to the database; if this is the first\
+        \ activity response for the activity, also adds the activity to the database"
+      operationId: "post_activity_response"
+      parameters:
+      - in: "body"
+        name: "activityResponseObj"
+        description: "ActivityResponse object to add"
+        required: true
+        schema:
+          $ref: "#/definitions/ActivityResponse"
+      responses:
+        201:
+          description: "ActivityResponse object successfully created"
+        400:
+          description: "Invalid request."
+          schema:
+            $ref: "#/definitions/Error"
+        500:
+          description: "An unexpected server error occurred."
+          schema:
+            $ref: "#/definitions/Error"
+      x-swagger-router-controller: "swagger_server.controllers.activity_responses_controller"
+  /activity-responses/{activityId}:
+    delete:
+      tags:
+      - "Activity Responses"
+      summary: "Deletes an activity and all its responses"
+      description: "Removes the activity and all responses associated with it from\
+        \ the database"
+      operationId: "delete_activity_response"
+      parameters:
+      - name: "activityId"
+        in: "path"
+        description: "The ID of the activity to delete"
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: "Activity successfully deleted"
+        400:
+          description: "Invalid request."
+          schema:
+            $ref: "#/definitions/Error"
+        404:
+          description: "Not Found"
+        500:
+          description: "An unexpected server error occurred."
+          schema:
+            $ref: "#/definitions/Error"
+      x-swagger-router-controller: "swagger_server.controllers.activity_responses_controller"
+  /page-state:
+    post:
+      tags:
+      - "Page State"
+      summary: "Stores the page state for a new user session"
+      description: "Stores the page state for a new user session in the database"
+      operationId: "post_page_state"
+      parameters:
+      - in: "body"
+        name: "pageStateObj"
+        description: "PageState object to add"
+        required: true
+        schema:
+          $ref: "#/definitions/PageState"
+      responses:
+        201:
+          description: "PageState object successfully created"
+        400:
+          description: "Invalid request."
+          schema:
+            $ref: "#/definitions/Error"
+        500:
+          description: "An unexpected server error occurred."
+          schema:
+            $ref: "#/definitions/Error"
+      x-swagger-router-controller: "swagger_server.controllers.page_state_controller"
+  /page-state/{keycloakId}:
+    get:
+      tags:
+      - "Page State"
+      summary: "Obtains the page state for a user session"
+      description: "Obtains the page state for the given user session"
+      operationId: "get_page_state"
+      parameters:
+      - name: "keycloakId"
+        in: "path"
+        description: "The ID of the learner whose page state will be returned"
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: "PageState object successfully returned"
+          schema:
+            $ref: "#/definitions/PageState"
+        400:
+          description: "Invalid request."
+          schema:
+            $ref: "#/definitions/Error"
+        404:
+          description: "Not Found"
+        500:
+          description: "An unexpected server error occurred."
+          schema:
+            $ref: "#/definitions/Error"
+      x-swagger-router-controller: "swagger_server.controllers.page_state_controller"
+    delete:
+      tags:
+      - "Page State"
+      summary: "Deletes the page state for a user session"
+      description: "Removes the page state for the given user session from the database"
+      operationId: "delete_page_state"
+      parameters:
+      - name: "keycloakId"
+        in: "path"
+        description: "The ID of the learner whose page state will be deleted"
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: "PageState object successfully deleted"
+        400:
+          description: "Invalid request."
+          schema:
+            $ref: "#/definitions/Error"
+        404:
+          description: "Not Found"
+        500:
+          description: "An unexpected server error occurred."
+          schema:
+            $ref: "#/definitions/Error"
+      x-swagger-router-controller: "swagger_server.controllers.page_state_controller"
+    patch:
+      tags:
+      - "Page State"
+      summary: "Updates the page state for a user session"
+      description: "Updates the page state for the given user session in the database"
+      operationId: "update_page_state"
+      parameters:
+      - name: "keycloakId"
+        in: "path"
+        description: "The ID of the learner whose page state will be updated"
+        required: true
+        type: "string"
+      - in: "body"
+        name: "pageStateObj"
+        description: "PageState object to update"
+        required: true
+        schema:
+          $ref: "#/definitions/PageState"
+      responses:
+        200:
+          description: "PageState object successfully updated"
+        400:
+          description: "Invalid request."
+          schema:
+            $ref: "#/definitions/Error"
+        404:
+          description: "Not Found"
+        500:
+          description: "An unexpected server error occurred."
+          schema:
+            $ref: "#/definitions/Error"
+      x-swagger-router-controller: "swagger_server.controllers.page_state_controller"
+  /tokens:
+    post:
+      tags:
+      - "Tokens"
+      summary: "Adds a new learner to the database with no tokens"
+      description: "Adds a new learner to the database with an empty set of tokens"
+      operationId: "post_learner_tokens"
+      parameters:
+      - in: "body"
+        name: "learnerTokensObj"
+        description: "LearnerTokens object to add"
+        required: true
+        schema:
+          $ref: "#/definitions/LearnerTokens"
+      responses:
+        201:
+          description: "LearnerTokens object successfully created"
+        400:
+          description: "Invalid request."
+          schema:
+            $ref: "#/definitions/Error"
+        500:
+          description: "An unexpected server error occurred."
+          schema:
+            $ref: "#/definitions/Error"
+      x-swagger-router-controller: "swagger_server.controllers.tokens_controller"
+  /tokens/{keycloakId}:
+    get:
+      tags:
+      - "Tokens"
+      summary: "Obtains the tokens for a learner"
+      description: "Returns the set of tokens the learner has earned so far"
+      operationId: "get_learner_tokens"
+      parameters:
+      - name: "keycloakId"
+        in: "path"
+        description: "The ID of the learner whose tokens will be returned"
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: "LearnerTokens object successfully returned"
+          schema:
+            $ref: "#/definitions/LearnerTokens"
+        400:
+          description: "Invalid request."
+          schema:
+            $ref: "#/definitions/Error"
+        404:
+          description: "Not Found"
+        500:
+          description: "An unexpected server error occurred."
+          schema:
+            $ref: "#/definitions/Error"
+      x-swagger-router-controller: "swagger_server.controllers.tokens_controller"
+    delete:
+      tags:
+      - "Tokens"
+      summary: "Deletes a learner's tokens"
+      description: "Removes the learner from the database"
+      operationId: "delete_learner_tokens"
+      parameters:
+      - name: "keycloakId"
+        in: "path"
+        description: "The ID of the learner to delete"
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: "LearnerTokens object successfully deleted"
+        400:
+          description: "Invalid request."
+          schema:
+            $ref: "#/definitions/Error"
+        404:
+          description: "Not Found"
+        500:
+          description: "An unexpected server error occurred."
+          schema:
+            $ref: "#/definitions/Error"
+      x-swagger-router-controller: "swagger_server.controllers.tokens_controller"
+    patch:
+      tags:
+      - "Tokens"
+      summary: "Updates a learner's tokens"
+      description: "Adds some tokens to the learner's current set of tokens"
+      operationId: "update_learner_tokens"
+      parameters:
+      - name: "keycloakId"
+        in: "path"
+        description: "The ID of the learner whose tokens will be updated"
+        required: true
+        type: "string"
+      - in: "body"
+        name: "learnerTokensObj"
+        description: "LearnerTokens object to update"
+        required: true
+        schema:
+          $ref: "#/definitions/LearnerTokens"
+      responses:
+        200:
+          description: "LearnerTokens object successfully updated"
+        400:
+          description: "Invalid request."
+          schema:
+            $ref: "#/definitions/Error"
+        404:
+          description: "Not Found"
+        500:
+          description: "An unexpected server error occurred."
+          schema:
+            $ref: "#/definitions/Error"
+      x-swagger-router-controller: "swagger_server.controllers.tokens_controller"
+  /ao-image:
+    get:
+      tags:
+      - "AO Image"
+      summary: "Obtains the AO Image"
+      description: "Returns the AO Image stored by the database"
+      operationId: "get_ao_image"
+      parameters: []
+      responses:
+        200:
+          description: "AoImage object successfully returned"
+          schema:
+            $ref: "#/definitions/AoImage"
+        400:
+          description: "Invalid request."
+          schema:
+            $ref: "#/definitions/Error"
+        404:
+          description: "Not Found"
+        500:
+          description: "An unexpected server error occurred."
+          schema:
+            $ref: "#/definitions/Error"
+      x-swagger-router-controller: "swagger_server.controllers.ao_image_controller"
+    post:
+      tags:
+      - "AO Image"
+      summary: "Stores the AO Image"
+      description: "Stores the AO Image in the database"
+      operationId: "post_ao_image"
+      parameters:
+      - in: "body"
+        name: "aoImageObj"
+        description: "AoImage object to add"
+        required: true
+        schema:
+          $ref: "#/definitions/AoImage"
+      responses:
+        201:
+          description: "AoImage object successfully created"
+        400:
+          description: "Invalid request."
+          schema:
+            $ref: "#/definitions/Error"
+        500:
+          description: "An unexpected server error occurred."
+          schema:
+            $ref: "#/definitions/Error"
+      x-swagger-router-controller: "swagger_server.controllers.ao_image_controller"
+  /learner-goals/{keycloakId}:
+    patch:
+      tags:
+      - "Learner Goals"
+      summary: "Updates the goals for a learner"
+      description: "Allows the UI to update the goals of a learner while avoiding\
+        \ Learner Inference service concurrency issues"
+      operationId: "update_goals"
+      parameters:
+      - name: "keycloakId"
+        in: "path"
+        description: "The ID of the learner whose goals will be updated"
+        required: true
+        type: "string"
+      - in: "body"
+        name: "learnerGoalsObj"
+        description: "New learner goals"
+        required: true
+        schema:
+          $ref: "#/definitions/LearnerGoals"
+      responses:
+        200:
+          description: "LearnerTokens object successfully updated"
+        400:
+          description: "Invalid request."
+          schema:
+            $ref: "#/definitions/Error"
+        404:
+          description: "Not Found"
+        500:
+          description: "An unexpected server error occurred."
+          schema:
+            $ref: "#/definitions/Error"
+      x-swagger-router-controller: "swagger_server.controllers.learner_goals_controller"
+definitions:
+  ActivityResponse:
+    type: "object"
+    required:
+    - "emotionRating"
+    - "learnerKeycloakId"
+    - "popularityRating"
+    - "timestamp"
+    properties:
+      learnerKeycloakId:
+        type: "string"
+        description: "The keycloak GUID for the learner (the subject field of the\
+          \ OAUTH object)"
+      timestamp:
+        type: "string"
+        format: "date-time"
+        description: "The date and time this response was recorded"
+      popularityRating:
+        type: "integer"
+        description: "Personal rating for the activity on a scale from 1 to 5"
+      emotionRating:
+        type: "string"
+        description: "Was the activity boring, confusing, frustrating, pleasant, epic,\
+          \ or neutral?"
+    example:
+      popularityRating: 0
+      learnerKeycloakId: "learnerKeycloakId"
+      emotionRating: "emotionRating"
+      timestamp: "2000-01-23T04:56:07.000+00:00"
+  ActivityTokens:
+    type: "object"
+    required:
+    - "count"
+    - "type"
+    properties:
+      type:
+        type: "string"
+        format: "uri"
+        description: "The kind of token - this field should be the CASS identifier\
+          \ for the affiliated TLO or ELO"
+      count:
+        type: "integer"
+        description: "How many tokens have been awarded to the learner for the type"
+    example:
+      count: 0
+      type: "http://example.com/aeiou"
+  AoImage:
+    type: "object"
+    required:
+    - "aoImage"
+    properties:
+      aoImage:
+        type: "string"
+        format: "uri"
+        description: "The image displayed to the learner upon login"
+    example:
+      aoImage: "http://example.com/aeiou"
+  Error:
+    type: "object"
+    required:
+    - "errorMessage"
+    properties:
+      errorMessage:
+        type: "string"
+      errorCode:
+        type: "string"
+      errorLink:
+        type: "string"
+        format: "url"
+      userMessage:
+        type: "string"
+  LearnerGoals:
+    type: "object"
+    required:
+    - "goals"
+    properties:
+      goals:
+        type: "array"
+        description: "The new goals for the learner"
+        items:
+          type: "object"
+          properties: {}
+    example:
+      goals:
+      - "{}"
+      - "{}"
+  LearnerTokens:
+    type: "object"
+    required:
+    - "learnerKeycloakId"
+    properties:
+      learnerKeycloakId:
+        type: "string"
+        description: "The keycloak GUID for the learner (the subject field of the\
+          \ OAUTH object)"
+      tokens:
+        type: "array"
+        description: "Tokens earned by the learner"
+        items:
+          $ref: "#/definitions/ActivityTokens"
+    example:
+      learnerKeycloakId: "learnerKeycloakId"
+      tokens:
+      - count: 0
+        type: "http://example.com/aeiou"
+      - count: 0
+        type: "http://example.com/aeiou"
+  PageState:
+    type: "object"
+    required:
+    - "learnerKeycloakId"
+    - "pageNumber"
+    properties:
+      learnerKeycloakId:
+        type: "string"
+        description: "The keycloak GUID for the learner (the subject field of the\
+          \ OAUTH object)"
+      learnerUsername:
+        type: "string"
+        description: "The learner's login name"
+      pageNumber:
+        type: "integer"
+        description: "Page number in the UI"
+    example:
+      pageNumber: 0
+      learnerKeycloakId: "learnerKeycloakId"
+      learnerUsername: "learnerUsername"
+responses:
+  Standard400Response:
+    description: "Invalid request."
+    schema:
+      $ref: "#/definitions/Error"
+  Standard500Response:
+    description: "An unexpected server error occurred."
+    schema:
+      $ref: "#/definitions/Error"

@@ -1,0 +1,22 @@
+---
+
+- name: "Initialize LRS Configuration"
+  tags: all
+  set_fact:
+    lrs: "{{ lrs_defaults | combine(lrs | default({}), recursive=True) }}"
+
+- name: "Debug Role Configuration"
+  debug:
+    msg: "{{ lrs }}"
+
+- include: "celery.yml"
+- include: "lrs.yml"
+
+- meta: flush_handlers
+
+# This does not seem to be getting used for now
+#- name: "Start CeleryLRS"
+#  service: name=celerylrs state=started
+
+- name: "Start LRS"
+  service: name=lrs state=started

@@ -1,0 +1,13 @@
+---
+
+tcpdump_service_defaults:
+  output_path: "/tmp/tcpdump"
+  filter_path: "/root/tcpd-filter.txt"
+  filter_template: "tcpd-filter.txt.j2"
+  user: root
+  ifaces:
+    - lo
+    - eth1
+
+  init_name: "tcpd"
+  run_levels: []

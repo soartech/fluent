@@ -1,0 +1,80 @@
+{
+  "@context": {
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#"
+  },
+"@graph": [
+    {
+      "@id": "https://tla.adl.net/definitions/LearningActivity",
+      "@type": "rdfs:Class",
+      "rdfs:comment": "A generic description of LearningActivity.",
+      "rdfs:label": "LearningActivity",
+      "rdfs:subClassOf": {
+        "@id": "http://schema.org/CreativeWork"
+      }
+    },
+    {
+      "@id": "https://tla.adl.net/definitions/Learner",
+      "@type": "rdfs:Class",
+      "rdfs:comment": "A generic description of a Learner.",
+      "rdfs:label": "Learner",
+      "rdfs:subClassOf": {
+        "@id": "http://schema.org/Person"
+      }
+    },
+    {
+      "@id": "https://tla.adl.net/definitions/CompetencyAttemptCounter",
+      "@type": "rdfs:Class",
+      "rdfs:comment": "How many times a competency has been attempted by a learner.",
+      "rdfs:label": "CompetencyAttemptCounter",
+      "rdfs:subClassOf": {
+        "@id": "http://schema.org/Intangible"
+      }
+    },
+    {
+      "@id": "https://tla.adl.net/definitions/Goal",
+      "@type": "rdfs:Class",
+      "rdfs:comment": "Competency that a learner should master and expected time to achieve that goal.",
+      "rdfs:label": "Goal",
+      "rdfs:subClassOf": {
+        "@id": "http://schema.org/Intangible"
+      }
+    },
+    {
+      "@id": "https://tla.adl.net/definitions/CompetencyAchievement",
+      "@type": "rdfs:Class",
+      "rdfs:comment": "Describes mastery of competency achieved by learner and when that happened",
+      "rdfs:label": "CompetencyAchievement",
+      "rdfs:subClassOf": {
+        "@id": "http://schema.org/Intangible"
+      }
+    },
+    {
+      "@id": "https://tla.adl.net/definitions/MasteryEstimate",
+      "@type": "rdfs:Class",
+      "rdfs:comment": "An assessment of the mastery of a competency for a learner; e.g. 'held', 'not held', 'unknown'.",
+      "rdfs:label": "MasteryEstimate",
+      "rdfs:subClassOf": {
+        "@id": "http://schema.org/Intangible"
+      }
+    },
+    {
+      "@id": "https://tla.adl.net/definitions/MasteryProbability",
+      "@type": "rdfs:Class",
+      "rdfs:comment": "The probability that the learner has mastered a particular competency.",
+      "rdfs:label": "MasteryProbability",
+      "rdfs:subClassOf": {
+        "@id": "http://schema.org/Intangible"
+      }
+    },
+    {
+      "@id": "https://tla.adl.net/definitions/ActivityAttemptCounter",
+      "@type": "rdfs:Class",
+      "rdfs:comment": "How many times an activity has been attempted by a learner.",
+      "rdfs:label": "ActivityAttemptCounter",
+      "rdfs:subClassOf": {
+        "@id": "http://schema.org/Intangible"
+      }
+    }
+  ]
+}

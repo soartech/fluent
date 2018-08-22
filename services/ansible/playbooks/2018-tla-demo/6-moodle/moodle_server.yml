@@ -1,0 +1,118 @@
+---
+
+- name: "Provision Moodle AP Server"
+  hosts: moodle_server
+  remote_user: root
+  become: yes
+  become_method: sudo
+
+  vars:
+    time_server:        "time.nist.gov"
+    download_cache_dir: "{{ deployment_base }}/.ansible_cache"
+    tla_configs_dir:    "/opt/tla/config"
+    # This file is generated in the TLA ansbile scripts during LRS config
+    lrs_creds_location: "{{ deployment_base }}/ansible/.tmp/learning_locker_creds.json"
+    lrs_credentials: "{{ lookup('file', '{{ lrs_creds_location }}') | from_json}}"
+    postgresql_dbs:
+      moodle:
+        owner: "insertUsername"
+        args:  "-E UTF8"
+    postgresql_users:
+      insertUsername:
+        password: "{{ ap_config.moodle.postgres.password }}"
+
+  pre_tasks:
+    # If this becomes any more complicated, it should go into its own role
+    # Example: $ ANSIBLE_ARGS=-edev=true vagrant [up|provision]
+    - name: "Install Developer Tools"
+      apt:
+        name: "{{ item }}"
+        state: present
+        force: yes
+        update_cache:     true
+        cache_valid_time: 3600
+      with_items:
+        - "nmap"
+        - "phppgadmin"
+      when: "dev is defined"
+
+    # Example: $ ANSIBLE_ARGS=-ejenkins=true vagrant [up|provision]
+    - name: "Set Moodle Backup Course"
+      set_fact:
+        moodle_course_shortname: "{{ jenkins is defined | ternary('PenTest', 'Cyber Security') }}"
+        moodle_course_fullname:  "{{ jenkins is defined | ternary('Penetration Testing', 'Cyber Security') }}"
+        moodle_course_file: "{{ jenkins is defined | ternary('{{ deployment_base }}/moodle-data/moodle-pentest-backup.mbz', '{{ deployment_base }}/moodle-data/cyber-security-course.mbz') }}"
+
+  roles:
+
+    - role: postgresql
+      tags: [ postgres, moodle ]
+      postgresql_version: "9.5"
+      postgresql_dbs:
+        moodle:
+          owner: "insertUsername"
+          args:  "-E UTF8"
+
+    - role: apache2
+      tags: moodle
+      apache2:
+        module_dependencies:
+          - "rewrite"
+        virtual_hosts: {}
+    - role: php
+      tags: moodle
+      php:
+        package_name:   "{{ php_platform_specific.package_name }}"
+        conf_path:      "{{ php_platform_specific.conf_path }}"
+        addon_packages: "{{ php_platform_specific.addon_packages }}"
+        config:
+          # Need to increase PHP upload limit for uploading a PDF
+          upload_max_filesize : "2048M"
+          post_max_size       : "0"
+
+    - role: moodle
+      tags: moodle
+      moodle:
+        dependencies: "{{ moodle_platform_specific.dependencies }}"
+        admin:
+          username: "{{ ap_config.moodle.username }}"
+          password: "{{ ap_config.moodle.password }}"
+          email:    "{{ ap_config.moodle.email }}"
+
+    - role: moodle_xapi
+      tags: moodle, moodle_xapi
+      moodle_xapi:
+        source_dir: "{{ deployment_base }}/moodle/admin/tool/log/store/xapi"
+        config:
+          version:        "2016060200"
+          idprovider:     "acct:keycloak-server"
+          backgroundmode: 0
+          maxbatchsize:   0
+          lrs:
+            endpoint: "{{ tla_config.lrs.xapi_base_url }}/"
+            username: "{{ lrs_credentials.username }}"
+            password: "{{ lrs_credentials.password }}"
+
+    - role: moodle_data
+      tags: moodle
+      moodle_data:
+        courses:
+          fullname:    "{{ moodle_course_fullname }}"
+          shortname:   "{{ moodle_course_shortname }}"
+          backup_file: "{{ moodle_course_file }}"
+        admin:
+          username: "{{ moodle.admin.username }}"
+          password: "{{ moodle.admin.password }}"
+
+    # Set up OpenID Plugin in Moodle
+    - role: moodle_oidc
+      tags: moodle
+      moodle_oidc:
+        keycloak_well_known: "http://{{ adl_server_hostname }}:8081/auth/realms/fluent/.well-known"
+        config:
+          client_id:     "moodle-fluent"
+          provider_name: "FLUENT TLA Keycloak Service"
+        admin:
+          username: "{{ moodle.admin.username }}"
+          password: "{{ moodle.admin.password }}"
+          email:    "{{ moodle.admin.email }}"

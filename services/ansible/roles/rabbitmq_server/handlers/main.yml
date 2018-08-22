@@ -1,0 +1,15 @@
+---
+
+# - name: "Restart RabbitMQ"
+#   service:
+#     name:    "{{ rabbitmq.init_name }}"
+#     state:   restarted
+
+- name: "Restart RabbitMQ"
+  become:  true
+  command: "rabbitmq-server restart"
+
+- name: "Reload RabbitMQ"
+  service:
+    name:    "{{ rabbitmq_server.init_name }}"
+    state:   reloaded

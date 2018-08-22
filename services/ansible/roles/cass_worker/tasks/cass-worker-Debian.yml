@@ -1,0 +1,41 @@
+---
+# Based on https://github.com/geerlingguy/ansible-for-devops/blob/master/nodejs/provisioning/playbook.yml
+
+- name: Install Forever (to run our Node.js app).
+  npm:
+    name: forever
+    global: yes
+    state: present
+
+- name: Ensure Node.js app folder exists.
+  file:
+    path: "{{ cass_worker.node_apps_location }}"
+    state: directory
+
+- name: Copy example Node.js app to server.
+  copy:
+    src: "{{ cass_worker.app_source_location }}"
+    dest: "{{ cass_worker.node_apps_location }}"
+
+- name: Install app dependencies defined in package.json.
+  npm:
+    path: "{{ cass_worker.node_apps_location }}/cass-worker/"
+
+- name: Check list of running Node.js apps.
+  command: forever list
+  register: _forever_list
+  changed_when: false
+
+# - name: Copy startup script to init.d
+#   template:
+#     src: "cass-worker.sh.j2"
+#     dest: "/etc/init.d/cass-worker.sh"
+
+# - name: Set startup script executable permissions
+#   file:
+#     path: "/etc/init.d/cass-worker.sh"
+#     mode: "a+x"
+
+- name: Start cass-worker app.
+  command: "forever start {{ cass_worker.node_apps_location }}/cass-worker/cass-worker.js"
+  when: "_forever_list.stdout.find(cass_worker.node_apps_location + '/cass-worker/cass-worker.js') == -1"

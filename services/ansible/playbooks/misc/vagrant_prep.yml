@@ -1,0 +1,14 @@
+---
+
+- name: "Prepare Vagrant-specific Environment"
+  hosts: vagrant
+  remote_user: root
+  become: yes
+  become_method: sudo
+
+  vars:
+    download_cache_dir: "{{ deployment_base }}/.ansible_cache"
+
+  roles:
+    # Link to any cached apt packages to speed up provisioning
+    - role: apt_caching

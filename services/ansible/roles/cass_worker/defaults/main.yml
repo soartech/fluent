@@ -1,0 +1,6 @@
+---
+
+cass_worker_defaults:
+  app_source_location: "{{ deployment_base }}/cass-worker"
+  node_apps_location: "/opt/node_js_apps"
+  cass_worker_port: "{{ tla_config.cass_worker.port }}"

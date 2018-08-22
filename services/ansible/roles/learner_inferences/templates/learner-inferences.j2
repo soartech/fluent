@@ -1,0 +1,28 @@
+<VirtualHost *:{{ tla_config.learner_inferences.port }}>
+
+    DocumentRoot /var/www/learner-inferences
+
+    WSGIDaemonProcess learner-inferences python-path=/usr/bin/python3
+    WSGIScriptAlias / /var/www/learner-inferences/learner_inferences.wsgi
+
+    # WSGIRestrictStdout Off
+    WSGIScriptReloading On
+
+    <Directory /var/www/learner-inferences>
+        WSGIProcessGroup learner-inferences
+        AllowOverride All
+        Require all granted
+    </Directory>
+
+    ServerName {{ st_server_hostname }}
+
+    ServerAdmin webmaster@localhost
+
+    Header add Access-Control-Allow-Origin "*"
+    Header set Access-Control-Allow-Headers "GET, POST, PATCH, DELETE, Content-Type, If-Match"
+    Header append Access-Control-Expose-Headers "ETag"
+
+    ErrorLog ${APACHE_LOG_DIR}/learner-inferences.error.log
+    CustomLog ${APACHE_LOG_DIR}/learner-inferences.access.log combined
+
+</VirtualHost>

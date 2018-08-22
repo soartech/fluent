@@ -1,0 +1,68 @@
+---
+
+- name: "Download Zookeeper {{ zookeeper.version }}" 
+  connection: local
+  become: false
+  get_url:
+    url:  "{{ zookeeper.download_url }}"
+    dest: "{{ zookeeper.download_cache_dir }}/{{ zookeeper.download_url | basename }}"
+    checksum: "{{ zookeeper.checksum | default(omit) }}"
+
+- name: "Create Zookeeper Directory"
+  file:
+    path:    "{{ zookeeper.home | dirname }}"
+    state:   "directory"
+    owner:   "{{ zookeeper.owner }}"
+    group:   "{{ zookeeper.group }}"
+
+- name: "Decompress Zookeeper Tarball"
+  unarchive:
+    src:     "{{ zookeeper.download_cache_dir }}/{{ zookeeper.download_url | basename }}"
+    dest:    "{{ zookeeper.home | dirname }}"
+    creates: "{{ zookeeper.home }}"
+    owner:   "{{ zookeeper.owner }}"
+    group:   "{{ zookeeper.group }}"
+
+- name: "Create Zookeeper Configuration File"
+  copy:
+    src:   "{{ zookeeper.home }}/conf/zoo_sample.cfg"
+    dest:  "{{ zookeeper.home }}/conf/{{ zookeeper.config_filename }}"
+    owner: "{{ zookeeper.owner }}"
+    group: "{{ zookeeper.group }}"
+    force:      false
+    remote_src: true
+
+- name: "Set Zookeeper Configuration Parameters"
+  lineinfile:
+    dest:   "{{ zookeeper.home }}/conf/{{ zookeeper.config_filename }}"
+    line:   "{{ item.key }}={{ item.value }}"
+    regexp: "{{ item.key }}="
+    backup: yes
+    insertafter: EOF
+  with_dict: "{{ zookeeper.config }}"
+
+- name: "Generate SYSVInit Defaults for Zookeeper"
+  copy:
+    content: "{{ lookup('template', 'zookeeper.default.j2') | regex_replace('\\r\\n?','\\n') }}"
+    dest:  "/etc/default/{{ zookeeper.init_name }}"
+    owner: root
+    group: root
+    mode:  0644
+
+- name: "Generate SYSVInit Script for Zookeeper"
+  copy:
+    content: "{{ lookup('file', 'zookeeper.init') | regex_replace('\\r\\n?','\\n') }}"
+    dest:  "/etc/init.d/{{ zookeeper.init_name }}"
+    owner: root
+    group: root
+    mode:  0755
+  register: zookeeper_sysvinit_generated
+
+- name: "Set update-rc.d for Zookeeper"
+  command: "update-rc.d {{ zookeeper.init_name }} defaults"
+  when: zookeeper_sysvinit_generated|changed
+
+- name: "Start the Zookeeper Server"
+  service:
+    name:  "{{ zookeeper.init_name }}"
+    state: started

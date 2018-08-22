@@ -1,0 +1,125 @@
+---
+
+- name: Copy config.py template file
+  template:
+    src: config.py.j2
+    dest: /vagrant/learner-inferences/server/learner_inferences_server/config.py
+
+- name: Install Pip
+  command: apt-get -y install python3-pip
+
+- name: Install PyMongo
+  command: python3 -m pip install pymongo
+
+- name: Install Flask
+  command: python3 -m pip install flask
+
+- name: Install Connexion
+  command: python3 -m pip install connexion
+
+- name: Install Dateutil
+  command: python3 -m pip install python-dateutil
+
+- name: Install Learner Inferences Server Python Package in Develop Mode
+  command: python3 -m pip install -e /vagrant/learner-inferences/server
+  
+- name: Install Learner Inferences Client Python Package in Develop Mode
+  command: python3 -m pip install -e /vagrant/learner-inferences/clients/python/
+
+# This user is for both the raw and deconflicted inferences exchanges
+- name: "Create AMQP User/Password for raw/deconflicted inferences"
+  shell: "rabbitmqctl add_user inferences_usr inferences_pwd"
+  become: true
+  become_user: root
+  register: command_result
+  failed_when: command_result.stderr != "" and 'user_already_exists' not in command_result.stderr
+
+- name: "Give AMQP user permissions"
+  shell: "rabbitmqctl set_permissions -p / inferences_usr \".*\" \".*\" \".*\" "
+  become: true
+  become_user: root
+
+- name: Make /var/www/learner-inferences Directory
+  file:
+    path: /var/www/learner-inferences
+    state: directory
+
+- name: Copy WSGI file to /var/www/learner-inferences
+  copy:
+    src: learner_inferences.wsgi
+    dest: /var/www/learner-inferences
+
+- name: Copy Apache config file
+  template:
+    src:  learner-inferences.j2
+    dest: /etc/apache2/sites-available/learner-inferences.conf
+  notify: restart apache
+
+- name: Add Listening Port to ports.conf
+  lineinfile:
+    dest: /etc/apache2/ports.conf
+    line: Listen {{ tla_config.learner_inferences.port }}
+  notify: restart apache
+
+- name: Enable Learner Inferences VirtualHost
+  shell: a2ensite learner-inferences
+  args:
+    creates: /etc/apache2/sites-enabled/learner-inferences.conf
+  notify: restart apache
+
+- name: Creates Learner Inferences lib directory
+  file: path=/var/lib/learner-inferences state=directory
+
+- name: Creates Learner Inferences log directory
+  file: path=/var/log/learner-inferences state=directory
+
+- name: Copy bash file to /var/lib/learner-inferences
+  copy:
+    src: "{{ deployment_base }}/learner-inferences/server/learner_inferences_server/amqp_listener/learner_inferences_service"
+    dest: "/var/lib/learner-inferences/"
+
+- name: Remove trailing \r in shell file
+  command: sed -i 's/\r$//' /var/lib/learner-inferences/learner_inferences_service
+  become: true
+  become_user: root
+
+- name: Change service permissions
+  command: chmod u+x /var/lib/learner-inferences/learner_inferences_service
+  become: true
+  become_user: root
+
+- name: Remove instance files if they exist
+  file:
+    path: "{{ item }}"
+    state: absent
+  with_items:
+    - "{{ deployment_base }}/learner-inferences/server/learner_inferences_server/amqp_listener/lock.pid"
+
+- name: Copy service file into systemd
+  copy:
+    src: "{{ deployment_base }}/learner-inferences/server/learner_inferences_server/amqp_listener/learner-inferences.service"
+    dest: "/etc/systemd/system/learner-inferences.service"
+
+- name: Reload daemon services
+  command: systemctl daemon-reload
+  become: true
+  become_user: root
+
+- name: Enable Learner Inferences Listener service
+  command: systemctl enable learner-inferences
+  become: true
+  become_user: root
+
+- name: Start Learner Inferences Listener service
+  command: systemctl restart learner-inferences
+  become: true
+  become_user: root
+
+# 8am UTC, so 3am EST, Midnight PST
+- name: "Set up mastery decay Cron job"
+  become: true
+  cron:
+    name: "Mastery Decay"
+    minute: 0
+    hour: 8
+    job: "python3 /vagrant/learner-inferences/server/learner_inferences_server/update_mastery_estimates.py"

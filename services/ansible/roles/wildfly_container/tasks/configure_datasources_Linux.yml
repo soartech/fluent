@@ -1,0 +1,31 @@
+---
+
+- name: "Start Wildfly if Needed"
+  service:
+    name:  "{{ wildfly.init_name }}"
+    state: started
+
+- name: "Perform Initial Configuration Commands"
+  command: |
+    {{ wildfly.home }}/bin/jboss-cli.sh
+    --controller=localhost:{{ 9990 + wildfly.java_options['jboss.socket.binding.port-offset'] }}
+    -c
+    --command="{{ item.command }}"
+  with_items: "{{ wildfly_container.commands }}"
+  register: wildfly_cli_config_result
+  changed_when: |
+    wildfly_cli_config_result.rc == 0 and
+       (    item.requires_restart and '"reload-required"'      in wildfly_cli_config_result.stdout)
+    or (not item.requires_restart and 'Duplicate resource' not in wildfly_cli_config_result.stdout)
+  failed_when:  "wildfly_cli_config_result.rc != 0 and 'Duplicate resource' not in wildfly_cli_config_result.stdout"
+
+- name: "Determine Whether a Restart is Required"
+  set_fact:
+    _requires_restart: "{{ (_requires_restart | default(false)) or (item.item.requires_restart and item.changed) }}"
+  with_items: "{{ wildfly_cli_config_result.results }}"
+
+- name: "Restart Wildfly"
+  service:
+    name:  "{{ wildfly.init_name }}"
+    state: restarted
+  when: _requires_restart

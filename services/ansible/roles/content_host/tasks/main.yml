@@ -1,0 +1,80 @@
+- name: "Copy files to /var/www/content-host"
+  copy:
+    src: "/vagrant/content-host/"
+    dest: "/var/www/content-host/"
+    mode: 0777
+
+# - name: "Set files_to_keep variable"
+#   set_fact:
+#     files_to_keep:
+#       - "gitkeep.txt"
+
+# - name: "Capture files in images path and register"
+#   shell: >
+#     ls -1 /vagrant/content-host/content/images
+#   register: files
+
+# - name: "Remove copied files from images source directory"
+#   file:
+#     path: "/vagrant/content-host/content/images/{{ item }}"
+#     state: absent
+#   with_items: "{{ files.stdout_lines }}"
+#   when: >
+#     item != "gitkeep.txt"
+
+# - name: "Capture files in videos path and register"
+#   shell: >
+#     ls -1 /vagrant/content-host/content/videos
+#   register: files
+
+# - name: "Remove copied files from videos source directory"
+#   file:
+#     path: "/vagrant/content-host/content/videos/{{ item }}"
+#     state: absent
+#   with_items: "{{ files.stdout_lines }}"
+#   when: >
+#     item != "gitkeep.txt"
+
+# - name: "Capture files in static content path and register"
+#   shell: >
+#     ls -1 /vagrant/content-host/content/static
+#   register: files
+
+# - name: "Remove copied files from static source directory"
+#   file:
+#     path: "/vagrant/content-host/content/static/{{ item }}"
+#     state: absent
+#   with_items: "{{ files.stdout_lines }}"
+#   when: >
+#     item != "gitkeep.txt"
+
+# - name: "Capture files in powerpoint path and register"
+#   shell: >
+#     ls -1 /vagrant/content-host/content/powerpoint
+#   register: files
+
+# - name: "Remove copied files from powerpoint source directory"
+#   file:
+#     path: "/vagrant/content-host/content/powerpoint/{{ item }}"
+#     state: absent
+#   with_items: "{{ files.stdout_lines }}"
+#   when: >
+#     item != "gitkeep.txt"
+
+- name: "Copy Apache config file"
+  template:
+    src:  "content-host.conf.j2"
+    dest: "/etc/apache2/sites-available/content-host.conf"
+  notify: restart apache
+
+- name: "Add Listening Port to ports.conf"
+  lineinfile:
+    dest: "/etc/apache2/ports.conf"
+    line: "Listen {{ ap_config.content_host.port }}"
+  notify: restart apache
+
+- name: "Enable VirtualHost"
+  shell: "a2ensite content-host"
+  args:
+    creates: "/etc/apache2/sites-enabled/content-host.conf"
+  notify: restart apache

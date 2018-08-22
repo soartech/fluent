@@ -1,0 +1,40 @@
+# Warning: This is an auto-generated file
+
+from activity_index_client.api.cached_activities_api import CachedSingleActivityApi, CachedMultipleActivitiesApi
+
+class Config(object):
+    DEBUG = True
+
+    ACTIVITY_INDEX_BASE_URL = '{{ tla_config.activity_index.base_url }}'
+
+    SINGLE_ACTIVITY_API = CachedSingleActivityApi(ACTIVITY_INDEX_BASE_URL)
+    MULTIPLE_ACTIVITIES_API = CachedMultipleActivitiesApi(ACTIVITY_INDEX_BASE_URL)
+
+    LEARNER_INFERENCE_BASE_URL = '{{ tla_config.learner_inferences.base_url }}'
+
+    RECOMMENDER_UI_SUPPORT_URL = '{{ tla_config.recommender_ui_support.base_url }}'
+    RECOMMENDER_URL = '{{ tla_config.recommender.base_url }}'
+
+    BAD_TRAIT_BOOLEAN_THRESHOLD = 0.25
+    USEFUL_BOOLEAN_THRESHOLD = 0.75
+
+class TokenConfig(object):
+
+    class PossibleTokens(object):
+        SIMPLE_LOGIC = "SIMPLE"
+        COMPLEX_LOGIC = "COMPLEX"
+
+    TOKEN_LOGIC = PossibleTokens.SIMPLE_LOGIC
+    ADVANCED_TOKEN_DECIDER = False
+
+class CassConfig(object):
+    WELL_DEFINED_CONCEPT_TERM = "https://insertCassUrl/api/data/insertCassSchemaUrl.0.3.skos.Concept/93c61600-8c6d-4f9b-b0c5-d2cbeb0368ac"
+    ILL_DEFINED_CONCEPT_TERM = "https://insertCassUrl/api/data/insertCassSchemaUrl.0.3.skos.Concept/8728644c-dd3a-4a9e-ac75-cd6db7984c28"
+
+class LoggingLRSConfig(object):
+    BASE_URL = "{{ logging_lrs_hostname }}/data/xAPI"
+    CLIENT_USR = "insertUsername"
+    CLIENT_PWD = "insertPassword"
+    USERNAME_ENCODED = "insertUsername"
+    PASSWORD_ENCODED = "insertPassword"
+    X_EXPERIENCE_VERSION = "1.0.0"

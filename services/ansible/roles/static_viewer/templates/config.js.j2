@@ -1,0 +1,6 @@
+var config = {
+    "identityProviderName" : "{{ static_viewer.identity_provider }}",
+    "endpoint" : "{{ static_viewer.discovery_service_url }}/list/lrs/endpoint/",
+    "auth" : "Basic " + toBase64("{{ static_viewer.lrs.username }}:{{ static_viewer.lrs.password }}"),
+    "activityIndexEndpoint" : "{{ static_viewer.activity_index }}"
+}

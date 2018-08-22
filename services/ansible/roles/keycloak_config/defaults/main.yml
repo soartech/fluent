@@ -1,0 +1,26 @@
+---
+
+keycloak_config_defaults:
+  home: "/opt/wildfly/keycloak-2.2.1.Final"
+  base_url: "http://{{ adl_server_hostname | default('localhost') }}:8080/auth"
+  #realms_path: "path/to/realms/"
+  download_cache_dir: "{{ download_cache_dir | default('/tmp') }}"
+  admin: {}
+    #username: "" # SET ME IN PLAYBOOK OR INVENTORY
+    #password: "" # SET ME IN PLAYBOOK OR INVENTORY
+  clients: []
+
+# realms_path should point to a directory containing a folder called "realms",
+# containing one .json file for each realm to be defined.  It can also
+# optionally contain folders named after each realm's ID, containing a users
+# folder with user .json definitions that will be used to initialize users
+# under that realm.
+
+# Example client:
+#   - definition: "{{ deployment_base }}/path/to/client-def.json"
+#     realm: fluent
+#     install_json:
+#       dest:  "/path/to/place/keycloak.json"
+#       owner: "root" (Optional)
+#       group: "root" (Optional)
+#       mode:  0644   (Optional)

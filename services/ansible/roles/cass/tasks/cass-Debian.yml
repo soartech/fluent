@@ -1,0 +1,141 @@
+---
+
+- name: "Install Tomcat"
+  apt:
+    name:  "tomcat7"
+    state: present
+    update_cache:     true
+    cache_valid_time: 3600
+
+- name: "Fix Ownership of Tomcat Directory"
+  file:
+    path:    "/var/lib/tomcat7"
+    state:   directory
+    owner:   tomcat7
+    group:   tomcat7
+  notify: "Restart Tomcat"
+
+- name: "Create Tomcat etc Directory"
+  file:
+    path:    "/var/lib/tomcat7/etc"
+    state:   directory
+    owner:   tomcat7
+    group:   tomcat7
+  notify: "Restart Tomcat"
+
+- name: "Download ElasticSearch" 
+  connection: local
+  become:     false
+  get_url:
+    url:  "{{ cass.elasticsearch.download_url }}"
+    dest: "{{ cass.download_cache_dir }}/{{ cass.elasticsearch.download_url | basename }}"
+    checksum: "{{ cass.elasticsearch.checksum | default(omit) }}"
+
+- name: "Copy ElasticSearch to Server"
+  copy:
+    src:  "{{ cass.download_cache_dir }}/{{ cass.elasticsearch.download_url | basename }}"
+    dest: "/tmp/{{ cass.elasticsearch.download_url | basename }}"
+
+- name: "Install ElasticSearch"
+  apt:
+    deb: "/tmp/{{ cass.elasticsearch.download_url | basename }}"
+  register: elasticsearch_installed
+  notify: "Restart ElasticSearch"
+
+- name: "Set update-rc.d for ElasticSearch"
+  command: "update-rc.d elasticsearch defaults"
+  when: elasticsearch_installed|changed
+
+- name: "Download CASS Tarball"
+  connection: local
+  become:     false
+  get_url:
+    url:  "{{ cass.download_url }}"
+    dest: "{{ cass.download_cache_dir }}/CASS-{{ cass.download_url | basename }}"
+
+- name: "Unzip CASS"
+  unarchive:
+    src:     "{{ cass.download_cache_dir }}/CASS-{{ cass.download_url | basename }}"
+    dest:    "{{ cass.init_cache_dir }}"
+    creates: "{{ cass.init_cache_dir }}/CASS-{{ cass.version }}"
+
+- name: "Compile CASS"
+  shell: "mvn clean install"
+  args:
+    chdir: "{{ cass.init_cache_dir }}/CASS-{{ cass.version }}"
+    creates: "{{ cass.init_cache_dir }}/CASS-{{ cass.version }}/target"
+
+- name: "Deploy CASS to Tomcat"
+  copy:
+    src:  "{{ cass.init_cache_dir }}/CASS-{{ cass.version }}/target/cass.war"
+    dest: "/var/lib/tomcat7/webapps/cass.war"
+    remote_src: true
+  notify: "Restart Tomcat"
+
+- name: "Create Tomcat CASS Directories"
+  file:
+    path:  "{{ item }}"
+    state: directory
+    owner: tomcat7
+    group: tomcat7
+  with_items:
+    - "/var/lib/tomcat7/src/main"
+
+- name: "Copy CASS Scripts to Tomcat Directory"
+  become_user: tomcat7
+  become:      true
+  shell: "cp -R {{ cass.init_cache_dir }}/CASS-{{ cass.version }}/scripts /var/lib/tomcat7/"
+  args:
+    creates: "/var/lib/tomcat7/scripts"
+  notify: "Restart Tomcat"
+
+- name: "Copy CASS TLA Stuff to Tomcat Directory"
+  become_user: tomcat7
+  become:      true
+  command: "cp -R {{ cass.init_cache_dir }}/CASS-{{ cass.version }}/src/main/js /var/lib/tomcat7/src/main/"
+  args:
+    creates: "/var/lib/tomcat7/src/main/js"
+  notify: "Restart Tomcat"
+
+- name: "Copy Adapter Configuration to Tomcat Directory"
+  template:
+    src:   "adapter.config.rs2.j2"
+    dest:  "/var/lib/tomcat7/etc/adapter.config.rs2"
+    owner: tomcat7
+    group: tomcat7
+  notify: "Restart Tomcat"
+
+- name: "Change tomcat7 Home Directory"
+  lineinfile:
+    dest:     "/etc/passwd"
+    regexp:   "^tomcat7:([^:]*:[^:]*:[^:]*:[^:]*):[^:]*:([^:]*)$"
+    line:     "tomcat7:\\g<1>:/var/lib/tomcat7:\\g<2>"
+    backup:   true
+    backrefs: true
+
+- name: "Install CASS Node module"
+  npm:
+    name: "cassproject"
+    path: "/var/lib/tomcat7/scripts"
+  become_user: tomcat7
+
+- name: "Copy data entry script"
+  copy:
+    src:  "/vagrant/cass-data-entry/CreateObjs.js"
+    dest: "/var/lib/tomcat7/scripts/CreateObjs.js"
+  become: true
+
+
+- name: "Copy CASS XAPI Adapter Config"
+  template:
+    src:  "{{ item }}.j2"
+    dest: "/var/lib/tomcat7/{{ item }}"
+    owner: tomcat7
+    group: tomcat7
+  with_items:
+    - "adapter.xapi.json"
+    - "adapter.moodle.json"
+  notify: "Restart Tomcat"
+
+# Restart Apache/Tomcat if needed
+- meta: flush_handlers

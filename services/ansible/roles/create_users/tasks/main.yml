@@ -1,0 +1,55 @@
+---
+
+# Create specified groups if they exist, otherwise create default group.
+- name: "Create group from empty list"
+  group: name="{{ item.value.group | default(item.key) }}"
+  with_dict: "{{ create_users.users | mandatory }}"
+
+- name: "Create groups from list"
+  group: name="{{ item.1 }}"
+  with_subelements:
+    - "{{ create_users.users }}"
+    - groups 
+    - skip_missing: true
+
+- name: "Hash User's Password With Specified Salt"
+  set_fact:
+    _user_passhashes: "{{ _user_passhashes | default({}) | combine({ item.key : item.value.password | password_hash('sha512', (item.value.salt != False) | ternary(item.value.salt, '')) }) | to_json }}"
+  when: "item.value.password is defined and item.value.salt is defined"
+  with_dict: "{{ create_users.users }}"
+
+- name: "Hash User's Password With Randomly Generated Salt"
+  set_fact:
+    _user_passhashes: "{{ _user_passhashes | default({}) | combine({ item.key : item.value.password | password_hash('sha512') }) | to_json }}"
+  when: "item.value.password is defined and (item.value.salt is undefined or item.value.salt == True)"
+  with_dict: "{{ create_users.users }}"
+
+- name: "Debug"
+  debug: msg="{{ _user_passhashes }}"
+
+- name: "Create user"
+  user:
+    name:       "{{ item.key }}"
+    group:      "{{ item.value.group | default(item.key) }}" #optional
+    groups:     "{{ item.value.groups | default([]) | join(',') }}" #optional
+    password:   "{{ _user_passhashes[item.key] | default(omit) }}" # note that this password must be pre-crypted
+    shell:      "{{ item.value.shell | default('/bin/bash')}}" #optional
+    createhome: "{{ item.value.create_home | default('yes') }}" # optional
+  with_dict: "{{ create_users.users }}"
+
+# If sudo_nopasswd = true
+- name: "Add sudo no password privileges"
+  lineinfile: 
+    dest: "/etc/sudoers" 
+    line: "{{ item.key }} ALL=(ALL) NOPASSWD: ALL"
+  with_dict: "{{ create_users.users }}"
+  when: (item.value.sudo_nopasswd is defined) and (item.value.sudo_nopasswd == true)
+
+# If sudo = true
+- name: "Add sudo group only"
+  user: 
+    name: "{{ item.key }}"
+    groups: sudo
+    append: yes
+  with_dict: "{{ create_users.users }}"
+  when: (item.value.sudo is defined) and (item.value.sudo == true)

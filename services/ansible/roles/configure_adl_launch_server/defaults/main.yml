@@ -1,0 +1,4 @@
+---
+
+configure_adl_server_defaults:
+  install_dir:    "/opt"

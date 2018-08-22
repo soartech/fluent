@@ -1,0 +1,135 @@
+---
+
+# Query DB for Organization (JSON array)
+- name: "Query MongoDB for Organization Objects"
+  become: true
+  shell: "mongo --quiet learninglocker_v2 --eval 'printjsononeline(db.organisations.find().toArray());' | grep -P -m 1 -o '(?<=\"_id\" : ObjectId\\(\").*?(?=\"\\),)'"
+  register: _mongoDB_organization_ID_result
+
+# Set the org ID
+- name: "Get Organization ID"
+  set_fact:
+    _ll_orgID: "{{ _mongoDB_organization_ID_result.stdout }}"
+
+# Generate new client credentials
+- name: "Generate new Client Key"
+  shell: "echo $(openssl rand -base64 32)"
+  register: _new_client_key
+
+- name: "Generate new Client Secret"
+  shell: "echo $(openssl rand -base64 32)"
+  register: _new_client_secret
+
+- name: "Create the credentials object"
+  set_fact:
+    _ll_new_client:
+      key: "{{ _new_client_key.stdout }}"
+      secret: "{{ _new_client_secret.stdout }}"
+
+# Build JSON object via template
+- name: "Build Client Object"
+  set_fact:
+    _ll_new_client_json: |
+      {
+        "createdAt" : ISODate("{{ ansible_date_time.iso8601 }}"),
+        "updatedAt" : ISODate("{{ ansible_date_time.iso8601 }}"),
+        "organisation" : ObjectId("{{ _ll_orgID }}"),
+        "title" : "{{ learning_locker.lrs.client }}",
+        "scopes" : [
+                "xapi/all",
+                "all"
+        ],
+        "isTrusted" : true,
+        "authority" : "{\"mbox\":\"mailto:hello@learninglocker.net\",\"name\":\"New Client\",\"objectType\":\"Agent\"}",
+        "api" : {
+                "basic_secret" : "{{ _ll_new_client.secret }}",
+                "basic_key" : "{{ _ll_new_client.key }}"
+        },
+        "__v" : 1
+      } 
+
+# Insert Obj into DB
+- name: "Insert New Client into Database"
+  shell: "mongo --quiet learninglocker_v2 --eval 'printjson(db.client.insert({{ _ll_new_client_json }}));'"
+
+# Query DB for Client (JSON array)
+- name: "Query MongoDB for Client Objects"
+  become: true
+  shell: "mongo --quiet learninglocker_v2 --eval 'printjson(db.client.find().toArray());' | grep -P -m 1 -o '(?<=\"_id\" : ObjectId\\(\").*?(?=\"\\),)'"
+  register: _mongoDB_client_ID_result
+
+# Set the Client ID
+- name: "Get Client ID"
+  set_fact:
+    _ll_clientID: "{{ _mongoDB_client_ID_result.stdout }}"
+
+# Create LRS
+- name: "Create LRS"
+  shell: |
+    curl -X POST \
+      -u {{ _ll_new_client.key }}:{{ _ll_new_client.secret }} \
+      -H "Content-Type: application/json" \
+      -d '{"title":"{{ learning_locker.lrs.title }}"}' \
+      '{{ tla_config.lrs.local_base_url }}/api/v2/lrs' | \
+      grep -P -m 1 -o '(?<=\"_id\":\").*?(?=\",)'
+  register: _ll_create_lrs_result
+
+- set_fact:
+    _ll_create_lrs_id: "{{ _ll_create_lrs_result.stdout }}"
+
+# Update Client
+- name: "Update Client to link to LRS"
+  shell: |
+    curl -X PATCH \
+      -u {{ _ll_new_client.key }}:{{ _ll_new_client.secret }} \
+      -H "Content-Type: application/json" \
+      -d '{"lrs_id":"{{ _ll_create_lrs_id }}"}' \
+      '{{ tla_config.lrs.local_base_url }}/api/v2/client/{{ _ll_clientID }}'
+  register: _ll_update_client_result
+
+# Parse out the creds to an object
+- name: "Create LRS Client credentials object"
+  set_fact:
+    learning_locker_client_creds:
+        username: "{{ _ll_new_client.key }}"
+        password: "{{ _ll_new_client.secret }}"
+
+# Write endpoints file to set the credentials
+- name: "Writing LRS Client credentials to output file"
+  copy:
+    content: "{{ learning_locker_client_creds | to_json }}"
+    dest: "{{ item }}"
+  with_items: "{{ learning_locker.save_creds_locations }}"
+
+- name: "Add RabbitMQ Statement Forwarding"
+  shell: |
+    curl -X POST {{ tla_config.lrs.local_base_url }}/api/v2/statementforwarding \
+      -u {{ _ll_new_client.key }}:{{ _ll_new_client.secret }} \
+      -H 'Content-Type: application/json' \
+      -d '{
+        "lrs_id" : "{{ _ll_create_lrs_id }}",
+        "_id" : "59c8d14b0d82b3864a450604",
+        "owner" : "{{ _ll_clientID }}",
+        "createdAt" : "{{ ansible_date_time.iso8601 }}",
+        "updatedAt" : "{{ ansible_date_time.iso8601 }}",
+        "query" : "{}",
+        "isPublic" : true,
+        "configuration" : { 
+          "authType" : "no auth",
+          "protocol" : "http",
+          "url" : "{{ tla_config.statement_forwarding.serverName }}:{{ tla_config.statement_forwarding.port }}/statementforwarding",
+          "maxRetries" : 10
+        },
+        "__v" : 0,
+        "active" : true,
+        "description" : "RabbitMQ"
+      }'
+  register: _ll_update_client_result
+  when: _ll_set_forwarding is defined and _ll_set_forwarding == true
+
+- name: "Create success file"
+  file:
+    path: /var/log/LL_config_success.txt
+    state: touch
+  become: true
+      

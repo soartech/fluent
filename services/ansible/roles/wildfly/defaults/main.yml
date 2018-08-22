@@ -1,0 +1,29 @@
+---
+
+wildfly_default_version: "9.0.2.Final"
+
+wildfly_defaults:
+  unzip_dir: "/opt/wildfly"
+  home:      "/opt/wildfly/wildfly-{{ wildfly_default_version }}"
+  log_dir:   "/var/log/wildfly/console.log"
+  version:   "{{ wildfly_default_version }}"
+  download_url: "http://download.jboss.org/wildfly/{{ wildfly_default_version }}/wildfly-{{ wildfly_default_version }}.tar.gz"
+  download_cache_dir: "{{ download_cache_dir | default('/tmp') }}"
+  owner: "wildfly"
+  group: "wildfly"
+  init_name: "wildfly"
+  administrator: {}
+    #username: "" # SET ME IN PLAYBOOK OR INVENTORY
+    #password: "" # SET ME IN PLAYBOOK OR INVENTORY
+  java_options:
+    'jboss.socket.binding.port-offset' : 0
+    'jboss.bind.address'               : "0.0.0.0"
+    'jboss.bind.address.management'    : "0.0.0.0"
+  startup_wait:  60
+  shutdown_wait: 60
+
+# Checksum for 9.0.2.Final
+#checksum: "sha256:74689569d6e04402abb7d94921c558940725d8065dce21a2d7194fa354249bb6"
+
+#    'jboss.socket.binding.port-offset' : 1
+#    'ae.properties.location'           : "/opt/tla/adaptation-engine/ae.properties"

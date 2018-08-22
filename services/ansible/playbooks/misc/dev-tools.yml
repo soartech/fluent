@@ -1,0 +1,25 @@
+---
+
+- name: "Prepare Development Tools"
+  hosts: dev-tools
+
+  tasks:
+    - name: "Install Developer Tools"
+      apt:
+        name: "{{ item }}"
+        state: present
+        force: yes
+        update_cache:     true
+        cache_valid_time: 3600
+      with_items:
+        - "nmap"
+        - "phppgadmin"
+        #- "elasticsearch-head"
+
+    - name: "Set Bash Aliases"
+      blockinfile:
+        dest:   "{{ ansible_env.HOME }}/.bashrc"
+        create: true
+        block: |
+          # PLACE YOUR COMMANDS HERE
+

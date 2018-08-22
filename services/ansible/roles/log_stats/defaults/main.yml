@@ -1,0 +1,13 @@
+---
+
+log_stats_defaults:
+
+  script_src: "log-stat"
+  script_dst: "/usr/local/sbin/log-stat"
+
+  log_file: "/var/log/vm_stats.log"
+
+  time: {}
+  
+  download_cache_dir: "{{ download_cache_dir | default('/tmp') }}"
+  init_cache_dir: "{{ init_cache_dir | default('/var/cache/ansible') }}/log_stats"

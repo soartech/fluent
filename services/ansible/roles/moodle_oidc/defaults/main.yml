@@ -1,0 +1,26 @@
+---
+
+moodle_oidc_defaults:
+  download_url: "https://moodle.org/plugins/download.php/11814/auth_oidc_moodle31_2016062000.zip"
+  #keycloak_well_known: "/url/to/keycloak/realm/.well-known"
+  client_info_path: "/tmp/moodle-keycloak.json"
+  web_root:     "/var/www/moodle"
+  base_url:     "{{ moodle.root_url }}:{{ moodle.port }}"
+  data_dir:     "{{ moodle.data_dir }}" # Where we store the records of installation
+  download_cache_dir: "{{ download_cache_dir | default('/tmp') }}"
+  owner: "{{ apache2.owner }}"
+  group: "{{ apache2.group }}"
+  admin:
+    #username: "" # SET ME IN PLAYBOOK OR INVENTORY
+    #password: "" # SET ME IN PLAYBOOK OR INVENTORY
+  config:
+    client_id:         "moodle"
+    provider_name:     "FLUENT Keycloak Service"
+    resource:          ""
+    autoappend:        ""
+    domain_hint:       ""
+    login_flow:        "authcode"
+    user_restrictions: ""
+    debug_mode:        0
+    icon:              "moodle:i/permissions"
+    custom_icon:       "790771122"

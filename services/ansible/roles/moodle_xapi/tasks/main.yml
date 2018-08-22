@@ -1,0 +1,91 @@
+---
+
+- name: "Copy Moodle xAPI Plugin"
+  copy: 
+    src:     "{{ moodle_xapi.source_dir }}"
+    dest:    "{{ moodle.web_root }}/admin/tool/log/store"
+    owner:   "{{ moodle.owner }}"
+    group:   "{{ moodle.group }}"
+
+- name: "Log In to Moodle"
+  shell: |
+    curl -v -L -X POST \
+         -c {{ moodle.init_cache_dir }}/cookies.txt \
+         -F "username={{ moodle.admin.username }}" \
+         -F "password={{ moodle.admin.password }}" \
+         "{{ moodle.root_url }}:{{ moodle.port }}/login/index.php" \
+         2>&1 \
+         > {{ moodle.init_cache_dir }}/login.result.txt
+  args:
+    executable: "/bin/bash"
+    warn: no
+
+- name: "Get Session Key from Response"
+  shell: |
+    grep -Po "(?<=\"sesskey\":\")(.*?)(?=\")" {{ moodle.init_cache_dir }}/login.result.txt
+  args:
+    executable: "/bin/bash"
+  register: moodle_session_key
+  changed_when: False 
+
+- name: "Check for existing plugin install"
+  shell: |
+    curl '{{ moodle.root_url }}:{{ moodle.port }}/admin/settings.php?section=managelogging' \
+         -v -L \
+         -b {{ moodle.init_cache_dir }}/cookies.txt \ 
+         -c {{ moodle.init_cache_dir }}/cookies.txt \
+         2>> {{ moodle.init_cache_dir }}/check_for_install.txt \
+          >> {{ moodle.init_cache_dir }}/check_for_install.txt && \
+         grep -m1 -o "action=disable&amp;store=logstore_xapi" {{ moodle.init_cache_dir }}/check_for_install.txt
+  args:
+    executable: "/bin/bash"
+    warn: no
+  changed_when: false
+  failed_when: false
+  register: check_for_install
+
+- name: "Install xAPI Plugin to Moodle"
+  shell: |
+    curl -v -L -X GET \
+         -b {{ moodle.init_cache_dir }}/cookies.txt \ 
+         -c {{ moodle.init_cache_dir }}/cookies.txt \
+         "{{ moodle.root_url }}:{{ moodle.port }}/admin/index.php?cache=0&confirmplugincheck=1" \
+         2>&1 \
+         > {{ moodle.init_cache_dir }}/install.result.txt
+  args:
+    executable: "/bin/bash"
+    warn: no
+  when: "check_for_install.rc != 0"
+
+- name: "Configure Moodle xAPI Plugin"
+  shell: |
+    curl -v -L -X POST \
+         -b {{ moodle.init_cache_dir }}/cookies.txt \ 
+         -c {{ moodle.init_cache_dir }}/cookies.txt \
+         -F "sesskey={{ moodle_session_key.stdout }}" \
+         -F "return=" \
+         -F "s_logstore_xapi_idproviderid={{ moodle_xapi.config.idprovider }}" \
+         -F "s_logstore_xapi_endpoint={{ moodle_xapi.config.lrs.endpoint }}" \
+         -F "s_logstore_xapi_username={{ moodle_xapi.config.lrs.username }}" \
+         -F "s_logstore_xapi_password={{ moodle_xapi.config.lrs.password }}" \
+         -F "s_logstore_xapi_backgroundmode={{ moodle_xapi.config.backgroundmode }}" \
+         -F "s_logstore_xapi_maxbatchsize={{ moodle_xapi.config.maxbatchsize }}" \
+         "{{ moodle.root_url }}:{{ moodle.port }}/admin/upgradesettings.php" \
+         2>&1 \
+         > {{ moodle.init_cache_dir }}/config.result.txt
+  args:
+    executable: "/bin/bash"
+    warn: no
+
+- name: "Enable Moodle xAPI Plugin"
+  shell: |
+    curl -v -L -X GET \
+         -b {{ moodle.init_cache_dir }}/cookies.txt \ 
+         -c {{ moodle.init_cache_dir }}/cookies.txt \
+         "{{ moodle.root_url }}:{{ moodle.port }}/admin/tool/log/stores.php?sesskey={{ moodle_session_key.stdout }}&action=enable&store=logstore_xapi" \
+         2>&1 \
+         > {{ moodle.init_cache_dir }}/enable.result.txt
+  args:
+    executable: "/bin/bash"
+    warn: no
+

@@ -1,0 +1,14 @@
+[Unit]
+Description=Evidence Mapper Service
+Requires=multi-user.target
+After=multi-user.target
+
+[Service]
+Type=simple
+ExecStart=/bin/bash /var/lib/evidence-mapper/evidence_mapper_service start
+ExecStop=/bin/bash /var/lib/evidence-mapper/evidence_mapper_service stop
+Reload=on-abnormal
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

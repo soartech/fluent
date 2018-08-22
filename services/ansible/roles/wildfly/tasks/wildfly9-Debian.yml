@@ -1,0 +1,61 @@
+---
+
+- name: "Download Wildfly {{ wildfly.version }}" 
+  connection: local
+  become: false
+  get_url:
+    url:  "{{ wildfly.download_url }}"
+    dest: "{{ wildfly.download_cache_dir }}/{{ wildfly.download_url | basename }}"
+    checksum: "{{ wildfly.checksum | default(omit) }}"
+
+- name: "Create Wildfly Directory"
+  file:
+    path:    "{{ wildfly.unzip_dir }}"
+    state:   "directory"
+    owner:   "{{ wildfly.owner }}"
+    group:   "{{ wildfly.group }}"
+
+- name: "Decompress Wildfly Tarball"
+  unarchive:
+    src:     "{{ wildfly.download_cache_dir }}/{{ wildfly.download_url | basename }}"
+    dest:    "{{ wildfly.unzip_dir }}"
+    creates: "{{ wildfly.home }}"
+    owner:   "{{ wildfly.owner }}"
+    group:   "{{ wildfly.group }}"
+
+- name: "Set Wildfly Configuration Parameters"
+  lineinfile:
+    dest: "{{ wildfly.home }}/bin/standalone.conf"
+    line: "JAVA_OPTS=\"$JAVA_OPTS -D{{ item.key }}={{ item.value }}\""
+    insertafter: EOF
+  with_dict: "{{ wildfly.java_options }}"
+
+- name: "Generate SYSVInit Defaults for Wildfly"
+  copy:
+    content: "{{ lookup('template', 'wildfly.default.j2') | regex_replace('\\r\\n?','\\n') }}"
+    dest:  "/etc/default/{{ wildfly.init_name }}"
+    owner: root
+    group: root
+    mode:  0644
+
+- name: "Create SYSVInit Script for Wildfly"
+  copy:
+    content: "{{ lookup('file', 'wildfly.init') | regex_replace('\\r\\n?','\\n') }}"
+    dest:  "/etc/init.d/{{ wildfly.init_name }}"
+    owner: root
+    group: root
+    mode:  0755
+  register: wildfly_sysvinit_generated
+
+- name: "Set update-rc.d for Wildfly"
+  command: "update-rc.d {{ wildfly.init_name }} defaults"
+  when: wildfly_sysvinit_generated|changed
+
+- name: "Start the Wildfly Server"
+  service:
+    name:  "{{ wildfly.init_name }}"
+    state: started
+
+- name: "Create the Wildfly Administrator Account"
+  shell: "{{ wildfly.home }}/bin/add-user.sh -s {{ wildfly.administrator.username }} {{ wildfly.administrator.password }}"
+  when: wildfly_sysvinit_generated|changed

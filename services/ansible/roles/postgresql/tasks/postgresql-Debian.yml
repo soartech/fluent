@@ -1,0 +1,82 @@
+---
+- name: Add PostgreSQL APT Key
+  apt_key: url="https://www.postgresql.org/media/keys/ACCC4CF8.asc" state=present
+  register: postgres_apt_key_added
+  retries: 10
+  until: postgres_apt_key_added|success
+
+# This makes no changes to the system, so we always set changed_when to false
+- name: Get Ubuntu Release Type
+  command: "lsb_release -cs"
+  changed_when: false
+  register: ubuntu_release_type
+  
+- name: Add Postgres Repository
+  apt_repository: repo="deb http://apt.postgresql.org/pub/repos/apt/ {{ ubuntu_release_type.stdout }}-pgdg main"
+  register: postgres_add_apt_repo_ready
+
+- name: Update Apt Cache
+  apt: update_cache=true
+  when: postgres_add_apt_repo_ready|changed
+  register: postgres_apt_is_fresh
+
+- name: Install PostgreSQL
+  apt: name="{{ item }}" state=present force=yes update_cache=true cache_valid_time=3600
+  with_items:
+    - "postgresql-{{ postgresql_version }}"
+    - "postgresql-contrib-{{ postgresql_version }}"
+  register: postgres_server_installed
+
+- name: Create Initial PostgreSQL Database
+  shell: "createdb {{ item.key }} {{ item.value.args | default('') }}"
+  with_dict: "{{ postgresql_dbs }}"
+  when: postgres_server_installed
+  become_user: postgres
+  register: postgres_db_created
+  changed_when: "'already exists' not in postgres_db_created.stderr"
+  failed_when:  "postgres_db_created.rc != 0 and 'already exists' not in postgres_db_created.stderr"
+
+- name: "Create PostgreSQL User"
+  shell: "psql -c \"CREATE USER {{ item.key }} WITH PASSWORD '{{ item.value.password }}'\""
+  with_dict: "{{ postgresql_users }}"
+  become_user: postgres
+  when: postgres_db_created
+  register: postgres_user_created
+  changed_when: "'already exists' not in postgres_user_created.stderr"
+  failed_when:  "postgres_user_created.rc != 0 and 'already exists' not in postgres_user_created.stderr"
+
+- name: "Check Existing Database Privileges"
+  shell: "psql -c \"\\l {{ item.key }}\""
+  with_dict: "{{ postgresql_dbs }}"
+  become_user: postgres
+  register: postgres_db_privs
+  changed_when: False
+
+- name: "Grant Database Privileges"
+  shell: "psql -c \"GRANT ALL PRIVILEGES ON DATABASE {{ item.1.key }} to {{ item.1.value.owner }}\""
+  with_indexed_items: "{{ postgres_db_privs.results | map(attribute='item') | list }}"
+  become_user: postgres
+  when: postgres_db_created
+  register: postgres_db_granted
+  changed_when: "'{{ item.1.value.owner }}=CTc/' not in postgres_db_privs.results[item.0].stdout"
+
+- name: "Configure PostgreSQL Bind Address (Step 1)"
+  lineinfile:
+  args:
+    dest:     '{{ postgresql_host_binding_config_file }}'
+    regexp:   'host(\s+)all(\s+)all(\s+)[0-9./]+(\s+)(\w+)'
+    line:     'host\g<1>all\g<2>all\g<3>{{ postgresql_authorized_address }}\g<4>md5'
+    backrefs: yes
+    backup:   yes
+  when: postgres_server_installed
+  notify: Restart PostgresSQL
+
+- name: "Configure PostgreSQL Bind Address (Step 2)"
+  lineinfile: dest="{{ postgresql_config_file }}" regexp="^\s*[#]?\s*listen_addresses(\s*)=(\s*)'[^']+'(.*)" line="listen_addresses\g<1>=\g<2>'{{ postgresql_listen_addresses }}'\g<3>" backrefs=yes backup=yes
+  when: postgres_server_installed
+  notify: Restart PostgresSQL
+
+- name: "Configure PostgreSQL Server Port"
+  lineinfile: dest="{{ postgresql_config_file }}" regexp="^\s*[#]?\s*port(\s*)=(\s*)[0-9]+(.*)" line="port\g<1>=\g<2>{{ postgresql_port }}\g<3>" backrefs=yes backup=yes
+  when: postgres_server_installed
+  notify: Restart PostgresSQL

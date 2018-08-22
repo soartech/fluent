@@ -1,0 +1,15 @@
+---
+
+self_report_ap_defaults:
+  web_root:    "/var/www/self-report-ap"
+  server_name: "{{ default_hostname | default('localhost') }}"
+  server_path: "/self-report-ap/"
+  port:        80
+  source_dir:  "self-report-ap"
+  vhost_file:  "self-report-ap-vhost.conf.j2"
+  owner:       "www-data"
+  group:       "www-data"
+  service: {}
+    #endpoint: "" # SET ME IN PLAYBOOK OR INVENTORY
+    #username:     "" # SET ME IN PLAYBOOK OR INVENTORY
+    #password:     "" # SET ME IN PLAYBOOK OR INVENTORY

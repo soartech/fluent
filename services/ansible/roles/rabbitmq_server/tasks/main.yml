@@ -1,0 +1,30 @@
+---
+
+- name: "Initialize RabbitMQ Server Configuration"
+  tags: always
+  set_fact:
+    rabbitmq_server: "{{ rabbitmq_defaults | combine(rabbitmq_server | default({}), recursive=True) }}"
+
+- name: "Debug Role Configuration"
+  tags: always
+  debug:
+    msg: "{{ rabbitmq_server }}"
+
+- name: "Install Erlang"
+  apt:
+    name: "erlang"
+    state: present
+    update_cache: "{{ rabbitmq_server.apt.update_cache }}"
+    cache_valid_time: "{{ rabbitmq_server.apt.cache_valid_time }}"
+
+- name: "Install RabbitMQ"
+  apt:
+    name: "rabbitmq-server"
+    state: present
+    update_cache: "{{ rabbitmq_server.apt.update_cache }}"
+    cache_valid_time: "{{ rabbitmq_server.apt.cache_valid_time }}"
+
+- name: "Enable HTTP API"
+  command: "rabbitmq-plugins enable rabbitmq_management"
+  become: true
+  

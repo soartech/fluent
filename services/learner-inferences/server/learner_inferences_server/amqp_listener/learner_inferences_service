@@ -1,0 +1,18 @@
+#!/bin/sh
+
+case "$1" in
+    start)
+        echo "Starting Learner Inference AMQP Listener Service..."
+        python3 /vagrant/learner-inferences/server/learner_inferences_server/amqp_listener/learner_inferences_listener.py start >> /var/log/learner-inferences/log
+        ;;
+    stop)
+        echo "Stopping Learner Inference AMQP Listener Service..."
+        python3 /vagrant/learner-inferences/server/learner_inferences_server/amqp_listener/learner_inferences_listener.py stop >> /var/log/learner-inferences/log
+        ;;
+    *)
+        echo "Useage: /etc/init.d/learner_inferences_service {start|stop}"
+        exit 1
+        ;;
+esac
+
+exit 0

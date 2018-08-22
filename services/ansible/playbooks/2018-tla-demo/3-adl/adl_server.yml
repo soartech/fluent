@@ -1,0 +1,27 @@
+---
+
+- name: "Provision TLA ADL Server"
+  hosts: adl_server
+  remote_user: root
+  become: yes
+  become_method: sudo
+
+  vars:
+    download_cache_dir: "{{ deployment_base }}/.ansible_cache"
+    tla_staging_dir:    "{{ deployment_base }}/tla-soartech/target"
+    tla_configs_dir:    "/opt/tla/config"
+
+  roles:
+
+    # Java
+    - role: java
+      java:
+        version:      "Server JRE 8u92"
+        download_url: "https://lcde.soartech.com/boxes/ansible-dependencies/java-8/server-jre-8u92-linux-x64.tar.gz"
+        home:         "/usr/lib/jvm/jdk1.8.0_92"
+
+    # We just have a single role to call for ADL's launch server.
+    # We'll do everything there.
+    - role: configure_adl_launch_server
+      configure_adl_server_defaults:
+        install_dir:    "/opt"

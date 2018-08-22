@@ -1,0 +1,47 @@
+---
+- name: Install RabbitMQ
+  apt: name=rabbitmq-server state=present update_cache=true cache_valid_time=3600
+
+- name: Create LRS RabbitMQ User
+  command: "rabbitmqctl add_user {{ lrs.celery.username }} {{ lrs.celery.password }}"
+  register: celerylrs_user_created
+  failed_when: "celerylrs_user_created.rc != 0 and 'user_already_exists' not in celerylrs_user_created.stderr"
+  changed_when: "celerylrs_user_created.rc == 0 and 'user_already_exists' not in celerylrs_user_created.stderr"
+
+- name: Create LRS RabbitMQ VHost
+  command: "rabbitmqctl add_vhost {{ lrs.celery.vhost }}"
+  register: celerylrs_vhost_created
+  changed_when: "celerylrs_vhost_created.rc == 0 and 'vhost_already_exists' not in celerylrs_vhost_created.stderr"
+  failed_when:  "celerylrs_vhost_created.rc != 0 and 'vhost_already_exists' not in celerylrs_vhost_created.stderr"
+
+- name: Check LRS RabbitMQ User Permissions
+  command: "rabbitmqctl list_permissions -p {{ lrs.celery.vhost }}"
+  register: celerylrs_cur_permissions
+  changed_when: False
+
+- name: Set LRS RabbitMQ User Permissions
+  command: "rabbitmqctl set_permissions -p {{ lrs.celery.vhost }} {{ lrs.celery.username }} \".*\" \".*\" \".*\""
+  register: celerylrs_permissions_set
+  when: 'celerylrs_cur_permissions.stdout | search("rabbitmq_user\s+\.\*\s+\.\*\s+\.\*") | ternary(False, True)'
+
+- name: "Create SYSVInit Script for Celery"
+  template:
+  args:
+    src:   'celerylrs.init.j2'
+    dest:  '/etc/init.d/{{ lrs.celery.init_name }}'
+    owner: root
+    group: root
+    mode:  0755
+  register: celerylrs_sysvinit_generated
+
+- name: "Remove old Upstart Script for Celery"
+  become: true
+  file:
+    path:  "/etc/init/celerylrs.conf"
+    state: absent
+  notify: "Restart LRS"
+
+- name: "Set update-rc.d for Celery"
+  become: true
+  command: "update-rc.d {{ lrs.celery.init_name }} defaults"
+  when: celerylrs_sysvinit_generated|changed

@@ -1,0 +1,47 @@
+---
+
+- name: "Prepare TCP Dump Directories"
+  file:
+    path:  "{{ item }}"
+    state: directory
+  with_items:
+    - "{{ tcpdump_service.output_path | dirname }}"
+    - "{{ tcpdump_service.filter_path | dirname }}"
+
+- name: "Create filter script for the tcpdump Daemon"
+  become: true
+  template:
+    src:   "{{ tcpdump_service.filter_template }}"
+    dest:  "{{ tcpdump_service.filter_path }}"
+    owner: root
+    group: root
+    mode:  0755
+
+- name: "Override AppArmor Settings"
+  become: true
+  lineinfile:
+    dest:   "/etc/apparmor.d/usr.sbin.tcpdump"
+    insertafter: "# for -r, -F and -w"
+    line:   "  {{ tcpdump_service.output_path | dirname }}/** rw,"
+    backup: yes
+  register: _apparmor_result
+
+- name: "Refresh AppArmor if Needed"
+  become: true
+  shell: "apparmor_parser -r /etc/apparmor.d/usr.sbin.tcpdump"
+  when: _apparmor_result|changed
+
+- name: "Create SYSVInit Script for the tcpdump Daemon"
+  become: true
+  template:
+    src:   "tcpd.j2"
+    dest:  "/etc/init.d/{{ tcpdump_service.init_name }}"
+    owner: root
+    group: root
+    mode:  0755
+  register: _tcpd_upstart_generated
+
+- name: "Set update-rc.d for tcpdump Daemon"
+  become: true
+  command: "update-rc.d {{ tcpdump_service.init_name }} {{ tcpdump_service.run_levels | join(' ') }}"
+  when: "_tcpd_upstart_generated|changed and (tcpdump_service.run_levels | length) > 0"

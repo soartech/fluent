@@ -1,0 +1,19 @@
+---
+
+maven_default_version:  "3.3.9"
+
+maven_defaults:
+  dest:             "/usr/share"
+  folder_name:      "apache-maven-{{ maven_default_version }}"
+  version:          "{{ maven_default_version }}"
+  download_url:     "http://apache.mirrors.ionfish.org/maven/maven-{{ maven_default_version.split('.')[0] }}/{{ maven_default_version }}/binaries/apache-maven-{{ maven_default_version }}-bin.tar.gz"
+  owner: root
+  group: root
+  priority_level: 100
+  copy_credentials: []
+  #  # Example copy_credentials item:
+  #  - source: "{{ lookup('env','HOME') }}/.m2"
+  #    dest:   "/home/user/.m2"
+  #    owner:  "user"
+  #    group:  "user"
+  download_cache_dir: "{{ download_cache_dir | default('/tmp') }}"

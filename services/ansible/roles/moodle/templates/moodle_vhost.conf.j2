@@ -1,0 +1,16 @@
+<VirtualHost *:{{ moodle.port }}>
+
+    ServerAdmin webmaster@localhost
+    DocumentRoot {{ moodle.web_root }}
+
+    ErrorLog ${APACHE_LOG_DIR}/moodle.error.log
+    CustomLog ${APACHE_LOG_DIR}/moodle.access.log combined
+
+    <Directory {{ moodle.web_root }}>
+        AllowOverride All
+        Require all granted
+    </Directory>
+
+</VirtualHost>
+
+# vim: syntax=apache ts=4 sw=4 sts=4 sr noet

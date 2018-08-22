@@ -1,0 +1,20 @@
+---
+postgresql_dbs: {}
+  #test: # SET ME IN PLAYBOOK OR INVENTORY
+  #  owner : "" # SET ME IN PLAYBOOK OR INVENTORY
+
+
+postgresql_users:
+  root: {}
+    # password: "" # SET ME IN PLAYBOOK OR INVENTORY
+
+postgresql_version:        "9.5"
+postgresql_version_string: "9.5.5-1.pgdg14.04+1"
+
+# The IP addresses that postgres will listen on
+# Give * to allow all IP addresses
+postgresql_listen_addresses:   "localhost"
+
+# The IP addresses that are allowed to connect to the database
+postgresql_authorized_address: "127.0.0.1/32"
+postgresql_port:               5432

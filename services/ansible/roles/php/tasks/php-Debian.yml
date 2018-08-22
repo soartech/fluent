@@ -1,0 +1,33 @@
+---
+
+- name: "Add PHP Apt Repository"
+  apt_repository:
+    repo: "ppa:ondrej/php"
+
+- name: "Install PHP"
+  apt:
+    name:  "{{ php.package_name }}"
+    state: present
+    update_cache:     true
+    cache_valid_time: 3600
+  notify: "Restart Apache"
+
+- name: "Install any PHP Add-ons"
+  apt:
+    name:  "{{ item }}"
+    state: present
+    update_cache:     true
+    cache_valid_time: 3600
+  with_items: "{{ php.addon_packages }}"
+  notify: "Restart Apache"
+
+- name: "Configure PHP Settings"
+  lineinfile:
+    dest:   "{{ php.conf_path }}"
+    line:   "{{ item.key }} = {{ item.value }}"
+    regexp: "{{ item.key }} ="
+    backup: yes
+  with_dict: "{{ php.config }}"
+  notify: "Restart Apache"
+
+- meta: flush_handlers

@@ -1,0 +1,25 @@
+---
+
+- name: "Make ansible cache directory"
+  file:
+    path:  "{{ download_cache_dir }}"
+    state: directory
+
+- name: "Identify Cached apt Files"
+  command: "ls {{ apt_caching_dir }}"
+  register: apt_caching_pkgs
+  changed_when: False
+  failed_when: False
+
+- name: "Link Cached Files into apt"
+  file:
+    path: "/var/cache/apt/archives/{{ item }}"
+    src: "{{ apt_caching_dir }}/{{ item }}"
+    state:   link
+  with_items: "{{ apt_caching_pkgs.stdout_lines }}"
+  when: "apt_caching_pkgs|success"
+  failed_when: False
+  #ignore_errors: yes
+  #register: apt_caching_linked
+  #changed_when: "apt_caching_linked|changed or 'refusing to convert between file and link' in apt_caching_linked.msg"
+  #failed_when: "apt_caching_linked|failed and 'refusing to convert between file and link' not in apt_caching_linked.msg"

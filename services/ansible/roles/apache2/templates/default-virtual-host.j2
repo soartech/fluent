@@ -1,0 +1,23 @@
+<VirtualHost *:{{ item.value.port }}>
+{% if item.value.server_name is defined %}
+
+    ServerName {{ item.value.server_name }}
+{% endif %}
+
+    DocumentRoot {{ item.value.root }}
+{% if item.value.index is defined %}
+    DirectoryIndex {{ item.value.index }}
+{% endif %}
+
+    ErrorLog  {{ apache2.log_dir }}/error.log
+    CustomLog {{ apache2.log_dir }}/access.log combined
+{% if item.value.log_level is defined %}
+    LogLevel {{ item.value.log_level }}
+{% endif %}
+
+    <Directory {{ item.value.root }}>
+        AllowOverride All
+        Require all granted
+    </Directory>
+
+</VirtualHost>

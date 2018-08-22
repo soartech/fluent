@@ -1,0 +1,2 @@
+ip
+and tcp portrange 8000-8100

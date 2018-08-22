@@ -1,0 +1,6 @@
+var config = {
+    "identityProviderName" : "{{ video_player.identity_provider }}",
+    "endpoint" : "{{ video_player.lrs.endpoint_url }}",
+    "auth" : "Basic " + toBase64("{{ video_player.lrs.username }}:{{ video_player.lrs.password }}"),
+    "activityIndexEndpoint" : "{{ video_player.activity_index }}"
+}

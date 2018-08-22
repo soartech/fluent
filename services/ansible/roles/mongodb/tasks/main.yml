@@ -1,0 +1,24 @@
+---
+
+- name: "Initialize Platform-Specific MongoDB Configuration"
+  tags: always
+  set_fact:
+    mongodb_platform_specific: "{{ mongodb_defaults | combine(_mongodb_platform_specific_defaults[ansible_distribution][ansible_distribution_release] | default({}), recursive=True) }}"
+
+- name: "Initialize MongoDB Configuration"
+  tags: always
+  set_fact:
+    mongodb: "{{ mongodb_platform_specific | combine(mongodb | default({}), recursive=True) }}"
+
+- name: "Debug Role Configuration"
+  tags: always
+  debug:
+    msg: "{{ mongodb }}"
+
+- name: "Create Init Cache Directory"
+  file:
+    path:  "{{ mongodb.init_cache_dir }}"
+    state: directory
+
+- include: "mongodb-{{ ansible_os_family }}.yml"
+  become:  true

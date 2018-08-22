@@ -1,0 +1,24 @@
+---
+
+- name: "Initialize Keycloak Self-Registraton Configuration"
+  set_fact:
+    keycloak_self_register: "{{ keycloak_self_register_defaults | combine(keycloak_self_register | default({}), recursive=True) }}"
+
+- name: "Debug Role Configuration"
+  debug:
+    msg: "{{ keycloak_self_register }}"
+
+- name: "Get Access Token for Administering Keycloak"
+  uri:
+    url: "{{ keycloak_self_register.base_url }}/realms/master/protocol/openid-connect/token"
+    method: POST
+    HEADER_Content-Type: "application/x-www-form-urlencoded"
+    body: "client_id=admin-cli&username={{ keycloak_self_register.admin.username }}&password={{ keycloak_self_register.admin.password }}&grant_type=password"
+    status_code: 200
+    return_content: yes
+  register: _auth_result
+  retries: 5
+  until: "'json' in _auth_result"
+
+- include: "register_client.yml"
+  with_items: "{{ keycloak_self_register.clients }}"

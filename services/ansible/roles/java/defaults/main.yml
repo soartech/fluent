@@ -1,0 +1,12 @@
+---
+
+# JDK 8u111 is downloaded by default.  Swap in a JRE download URL or different version to use that instead.
+
+java_defaults:
+  version:              "JDK 8u111"
+  download_url:         "http://download.oracle.com/otn-pub/java/jdk/8u111-b14/jdk-8u111-linux-x64.tar.gz" 
+  download_cache_dir:   "{{ download_cache_dir | default('/tmp') }}"
+  default_path:         "/usr/lib/jvm/default-java"
+  home:                 "/usr/lib/jvm/jdk1.8.0_111"
+  make_default_version: true
+  priority_level:       2000

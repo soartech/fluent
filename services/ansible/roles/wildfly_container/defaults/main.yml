@@ -1,0 +1,34 @@
+---
+
+wildfly_container_defaults:
+#  war_path: "/path/to/war/file/myapp.war"
+  download_cache_dir: "{{ download_cache_dir | default('/tmp') }}"
+  modules:  [] # Example:
+#   - name:         "org.postgresql"
+#     path:         "postgresql-9.4.1208.jre7.jar" [OPTIONAL, if download_url is set]
+#     download_url: "https://jdbc.postgresql.org/download/postgresql-9.4.1208.jre7.jar" [OPTIONAL, if path is set]
+#     download_checksum: [OPTIONAL]
+#     dependencies:
+#       - "javax.api"
+#       - "javax.transaction.api"
+  commands: []
+#    - |
+#        /subsystem=datasources/jdbc-driver=postgres:add(
+#            driver-name=postgres,
+#            driver-module-name=org.postgresql,
+#            driver-xa-datasource-class-name=org.postgresql.Driver
+#        )
+#    - |
+#        data-source add
+#            --name=PostgresDS
+#            --driver-name=postgres
+#            --driver-class=org.postgresql.Driver
+#            --connection-url=jdbc:postgresql://localhost:5432/learnerprofile
+#            --jndi-name=java:/jdbc/learnerprofile
+#            --user-name=root
+#            --password=insertPassword
+#            --jta=true
+#            --use-ccm=true
+#            --valid-connection-checker-class-name=org.jboss.jca.adapters.jdbc.extensions.postgres.PostgreSQLValidConnectionChecker
+#            --background-validation=true
+#            --exception-sorter-class-name=org.jboss.jca.adapters.jdbc.extensions.postgres.PostgreSQLExceptionSorter

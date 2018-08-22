@@ -1,0 +1,27 @@
+<VirtualHost *:{{ tla_config.recommender.port }}>
+
+    DocumentRoot /var/www/recommender
+
+    WSGIDaemonProcess recommender python-path=/usr/bin/python3
+    WSGIScriptAlias / /var/www/recommender/recommender.wsgi
+
+    # WSGIRestrictStdout Off
+    WSGIScriptReloading On
+
+    <Directory /var/www/recommender>
+        WSGIProcessGroup recommender
+        AllowOverride All
+        Require all granted
+    </Directory>
+
+    ServerName {{ st_server_hostname }}
+
+    ServerAdmin webmaster@localhost
+
+    Header add Access-Control-Allow-Origin "*"
+    Header set Access-Control-Allow-Headers "GET, POST, PATCH, DELETE, Content-Type"
+
+    ErrorLog ${APACHE_LOG_DIR}/recommender.error.log
+    CustomLog ${APACHE_LOG_DIR}/recommender.access.log combined
+
+</VirtualHost>

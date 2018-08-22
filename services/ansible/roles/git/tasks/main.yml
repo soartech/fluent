@@ -1,0 +1,2 @@
+---
+- include: "git-{{ ansible_os_family }}.yml"

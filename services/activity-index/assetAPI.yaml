@@ -1,0 +1,256 @@
+swagger: "2.0"
+
+info:
+  title: Asset API
+  description:
+    This API is used to interact with the data stored in the TLA Activity Index database.
+  version: "0.1.0"
+
+host: "fluent.tla"
+  
+basePath: /activity-index
+
+schemes:
+- https
+
+consumes:
+- application/ld+json
+
+produces:
+- application/ld+json
+
+paths:
+  /activities:
+    get:
+      tags:
+      - Multiple Activities
+      summary: Obtains multiple LearningActivity objects
+      description: Returns a collection of LearningActivity objects; all activities are returned if "limit" and "offset" were not specified
+      operationId: getActivities
+      parameters:
+      - name: limit
+        in: query
+        description: The maximum number of objects that will be returned
+        required: false
+        type: integer
+      - name: offset
+        in: query
+        description: Determines the first object to be returned
+        required: false
+        type: integer
+      responses:
+        200:
+          description: LearningActivity objects successfully returned
+          schema:
+            type: array
+            items:
+              $ref: "../schemas/tla-definitions.yaml#/definitions/LearningActivity"
+        400:
+          $ref: "#/responses/Standard400Response"
+        404:
+          description: Not Found
+        500:
+          $ref: "#/responses/Standard500Response"
+    post:
+      tags:
+      - Single Activity
+      summary: Creates a LearningActivity.
+      description: Creates a new LearningActivity, which is given as a whole object in the payload.
+      operationId: postActivity
+      parameters:
+      - name: activityObj
+        in: body
+        description: LearningActivity object to add.
+        required: true
+        schema:
+          $ref: "../schemas/tla-definitions.yaml#/definitions/LearningActivity"
+      responses:
+        201:
+          description: LearningActivity object successfully created
+        400:
+          $ref: "#/responses/Standard400Response"
+        500:
+          $ref: "#/responses/Standard500Response"
+
+  /activities/{activityId}:
+    get:
+      tags:
+      - Single Activity
+      summary: Obtains LearningActivity info
+      description: Obtains the information of the corresponding LearningActivity
+      operationId: getActivity
+      parameters:
+        - name: activityId
+          in: path
+          description: The ID of the requested LearningActivity
+          required: true
+          type: string
+      responses:
+        200:
+          description: LearningActivity object successfully returned
+          schema:
+            $ref: "../schemas/tla-definitions.yaml#/definitions/LearningActivity"
+        400:
+          $ref: "#/responses/Standard400Response"
+        404:
+          description: Not Found
+        500:
+          $ref: "#/responses/Standard500Response"
+    patch:
+      tags:
+      - Single Activity
+      summary: Updates LearningActivity info
+      description: Updates the information of the LearningActivity, which is given partially (one or more of the top-level properties) in the payload
+      operationId: updateActivity
+      parameters:
+        - name: activityId
+          in: path
+          description: The ID of the requested LearningActivity
+          required: true
+          type: string
+        - name: activityObj
+          in: body
+          description: LearningActivity object to update
+          required: true
+          schema:
+            type: object
+            description: The fields contained within this object should match a subset of those in the LearningActivity schema
+      responses:
+        200:
+          description: LearningActivity object successfully updated
+        400:
+          $ref: "#/responses/Standard400Response"
+        404:
+          description: Not Found
+        500:
+          $ref: "#/responses/Standard500Response"
+    delete:
+      tags:
+      - Single Activity
+      summary: Deletes a LearningActivity object
+      description: Removes the LearningActivity from the database
+      operationId: deleteActivity
+      parameters:
+        - name: activityId
+          in: path
+          description: The ID of the requested LearningActivity
+          required: true
+          type: string
+      responses:
+        200:
+          description: LearningActivity object successfully deleted
+        400:
+          $ref: "#/responses/Standard400Response"
+        404:
+          description: Not Found
+        500:
+          $ref: "#/responses/Standard500Response"
+  /associations:
+    post:
+      tags:
+      - Associations
+      summary: Generates mapping from TLOs/ELOs to activities and token types to activities
+      description: Generates a list of all activities mapped to their corresponding TLOs/ELOs and a list of all activities mapped to their corresponding token types
+      operationId: generateAssociations
+      responses:
+        201:
+          description: Competency and token associations successfully created
+        400:
+          $ref: "#/responses/Standard400Response"
+        500:
+          $ref: "#/responses/Standard500Response"
+  /competency-associations:
+    get:
+      tags:
+      - Associations
+      summary: Obtains mapping of TLOs/ELOs to activities
+      description: Obtains the list of all activities mapped to their corresponding TLOs/ELOs
+      operationId: getCompetencyAssociations
+      responses:
+        200:
+          description: Competency associations successfully returned
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/CompetencyAssociations"
+        400:
+          $ref: "#/responses/Standard400Response"
+        404:
+          description: Not Found
+        500:
+          $ref: "#/responses/Standard500Response"
+  /token-associations:
+    get:
+      tags:
+      - Associations
+      summary: Obtains mapping of token types to activities
+      description: Obtains the list of all activities mapped to their corresponding token types
+      operationId: getTokenAssociations
+      responses:
+        200:
+          description: Token associations successfully returned
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/TokenAssociations"
+        400:
+          $ref: "#/responses/Standard400Response"
+        404:
+          description: Not Found
+        500:
+          $ref: "#/responses/Standard500Response"
+          
+definitions:
+  CompetencyAssociations:
+    type: object
+    required:
+      - competency
+      - activities
+    properties:
+      competency:
+        type: string
+        description: URL reference to TLO or ELO
+        format: url
+      activities:
+        type: array
+        description: IDs of activities associated with the TLO/ELO
+        items:
+          type: string
+  Error:
+    type: object
+    required:
+      - errorMessage
+    properties:
+      errorMessage:
+        type: string
+      errorCode:
+        type: string
+      errorLink:
+        type: string
+        format: url
+      userMessage:
+        type: string
+  TokenAssociations:
+    type: object
+    required:
+      - tokenType
+      - activities
+    properties:
+      tokenType:
+        type: string
+        description: String representing the token type
+      activities:
+        type: array
+        description: IDs of activities associated with the token type
+        items:
+          type: string
+      
+responses:
+  Standard400Response:
+    description: Invalid request.
+    schema:
+      $ref: "#/definitions/Error"
+  Standard500Response:
+    description: An unexpected server error occurred.
+    schema:
+      $ref: "#/definitions/Error"

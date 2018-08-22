@@ -1,0 +1,142 @@
+swagger: "2.0"
+info:
+  description: "This is the API definition for the Recommender service."
+  version: "1.0.0"
+  title: "Recommender API"
+host: "localhost"
+basePath: "/recommender"
+schemes:
+- "http"
+paths:
+  /recommendation:
+    get:
+      tags:
+      - Recommendation
+      summary: "Get a new recommendation"
+      description: ""
+      produces:
+      - "application/json"
+      parameters:
+      - name: "learnerId"
+        in: "query"
+        description: "Id of the learner to get a recommendation for"
+        required: true
+        type: "string"
+      - name: "focusedCompetencies"
+        in: "query"
+        description: "Optional parameter to toggle focused competencies"
+        required: false
+        type: "boolean"
+        allowEmptyValue: true
+      responses:
+        200:
+          description: "Successfully got a recommendation"
+          schema:
+            $ref: "#/definitions/Recommendation"
+        404:
+          description: "learnerId not found."
+  /upcoming:
+    get:
+      tags:
+      - Upcoming
+      summary: "Get upcoming activities"
+      description: "Returns an overview of what the learner will be working on (and reflected in upcoming recommendations). It should include current ELO in the sequence that the learner has not yet mastered that they will continue learning. It will also include any ELOs that the learner has forgotten that will be reviewed."
+      produces:
+      - "application/json"
+      parameters:
+      - name: "learnerId"
+        in: "query"
+        description: "Id of the learner to get a recommendation for"
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: "Successfully got a recommendation"
+          schema:
+            $ref: "#/definitions/Recommendation"
+        404:
+          description: "learnerId not found."
+  /all:
+    get:
+      tags:
+      - All
+      summary: "Get all activities"
+      description: "Returns all activities."
+      produces:
+      - "application/json"
+      parameters:
+      - name: "learnerId"
+        in: "query"
+        description: "Id of the learner to get a recommendation for"
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: "Successfully got a recommendation"
+          schema:
+            $ref: "#/definitions/Recommendation"
+        404:
+          description: "learnerId not found."
+definitions:
+  Recommendation:
+    type: "object"
+    properties:
+      _type:
+        type: "string"
+        enum:
+        - "Recommendation"
+      timestamp:
+        type: "string"
+        format: "date-time"
+        description: "ISO8601 formatted timestamp"
+      learner:
+        type: "string"
+        description: "ID of the learner requesting the recommendation"
+      assignment:
+        $ref: "#/definitions/RecommendedActivity"
+      recommendations:
+        type: "array"
+        description: "Array of RecommendationRow objects. Null if assignment is not null."
+        items:
+          $ref: "#/definitions/RecommendationRow"
+  RecommendationRow:
+    type: "object"
+    properties:
+      _type:
+        type: "string"
+        enum:
+        - "RecommendationRow"
+      name:
+        type: "string"
+        description: "Display name of the recommendation row."
+      strategy:
+        type: "string"
+        description: "Strategy class used to make the recommendations in this row."
+      params:
+        type: "object"
+        description: "Keys with string values, representing the parameters used to instantiate this strategy."
+        additionalProperties:
+          type: "string"
+      activities:
+        type: "array"
+        description: "an array of recommendations in the form of activity ids"
+        items:
+          $ref: "#/definitions/RecommendedActivity"
+  RecommendedActivity:
+    type: "object"
+    properties:
+      activityId:
+        type: "string"
+        description: "Unique ID for an activity"
+      tokens:
+        type: "integer"
+        description: "Number of tokens the user gets if this activity is completed"
+      attemptRate:
+        type: "number"
+        description: "Popularity level based on attempt rates."
+      popularityRating:
+        type: "number"
+        description: "Popularity rating based on user ratings."
+      priority:
+        type: "number"
+        description: "Priority value of the activity as determined by the recommendation strategy."

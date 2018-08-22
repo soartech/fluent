@@ -1,0 +1,11 @@
+---
+
+- name: "Initialize TCP Dump Service Configuration"
+  set_fact:
+    tcpdump_service: "{{ tcpdump_service_defaults | combine(tcpdump_service | default({}), recursive=True) }}"
+
+- name: "Debug Role Configuration"
+  debug:
+    msg: "{{ tcpdump_service }}"
+
+- include: "tcpdump-{{ ansible_os_family }}.yml"

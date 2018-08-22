@@ -1,0 +1,17 @@
+---
+
+cass_default_version: "0.3"
+
+cass_defaults:
+  base_url: "http://localhost"
+  external_services:
+    lrs: { base_url: "http://localhost:8000" }
+  # redirect_url: "http://{{ st_server_hostname }}:8080/cass/"
+  redirect_url: "http://insertCassUrl/"
+  download_cache_dir: "{{ download_cache_dir | default('/tmp') }}"
+  init_cache_dir: "{{ init_cache_dir | default('/var/cache/ansible') }}/cass"
+  download_url: "https://github.com/cassproject/CASS/archive/{{ cass_default_version }}.tar.gz"
+  version: "{{ cass_default_version }}"
+  elasticsearch:
+    download_url: "https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-5.6.7.deb"
+    checksum: "sha512:a86976e14874244d58f45f31cd95259404a04d33928c33ead3e1d40a082b7186d9dda65bdad7f69544233efddec7c3df40b65fa42413ddf94d64bf5d315f1398"

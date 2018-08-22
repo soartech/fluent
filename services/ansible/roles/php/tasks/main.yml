@@ -1,0 +1,18 @@
+---
+
+- name: "Initialize Platform-Specific PHP Configuration"
+  tags: always
+  set_fact:
+    php_platform_specific: "{{ php_defaults | combine(_php_platform_specific_defaults[ansible_distribution][ansible_distribution_release] | default({}), recursive=True) }}"
+
+- name: "Initialize PHP Configuration"
+  tags: always
+  set_fact:
+    php: "{{ php_platform_specific | combine(php | default({}), recursive=True) }}"
+
+- name: "Debug Role Configuration"
+  tags: always
+  debug:
+    msg: "{{ php }}"
+
+- include: "php-{{ ansible_os_family }}.yml"

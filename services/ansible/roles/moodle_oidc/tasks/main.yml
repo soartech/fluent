@@ -1,0 +1,51 @@
+---
+
+- name: "Initialize Moodle OpenID Config Configuration"
+  set_fact:
+    moodle_oidc: "{{ moodle_oidc_defaults | combine(moodle_oidc | default({}), recursive=True) }}"
+
+- name: "Debug Role Configuration"
+  debug:
+    msg: "{{ moodle_oidc }}"
+
+- name: "Get Keycloak OpenID Configuration"
+  uri:
+    url: "{{ moodle_oidc.keycloak_well_known }}/openid-configuration"
+    method: GET
+    status_code: 200
+    return_content: yes
+  register: _keycloak_openid_cfg
+  when: "moodle_oidc.keycloak_well_known is defined"
+
+- name: "Copy keycloak.json Web Root"
+  template:
+    src:  "keycloak-moodle.json.j2"
+    dest: "{{ moodle_oidc.client_info_path }}"
+
+- name: "Get Moodle OpenID Client Secret"
+  command: "cat {{ moodle_oidc.client_info_path }}"
+  register: _keycloak_client_info_raw
+
+- name: "Parse Moodle OpenID Client Secret"
+  set_fact:
+    _keycloak_client_info: "{{ _keycloak_client_info_raw.stdout | from_json }}"
+
+- name: "Initialize Moodle OpenID Config Configuration"
+  set_fact:
+    _moodle_oidc_config:
+      s_auth_oidc_opname:           "{{ moodle_oidc.config.provider_name }}"
+      s_auth_oidc_clientid:         "{{ moodle_oidc.config.client_id }}"
+      s_auth_oidc_clientsecret:     "{{ _keycloak_client_info.credentials.secret }}"
+      s_auth_oidc_authendpoint:     "{{ moodle_oidc.config.auth_endpoint  | default(_keycloak_openid_cfg.json.authorization_endpoint) }}"
+      s_auth_oidc_tokenendpoint:    "{{ moodle_oidc.config.token_endpoint | default(_keycloak_openid_cfg.json.token_endpoint) }}"
+      s_auth_oidc_oidcresource:     "{{ moodle_oidc.config.resource }}"
+      s_auth_oidc_autoappend:       "{{ moodle_oidc.config.autoappend }}"
+      s_auth_oidc_domainhint:       "{{ moodle_oidc.config.domain_hint }}"
+      s_auth_oidc_loginflow:        "{{ moodle_oidc.config.login_flow }}"
+      s_auth_oidc_userrestrictions: "{{ moodle_oidc.config.user_restrictions }}"
+      s_auth_oidc_debugmode:        "{{ moodle_oidc.config.debug_mode }}"
+      s_auth_oidc_icon:             "{{ moodle_oidc.config.icon }}"
+      s_auth_oidc_customicon:       "{{ moodle_oidc.config.custom_icon }}"
+
+- include: "moodle_oidc-{{ ansible_os_family }}.yml"
+

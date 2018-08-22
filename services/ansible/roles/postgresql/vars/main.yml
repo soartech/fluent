@@ -1,0 +1,4 @@
+---
+
+postgresql_host_binding_config_file: "/etc/postgresql/{{ postgresql_version }}/main/pg_hba.conf"
+postgresql_config_file:              "/etc/postgresql/{{ postgresql_version }}/main/postgresql.conf"

@@ -1,0 +1,26 @@
+# Override these default values by specifying the "ae.properties.location" system property. 
+
+# The URL the Adaptation Engine nodes will use to communicate. 
+ae.url=http://{{ st_server_hostname }}:8081/adaptation-engine
+
+# The URL the Adaptation Engine will use to query the Learner Profile
+ae.learnerProfile.url=http://{{ st_server_hostname }}/api/custom
+
+# The framework of the competencies in question.  Necessary for CASS.  Will probably be removed later
+ae.learnerProfile.framework=http://{{ st_server_hostname }}/api/custom/data/insertCassSchemaUrl.0.2.Framework/5c0b7012-b2fd-431e-aab2-ee3feb323085
+
+# The URL the Adaptation Engine will use to query the Activity Index
+ae.activityIndex.url={{ tla_config.nuxeo.base_url }}
+# The username the Adaptation Engine will use to query the Activity Index
+ae.activityIndex.user={{ tla_config.nuxeo.username }}
+# The password the Adaptation Engine will use to query the Activity Index
+ae.activityIndex.password={{ tla_config.nuxeo.password }}
+
+# The URL the Adaptation Engine will use to query the LRS
+ae.lrs.url={{ tla_config.lrs.xapi_base_url }}
+# The username the Adaptation Engine will use to query the LRS
+ae.lrs.user={{ tla_config.lrs.username }}
+# The password the Adaptation Engine will use to query the LRS
+ae.lrs.password={{ tla_config.lrs.password }}
+
+ae.node.merge.children=assessment,instruction

@@ -1,0 +1,16 @@
+---
+
+- name: "Initialize Recommendation-UI Configuration"
+  set_fact:
+    recommendation_ui_config: "{{ recommendation_ui_config_defaults | combine(recommendation_ui_config | default({}), recursive=True) }}"
+
+- name: "Make sure the directory exists"
+  file:
+    path: "{{ recommendation_ui_config.dest | dirname }}"
+    state: directory
+    mode: 0755
+
+- name: "Copy config template to tmp directory"
+  template:
+    src:    "config.properties.j2"
+    dest:   "{{ recommendation_ui_config.dest }}"

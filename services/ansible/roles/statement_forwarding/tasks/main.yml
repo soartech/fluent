@@ -1,0 +1,49 @@
+---
+
+- name: Install Pip
+  command: apt-get -y install python3-pip
+
+- name: Install Flask
+  command: python3 -m pip install flask==0.12.2
+
+- name: Install Pika
+  command: python3 -m pip install pika==0.11.2
+
+- name: Copy script files to /var/www/statementforwarding
+  copy:
+    src: "{{ role_path }}/files/statementforwarding/"
+    dest: "/var/www/statementforwarding"
+
+- name: Copy Apache config file
+  template:
+    src:  "statementforwarding.j2"
+    dest: "/etc/apache2/sites-available/statementforwarding.conf"
+  notify: restart apache
+
+- name: "Add Listening Port to ports.conf"
+  lineinfile:
+    dest: "/etc/apache2/ports.conf"
+    line: "Listen {{ tla_config.statement_forwarding.port }}"
+  notify: restart apache
+
+- name: "Enable Statement Forwarding VirtualHost"
+  shell: "a2ensite statementforwarding"
+  args:
+    creates: "/etc/apache2/sites-enabled/statementforwarding.conf"
+  notify: restart apache
+
+- name: "Flag LearningLocker role to set up forwarding"
+  set_fact:
+    _ll_set_forwarding: true
+
+- name: "Create AMQP User/Password"
+  shell: "rabbitmqctl add_user experiences_usr exp_pwd"
+  become: true
+  become_user: root
+  register: command_result
+  failed_when: command_result.stderr != "" and 'user_already_exists' not in command_result.stderr
+
+- name: "Give AMQP user permissions"
+  shell: "rabbitmqctl set_permissions -p / experiences_usr \".*\" \".*\" \".*\" "
+  become: true
+  become_user: root

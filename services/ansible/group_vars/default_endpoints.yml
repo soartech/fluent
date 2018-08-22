@@ -1,0 +1,86 @@
+
+tla_config:
+  application_launcher:
+    base_url:      "http://{{ adl_server_hostname }}:8081/application-launcher"
+    rest_base_url: "http://{{ adl_server_hostname }}:8081/application-launcher/rest"
+    web_base_url:  "http://{{ adl_server_hostname }}:8081/application-launcher/client"
+  cass:
+    version: "0.3" #name of the branch
+    #redirect_url: "http://{{ st_server_hostname }}:8080/cass/"
+
+    # external redirect, which bypasses install scripts
+    redirect_url: "http://insertCassUrl/" 
+  discovery_service:
+    port:     8085
+    base_url: "http://{{ adl_server_hostname }}:8085"
+  wildfly:
+    port:     8081 # Must be at least 8080
+    username: insertUsername
+    password: insertPassword
+  keycloak:
+    port:     8081
+    base_url: "http://{{ adl_server_hostname }}:8081/auth"
+    local_base_url: "http://localhost:8081/auth"
+    username: insertUsername
+    password: insertPassword
+  lrs:
+    ports:
+      redirect: 8001
+      ui:       3000
+      api:      8090
+      xapi:     8091
+      redis:    6379
+      mongodb:  27017
+    base_url:       "http://{{ lrs_hostname }}:8001"
+    xapi_base_url:  "http://{{ lrs_hostname }}:8001/data/xAPI"
+    local_base_url: "http://localhost:8001"
+    admin:
+      organization: "Soartech"
+      email: "root@soartech.com"
+      password: "insertPassword"
+    db:
+      owner: "mongoDBOwner"
+      password: "insertPassword"
+  zookeeper:
+    port:    2181
+    version: 3.4.8
+  statement_forwarding:
+    #serverName: "{{ lrs_hostname }}"
+    serverName: "localhost"
+    port: 5678
+  activity_index:
+    base_url: "http://{{ st_server_hostname }}:8989/activity-index"
+    activity_endpoint: "http://{{ st_server_hostname }}:8989/activity-index/activities"
+    port: 8989
+    mongodb_port: 27017
+  learner_inferences:
+    base_url: "http://{{ st_server_hostname }}:8999/learner-inferences"
+    learner_endpoint: "http://{{ st_server_hostname }}:8999/learner-inferences/learners"
+    port: 8999
+  recommender:
+    base_url: "http://{{ st_server_hostname }}:8979/recommender"
+    port: 8979
+  recommender_ui_support:
+    base_url: "http://{{ st_server_hostname }}:8778/rui-support"
+    port: 8778
+  postgres:
+    root_password: "insertPassword"
+  cass_worker:
+    port: 9722
+
+ap_config:
+  static_viewer:
+    port: 8000
+  video_player:
+    port: 8001
+  assessment_ap:
+    port: 8002
+  content_host:
+    port: 8003
+  moodle:
+    # base_url: ""
+    username: "insertUsername"
+    password: "insertPassword"
+    email: "admin@example.com"
+    postgres:
+      password: "insertPassword"

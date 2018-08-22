@@ -1,0 +1,7 @@
+ip
+and
+(  tcp port 80
+or tcp port 443
+or ( tcp portrange 8000-8100
+     and not tcp port 8080 )
+)

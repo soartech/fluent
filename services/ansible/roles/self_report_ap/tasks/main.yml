@@ -1,0 +1,59 @@
+---
+
+- name: "Initialize Self-Report Configuration"
+  set_fact:
+    self_report_ap: "{{ self_report_ap_defaults | combine(self_report_ap | default({}), recursive=True) }}"
+
+- name: "Debug Role Configuration"
+  debug:
+    msg: "{{ self_report_ap }}"
+
+- name: "Create Self-Report Web Root Directory"
+  file:
+    path:    "{{ self_report_ap.web_root }}"
+    state:   directory
+    owner:   "{{ self_report_ap.owner }}"
+    group:   "{{ self_report_ap.group }}"
+
+- name: "Copy Code to Web Root"
+  copy:
+    src:  "{{ self_report_ap.source_dir }}/"
+    dest: "{{ self_report_ap.web_root }}"
+
+#- name: "Configure LRS Endpoint Address"
+#  lineinfile:
+#    dest:     "{{ self_report_ap.web_root }}/index.html"
+#    line:     "        \"endpoint\" : \"{{ self_report_ap.lrs.endpoint_url }}\","
+#    regexp:   "['\"]endpoint['\"]\\s*:"
+#
+#- name: "Configure LRS Endpoint Credentials"
+#  lineinfile:
+#    dest:     "{{ self_report_ap.web_root }}/index.html"
+#    line:     "        \"auth\" : \"Basic \" + toBase64(\"{{ self_report_ap.lrs.username }}:{{ self_report_ap.lrs.password }}\"),"
+#    regexp:   "['\"]auth['\"]\\s*:"
+
+- name: "Configure LRS Endpoint"
+  template:
+    src:  "config.js.j2"
+    dest: "{{ self_report_ap.web_root }}/js/config.js"
+
+- name: "Copy Self-Report VirtualHost File"
+  template:
+    src:  "{{ self_report_ap.vhost_file }}"
+    dest: "/etc/apache2/sites-available/self-report-ap-vhost.conf"
+  notify: "Restart Apache"
+
+- name: "Add Listening Port to ports.conf"
+  lineinfile:
+    dest: "/etc/apache2/ports.conf"
+    line: "Listen {{ self_report_ap.port }}"
+  notify: "Restart Apache"
+
+- name: "Enable Moodle VirtualHost"
+  shell: "a2ensite self-report-ap-vhost"
+  args:
+    creates: "/etc/apache2/sites-enabled/self-report-ap-vhost.conf"
+  notify: "Restart Apache"
+
+# Restart services if needed
+- meta: flush_handlers

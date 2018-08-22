@@ -1,0 +1,20 @@
+<VirtualHost *:{{ video_player.port }}>
+
+    DocumentRoot {{ video_player.web_root }}
+
+    ServerName {{ video_player.server_name }}
+    ServerPath "{{ video_player.server_path }}"
+
+    ServerAdmin webmaster@localhost
+
+    ErrorLog ${APACHE_LOG_DIR}/youtube-player.error.log
+    CustomLog ${APACHE_LOG_DIR}/youtube-player.access.log combined
+
+    <Directory {{ video_player.web_root }}>
+        AllowOverride All
+        Require all granted
+    </Directory>
+
+</VirtualHost>
+
+# vim: syntax=apache ts=4 sw=4 sts=4 sr noet

@@ -1,0 +1,8 @@
+conn = new Mongo();
+
+{% for db in mongodb.dbs %}
+db = conn.getDB("{{ db.name }}");
+    {% for user in db.users %}
+    db.createUser({{ user | to_json }});
+    {% endfor %}
+{% endfor %}

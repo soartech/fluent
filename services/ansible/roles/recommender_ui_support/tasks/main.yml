@@ -1,0 +1,59 @@
+---
+
+- name: Install Pip
+  command: apt-get -y install python3-pip
+
+- name: Install PyMongo
+  command: python3 -m pip install pymongo
+
+- name: Install Flask
+  command: python3 -m pip install flask
+
+- name: Install Connexion
+  command: python3 -m pip install connexion
+
+- name: Copy config.py file
+  template:
+    src:  "config.py.j2"
+    dest: "/vagrant/recommender-ui-support/swagger_server/config.py"
+  notify: restart apache
+
+- name: "Copy Recommender UI Support Files to Server"
+  copy:
+    src: /vagrant/recommender-ui-support
+    dest: /recommender-ui-support
+
+- name: Install Recommender UI Support Server Python Package in Develop Mode
+  command: python3 -m pip install -e /vagrant/recommender-ui-support/
+
+- name: Make /var/www/recommender-ui-support Directory
+  file:
+    path: /var/www/recommender-ui-support
+    state: directory
+
+- name: "Enable apache2 Headers Module"
+  shell: "a2enmod headers"
+  become: true
+
+- name: Copy WSGI file to /var/www/recommender-ui-support
+  copy:
+    src: "recommender_ui_support.wsgi"
+    dest: "/var/www/recommender-ui-support"
+
+- name: Copy Apache config file
+  template:
+    src:  "recommender-ui-support.j2"
+    dest: "/etc/apache2/sites-available/recommender-ui-support.conf"
+  notify: restart apache
+
+- name: "Add Listening Port to ports.conf"
+  lineinfile:
+    dest: "/etc/apache2/ports.conf"
+    line: "Listen {{ tla_config.recommender_ui_support.port }}"
+  notify: restart apache
+
+- name: "Enable Recommender UI Support VirtualHost"
+  shell: "a2ensite recommender-ui-support"
+  args:
+    creates: "/etc/apache2/sites-enabled/recommender-ui-support.conf"
+  notify: restart apache

@@ -1,0 +1,245 @@
+swagger: "2.0"
+
+info:
+  title: CASS API
+  description:
+    This API is used to interact with the data stored in the CASS database.
+  version: "0.1.0"
+
+host: "insertCassUrl"
+
+basePath: /api/data
+
+schemes:
+- https
+
+consumes:
+- application/ld+json
+
+produces:
+- application/ld+json
+
+paths:
+
+  /insertCassSchemaUrl.0.3.Competency/{competencyId}:
+    get:
+      tags:
+      - CASS Single Object
+      summary: Obtains Competencty info.
+      description: Obtains the information of the corresponding Competency.
+      operationId: getCompetency
+      parameters:
+        - name: competencyId
+          in: path
+          description: The ID of the requested Competency.
+          required: true
+          type: string
+      responses:
+        200:
+          description: CASS Competency object successfully returned.
+          schema:
+            $ref: "#/definitions/Competency"
+
+  /insertCassSchemaUrl.0.3.Framework/{frameworkId}:
+    get:
+      tags:
+      - CASS Single Object
+      summary: Obtains Framework info.
+      description: Obtains the information of the corresponding Framework.
+      operationId: getFramework
+      parameters:
+        - name: frameworkId
+          in: path
+          description: The ID of the requested Framework.
+          required: true
+          type: string
+      responses:
+        200:
+          description: CASS Framework object successfully returned.
+          schema:
+            $ref: "#/definitions/Framework"
+
+  /insertCassSchemaUrl.0.3.Relation/{relationId}:
+    get:
+      tags:
+      - CASS Single Object
+      summary: Obtains Relation info.
+      description: Obtains the information of the corresponding Relation.
+      operationId: getRelation
+      parameters:
+        - name: relationId
+          in: path
+          description: The ID of the requested Relation.
+          required: true
+          type: string
+      responses:
+        200:
+          description: CASS Relation object successfully returned.
+          schema:
+            $ref: "#/definitions/Relation"
+
+definitions:
+  Framework:
+   type: "object"
+   properties:
+      "@context":
+            type: string
+            enum:
+            - "http://insertCassSchemaUrl/0.3"
+      "@type":
+        type: string
+        enum:
+        - "Framework"
+      "@id":
+        description: The identifier property represents any kind of identifier for any
+          kind of Thing, such as ISBNs, GTIN codes, UUIDs etc. Schema.org provides dedicated
+          properties for representing many of these, either as textual strings or as
+          URL (URI) links. See background notes for more details.
+        type: "string"
+        format: uri
+      "@owner":
+        type: array
+        items:
+          type: string
+        description: Owner public key
+      "@signature":
+        type: array
+        items:
+          type: string
+        description: Owner signature
+      competency:
+        type: array
+        items:
+          type: string
+          format: uri
+        description: URI IDs of the competencies in the framework.
+      description:
+        type: string
+        description: The description of the framework.
+      level:
+        type: array
+        items:
+          type: string
+          format: uri
+        description: In Schema.org, URLs of levels included in the framework.
+      name:
+        type: string
+        description: The name of the framework.
+      relation:
+        type: array
+        items:
+          type: string
+          format: uri
+        description: The URLs of the Relation objects included in the framework.
+      "schema:dateCreated":
+        type: string
+        format: date-time
+        description: The date the framework was created.
+      "schema:dateModified":
+        type: string
+        format: date-time
+        description: The last time the framework was modified.
+
+  Competency:
+   type: "object"
+   properties:
+      "@context":
+            type: string
+            enum:
+            - "http://insertCassSchemaUrl/0.3"
+      "@type":
+        type: string
+        enum:
+        - "Competency"
+      "@id":
+        description: The identifier property represents any kind of identifier for any
+          kind of Thing, such as ISBNs, GTIN codes, UUIDs etc. Schema.org provides dedicated
+          properties for representing many of these, either as textual strings or as
+          URL (URI) links. See background notes for more details.
+        type: "string"
+        format: uri
+      "@owner":
+        type: array
+        items:
+          type: string
+        description: Owner public key
+      "@signature":
+        type: array
+        items:
+          type: string
+        description: Owner signature
+      "ceasn:codedNotation":
+        type: string
+        description: "Chapter-style coded notation for the ELOs and TLOs, e.g. 3.1, 3.2, 3.3, etc..."
+      "ceasn:conceptTerm":
+        type: string
+        format: uri
+        description: "The URI ID of the ceasn:conceptTerm used to detrmine if the ELO/TLO is 'Well defined' or 'Ill defined'"
+      "dcterms:type":
+        type: string
+        description: Determines the type of the competency.
+      description:
+        type: string
+        description: The description of the competency.
+      name:
+        type: string
+        description: The name of the competency.
+      "schema:dateCreated":
+        type: string
+        format: date-time
+        description: The date the competency was created.
+      "schema:dateModified":
+        type: string
+        format: date-time
+        description: The last time the competency was modified.
+
+  Relation:
+   type: "object"
+   properties:
+      "@context":
+            type: string
+            enum:
+            - "http://insertCassSchemaUrl/0.3"
+      "@type":
+        type: string
+        enum:
+        - "Relation"
+      "@id":
+        description: The identifier property represents any kind of identifier for any
+          kind of Thing, such as ISBNs, GTIN codes, UUIDs etc. Schema.org provides dedicated
+          properties for representing many of these, either as textual strings or as
+          URL (URI) links. See background notes for more details.
+        type: "string"
+        format: uri
+      "@owner":
+        type: array
+        items:
+          type: string
+        description: Owner public key
+      "@signature":
+        type: array
+        items:
+          type: string
+        description: Owner signature
+      relationType:
+        type: string
+        enum:
+        - narrows
+        - requires
+        - desires
+        - isEnabledBy
+        - isRelatedTo
+        - isEquivalentTo
+        description: "Enumerated string describing the relation. May be: 'narrows', 'desires', 'requires', 'isEnabledBy', 'isRelatedTo', or 'isEquivalentTo'."
+      "schema:dateCreated":
+        type: string
+        format: date-time
+        description: The date the competency was created.
+      source:
+        type: string
+        format: uri
+        description: URL of the competency at the beginning of the relation.
+      target:
+        type: string
+        format: uri
+        description: URL of the competency at the end of the relation.

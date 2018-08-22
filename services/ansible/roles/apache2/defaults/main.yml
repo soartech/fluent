@@ -1,0 +1,26 @@
+---
+
+apache2_defaults:
+  config_dir: "/etc/apache2"
+  init_name:  "apache2"
+  owner: "www-data"
+  group: "www-data"
+  log_dir: "/var/log/apache2"
+  apt:
+    update_cache:     true
+    cache_valid_time: 3600
+  default_site_name: "000-default"
+  keep_default_site: false # Enable this to keep the default site 
+                           # that comes with the base Apache installation
+  default_template_file: "default-virtual-host.j2"
+  module_dependencies:
+    - "rewrite"
+  virtual_hosts:
+    # A simple site that is deployed by default, unless overidden
+    localhost:
+      enabled:       true
+      #template_file: "alternate-template-file.j2"
+      server_name:   "localhost"
+      port:          80
+      index:         "index.html"
+      root:          "/var/www/html"

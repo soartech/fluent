@@ -1,0 +1,19 @@
+---
+
+- name: "Initialize Default Configuration"
+  set_fact:
+    wildfly_container: "{{ wildfly_container_defaults | combine(wildfly_container | default({}), recursive=True) }}"
+
+- name: "Debug Role Configuration"
+  debug:
+    msg: "{{ wildfly_container }}"
+
+- name: "Configure Wildfly Modules"
+  include: "configure_module_{{ ansible_system }}.yml"
+  with_items: "{{ wildfly_container.modules }}"
+
+- include: "configure_datasources_{{ ansible_system }}.yml"
+
+- include: "deploy_container_{{ ansible_system }}.yml"
+  tags: redeploy
+  with_items: "{{ wildfly_container.war_path }}"

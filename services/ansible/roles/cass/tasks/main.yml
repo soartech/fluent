@@ -1,0 +1,25 @@
+---
+
+- name: "Initialize CASS Download URL"
+  set_fact:
+    cass_defaults: "{{ cass_defaults | combine({ 'version': cass.version, 'download_url': 'https://github.com/cassproject/CASS/archive/{{ cass.version }}.tar.gz' }) }}"
+  when: "cass.version is defined"
+
+- name: "Initialize CASS Configuration"
+  set_fact:
+    cass: "{{ cass_defaults | combine(cass | default({}), recursive=True) }}"
+
+- name: "Debug Role Configuration"
+  debug:
+    msg: "{{ cass }}"
+
+- name: "Create Init Cache Directory"
+  file:
+    path:  "{{ cass.init_cache_dir }}"
+    state: directory
+
+# Only install cass if the redirect is local
+- include: "cass-{{ ansible_os_family }}.yml"
+  when: "'{{ st_server_hostname }}' in '{{ cass.redirect_url }}'"
+
+- include: "cass-configure-redirect-{{ ansible_os_family }}.yml"

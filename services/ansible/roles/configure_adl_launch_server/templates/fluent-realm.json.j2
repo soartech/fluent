@@ -1,0 +1,558 @@
+{
+   "realm":"fluent",
+   "enabled":true,
+   "sslRequired":"none",
+   "displayName":"TLA Sign In",
+   "displayNameHtml":"<h1 style=\"font-size: 40pt; font-weight: 400;\">TLA Sign In</h1>",
+   "bruteForceProtected":false,
+   "browserFlow":"browser",
+   "clientAuthenticationFlow":"clients",
+   "directGrantFlow":"direct grant",
+   "editUsernameAllowed":false,
+   "registrationAllowed":true,
+   "registrationEmailAsUsername":false,
+   "registrationFlow":"registration",
+   "rememberMe":true,
+   "requiredCredentials":[
+      "password"
+   ],
+   "resetCredentialsFlow":"reset credentials",
+   "resetPasswordAllowed":true,
+   "verifyEmail":false,
+   "accessCodeLifespan":60,
+   "accessCodeLifespanLogin":1800,
+   "accessCodeLifespanUserAction":300,
+   "accessTokenLifespan":60,
+   "accessTokenLifespanForImplicitFlow":900,
+   "ssoSessionIdleTimeout":1800,
+   "ssoSessionMaxLifespan":36000,
+   "users":[
+      {
+         "username":"angela.diablo",
+         "firstName":"Angela",
+         "lastName":"Diablo",
+         "email":"angela.diablo@soartech.com",
+         "enabled":true,
+         "credentials":[
+            {
+               "type":"password",
+               "value":"insertPassword"
+            }
+         ],
+         "clientRoles":{
+            "account":[
+               "manage-account"
+            ]
+         }
+      },
+      {
+         "username":"john.soar",
+         "firstName":"John",
+         "lastName":"Soar",
+         "email":"john.soar@soartech.com",
+         "enabled":true,
+         "credentials":[
+            {
+               "type":"password",
+               "value":"insertPassword"
+            }
+         ],
+         "clientRoles":{
+            "account":[
+               "manage-account"
+            ]
+         }
+      }
+   ],
+   "clients":[
+      {
+         "clientId":"application-launcher",
+         "name":"Application Launcher",
+         "description":"Client Facing web app",
+         "enabled":true,
+         "protocol":"openid-connect",
+         "fullScopeAllowed":true,
+         "consentRequired":true,
+         "publicClient":true,
+         "clientAuthenticatorType":"client-secret",
+         "directAccessGrantsEnabled":true,
+         "implicitFlowEnabled":true,
+         "standardFlowEnabled":false,
+         "adminUrl":"http://{{ adl_server_hostname }}:8081/application-launcher/client/index.html",
+         "redirectUris":[
+            "http://{{ adl_server_hostname }}:8081/application-launcher/client/*"
+         ],
+         "rootUrl":"http://{{ adl_server_hostname }}:8081/application-launcher/client/",
+         "webOrigins":[
+            "http://{{ adl_server_hostname }}:8081"
+         ],
+         "protocolMappers":[
+            {
+               "config":{
+                  "access.token.claim":"true",
+                  "claim.name":"given_name",
+                  "id.token.claim":"true",
+                  "jsonType.label":"String",
+                  "user.attribute":"firstName"
+               },
+               "consentRequired":true,
+               "consentText":"${givenName}",
+               "name":"given name",
+               "protocol":"openid-connect",
+               "protocolMapper":"oidc-usermodel-property-mapper"
+            },
+            {
+               "config":{
+                  "attribute.name":"Role",
+                  "attribute.nameformat":"Basic",
+                  "single":"false"
+               },
+               "consentRequired":false,
+               "name":"role list",
+               "protocol":"saml",
+               "protocolMapper":"saml-role-list-mapper"
+            },
+            {
+               "config":{
+                  "access.token.claim":"true",
+                  "claim.name":"preferred_username",
+                  "id.token.claim":"true",
+                  "jsonType.label":"String",
+                  "user.attribute":"username"
+               },
+               "consentRequired":true,
+               "consentText":"${username}",
+               "name":"username",
+               "protocol":"openid-connect",
+               "protocolMapper":"oidc-usermodel-property-mapper"
+            },
+            {
+               "config":{
+                  "access.token.claim":"true",
+                  "id.token.claim":"true"
+               },
+               "consentRequired":true,
+               "consentText":"${fullName}",
+               "name":"full name",
+               "protocol":"openid-connect",
+               "protocolMapper":"oidc-full-name-mapper"
+            },
+            {
+               "config":{
+                  "access.token.claim":"true",
+                  "claim.name":"email",
+                  "id.token.claim":"true",
+                  "jsonType.label":"String",
+                  "user.attribute":"email"
+               },
+               "consentRequired":true,
+               "consentText":"${email}",
+               "name":"email",
+               "protocol":"openid-connect",
+               "protocolMapper":"oidc-usermodel-property-mapper"
+            },
+            {
+               "config":{
+                  "access.token.claim":"true",
+                  "claim.name":"family_name",
+                  "id.token.claim":"true",
+                  "jsonType.label":"String",
+                  "user.attribute":"lastName"
+               },
+               "consentRequired":true,
+               "consentText":"${familyName}",
+               "name":"family name",
+               "protocol":"openid-connect",
+               "protocolMapper":"oidc-usermodel-property-mapper"
+            }
+         ]
+      },
+{
+    "clientId": "xapi-youtube-player", 
+    "name": "xAPI Youtube Player", 
+    "enabled": true, 
+
+    "protocol": "openid-connect", 
+
+    "fullScopeAllowed": false, 
+    "consentRequired": true, 
+    "publicClient": true, 
+
+    "clientAuthenticatorType": "client-secret", 
+    "directAccessGrantsEnabled": true, 
+    "implicitFlowEnabled": true, 
+    "standardFlowEnabled": false, 
+
+    "adminUrl": "http://{{ ap_server_hostname }}:8001/index.html", 
+    "redirectUris": [
+        "http://{{ ap_server_hostname }}:8001/*"
+    ], 
+    "rootUrl": "http://{{ ap_server_hostname }}:8001/index.html", 
+    "webOrigins": [
+        "http://{{ ap_server_hostname }}:8001"
+    ],
+
+    "protocolMappers": [
+        {
+            "config": {
+                "access.token.claim": "true", 
+                "claim.name": "preferred_username", 
+                "id.token.claim": "true", 
+                "jsonType.label": "String", 
+                "user.attribute": "username"
+            }, 
+            "consentRequired": true, 
+            "consentText": "${username}", 
+            "name": "username", 
+            "protocol": "openid-connect", 
+            "protocolMapper": "oidc-usermodel-property-mapper"
+        }, 
+        {
+            "config": {
+                "access.token.claim": "true", 
+                "claim.name": "email", 
+                "id.token.claim": "true", 
+                "jsonType.label": "String", 
+                "user.attribute": "email"
+            }, 
+            "consentRequired": true, 
+            "consentText": "${email}", 
+            "name": "email", 
+            "protocol": "openid-connect", 
+            "protocolMapper": "oidc-usermodel-property-mapper"
+        }, 
+        {
+            "config": {
+                "access.token.claim": "true", 
+                "claim.name": "given_name", 
+                "id.token.claim": "true", 
+                "jsonType.label": "String", 
+                "user.attribute": "firstName"
+            }, 
+            "consentRequired": true, 
+            "consentText": "${givenName}", 
+            "name": "given name", 
+            "protocol": "openid-connect", 
+            "protocolMapper": "oidc-usermodel-property-mapper"
+        }, 
+        {
+            "config": {
+                "access.token.claim": "true", 
+                "claim.name": "family_name", 
+                "id.token.claim": "true", 
+                "jsonType.label": "String", 
+                "user.attribute": "lastName"
+            }, 
+            "consentRequired": true, 
+            "consentText": "${familyName}", 
+            "name": "family name", 
+            "protocol": "openid-connect", 
+            "protocolMapper": "oidc-usermodel-property-mapper"
+        }, 
+        {
+            "config": {
+                "access.token.claim": "true", 
+                "id.token.claim": "true"
+            }, 
+            "consentRequired": true, 
+            "consentText": "${fullName}", 
+            "name": "full name", 
+            "protocol": "openid-connect", 
+            "protocolMapper": "oidc-full-name-mapper"
+        }
+    ]
+},
+{
+    "clientId": "static-content-viewer", 
+    "name": "Static Content Viewer", 
+    "enabled": true, 
+
+    "protocol": "openid-connect", 
+
+    "fullScopeAllowed": false, 
+    "consentRequired": true, 
+    "publicClient": true, 
+
+    "clientAuthenticatorType": "client-secret", 
+    "directAccessGrantsEnabled": true, 
+    "implicitFlowEnabled": true, 
+    "standardFlowEnabled": false, 
+
+    "adminUrl": "http://{{ ap_server_hostname }}:8000/index.html", 
+    "redirectUris": [
+        "http://{{ ap_server_hostname }}:8000/*"
+    ], 
+    "rootUrl": "http://{{ ap_server_hostname }}:8000/index.html", 
+    "webOrigins": [
+        "http://{{ ap_server_hostname }}:8000"
+    ],
+
+    "protocolMappers": [
+        {
+            "config": {
+                "access.token.claim": "true", 
+                "claim.name": "preferred_username", 
+                "id.token.claim": "true", 
+                "jsonType.label": "String", 
+                "user.attribute": "username"
+            }, 
+            "consentRequired": true, 
+            "consentText": "${username}", 
+            "name": "username", 
+            "protocol": "openid-connect", 
+            "protocolMapper": "oidc-usermodel-property-mapper"
+        }, 
+        {
+            "config": {
+                "access.token.claim": "true", 
+                "claim.name": "email", 
+                "id.token.claim": "true", 
+                "jsonType.label": "String", 
+                "user.attribute": "email"
+            }, 
+            "consentRequired": true, 
+            "consentText": "${email}", 
+            "name": "email", 
+            "protocol": "openid-connect", 
+            "protocolMapper": "oidc-usermodel-property-mapper"
+        }, 
+        {
+            "config": {
+                "access.token.claim": "true", 
+                "claim.name": "given_name", 
+                "id.token.claim": "true", 
+                "jsonType.label": "String", 
+                "user.attribute": "firstName"
+            }, 
+            "consentRequired": true, 
+            "consentText": "${givenName}", 
+            "name": "given name", 
+            "protocol": "openid-connect", 
+            "protocolMapper": "oidc-usermodel-property-mapper"
+        }, 
+        {
+            "config": {
+                "access.token.claim": "true", 
+                "claim.name": "family_name", 
+                "id.token.claim": "true", 
+                "jsonType.label": "String", 
+                "user.attribute": "lastName"
+            }, 
+            "consentRequired": true, 
+            "consentText": "${familyName}", 
+            "name": "family name", 
+            "protocol": "openid-connect", 
+            "protocolMapper": "oidc-usermodel-property-mapper"
+        }, 
+        {
+            "config": {
+                "access.token.claim": "true", 
+                "id.token.claim": "true"
+            }, 
+            "consentRequired": true, 
+            "consentText": "${fullName}", 
+            "name": "full name", 
+            "protocol": "openid-connect", 
+            "protocolMapper": "oidc-full-name-mapper"
+        }
+    ]
+},
+{
+    "clientId": "moodle-fluent",
+    "name": "Moodle Fluent",
+    "enabled": true,
+
+    "protocol": "openid-connect",
+
+    "fullScopeAllowed": false,
+    "consentRequired": true,
+    "publicClient": false,
+
+    "clientAuthenticatorType": "client-secret",
+    "directAccessGrantsEnabled": false,
+    "implicitFlowEnabled": false,
+    "standardFlowEnabled": true,
+    "bearerOnly": false,
+
+    "adminUrl": "http://{{ moodle_server_hostname }}:8090/",
+    "redirectUris": [
+        "http://{{ moodle_server_hostname }}:8090/*"
+    ],
+    "rootUrl": "http://{{ moodle_server_hostname }}:8090/",
+    "webOrigins": [
+        "http://{{ moodle_server_hostname }}:8090"
+    ],
+
+    "protocolMappers": [
+        {
+            "config": {
+                "access.token.claim": "true",
+                "claim.name": "family_name",
+                "id.token.claim": "true",
+                "jsonType.label": "String",
+                "user.attribute": "lastName"
+            },
+            "consentRequired": true,
+            "consentText": "${familyName}",
+            "name": "family name",
+            "protocol": "openid-connect",
+            "protocolMapper": "oidc-usermodel-property-mapper"
+        },
+        {
+            "config": {
+                "attribute.name": "Role",
+                "attribute.nameformat": "Basic",
+                "single": "false"
+            },
+            "consentRequired": false,
+            "name": "role list",
+            "protocol": "saml",
+            "protocolMapper": "saml-role-list-mapper"
+        },
+        {
+            "config": {
+                "access.token.claim": "true",
+                "claim.name": "email",
+                "id.token.claim": "true",
+                "jsonType.label": "String",
+                "user.attribute": "email"
+            },
+            "consentRequired": true,
+            "consentText": "${email}",
+            "name": "email",
+            "protocol": "openid-connect",
+            "protocolMapper": "oidc-usermodel-property-mapper"
+        },
+        {
+            "config": {
+                "access.token.claim": "true",
+                "claim.name": "preferred_username",
+                "id.token.claim": "true",
+                "jsonType.label": "String",
+                "user.attribute": "username"
+            },
+            "consentRequired": true,
+            "consentText": "${username}",
+            "name": "username",
+            "protocol": "openid-connect",
+            "protocolMapper": "oidc-usermodel-property-mapper"
+        },
+        {
+            "config": {
+                "access.token.claim": "true",
+                "claim.name": "given_name",
+                "id.token.claim": "true",
+                "jsonType.label": "String",
+                "user.attribute": "firstName"
+            },
+            "consentRequired": true,
+            "consentText": "${givenName}",
+            "name": "given name",
+            "protocol": "openid-connect",
+            "protocolMapper": "oidc-usermodel-property-mapper"
+        },
+        {
+            "config": {
+                "access.token.claim": "true",
+                "id.token.claim": "true"
+            },
+            "consentRequired": true,
+            "consentText": "${fullName}",
+            "name": "full name",
+            "protocol": "openid-connect",
+            "protocolMapper": "oidc-full-name-mapper"
+        }
+    ]
+},
+{
+  "clientId": "assessment-activity-provider",
+  "name": "Assessment Activity Provider",
+  "enabled": true,
+  "protocol": "openid-connect",
+  "fullScopeAllowed": false,
+  "consentRequired": true,
+  "publicClient": true,
+  "clientAuthenticatorType": "client-secret",
+  "directAccessGrantsEnabled": true,
+  "implicitFlowEnabled": true,
+  "standardFlowEnabled": false,
+  "adminUrl": "http://{{ ap_server_hostname }}:8002/index.html",
+  "redirectUris": [
+    "http://{{ ap_server_hostname }}:8002/*"
+  ],
+  "rootUrl": "http://{{ ap_server_hostname }}:8002/index.html",
+  "webOrigins": [
+    "http://{{ ap_server_hostname }}:8002"
+  ],
+  "protocolMappers": [
+    {
+      "config": {
+        "access.token.claim": "true",
+        "claim.name": "preferred_username",
+        "id.token.claim": "true",
+        "jsonType.label": "String",
+        "user.attribute": "username"
+      },
+      "consentRequired": true,
+      "consentText": "${username}",
+      "name": "username",
+      "protocol": "openid-connect",
+      "protocolMapper": "oidc-usermodel-property-mapper"
+    },
+    {
+      "config": {
+        "access.token.claim": "true",
+        "claim.name": "email",
+        "id.token.claim": "true",
+        "jsonType.label": "String",
+        "user.attribute": "email"
+      },
+      "consentRequired": true,
+      "consentText": "${email}",
+      "name": "email",
+      "protocol": "openid-connect",
+      "protocolMapper": "oidc-usermodel-property-mapper"
+    },
+    {
+      "config": {
+        "access.token.claim": "true",
+        "claim.name": "given_name",
+        "id.token.claim": "true",
+        "jsonType.label": "String",
+        "user.attribute": "firstName"
+      },
+      "consentRequired": true,
+      "consentText": "${givenName}",
+      "name": "given name",
+      "protocol": "openid-connect",
+      "protocolMapper": "oidc-usermodel-property-mapper"
+    },
+    {
+      "config": {
+        "access.token.claim": "true",
+        "claim.name": "family_name",
+        "id.token.claim": "true",
+        "jsonType.label": "String",
+        "user.attribute": "lastName"
+      },
+      "consentRequired": true,
+      "consentText": "${familyName}",
+      "name": "family name",
+      "protocol": "openid-connect",
+      "protocolMapper": "oidc-usermodel-property-mapper"
+    },
+    {
+      "config": {
+        "access.token.claim": "true",
+        "id.token.claim": "true"
+      },
+      "consentRequired": true,
+      "consentText": "${fullName}",
+      "name": "full name",
+      "protocol": "openid-connect",
+      "protocolMapper": "oidc-full-name-mapper"
+    }
+  ]
+}
+   ]
+}

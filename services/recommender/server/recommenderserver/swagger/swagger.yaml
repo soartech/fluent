@@ -1,0 +1,222 @@
+---
+swagger: "2.0"
+info:
+  description: "This is the API definition for the Recommender service."
+  version: "1.0.0"
+  title: "Recommender API"
+host: "localhost"
+basePath: "/recommender"
+schemes:
+- "http"
+paths:
+  /recommendation:
+    get:
+      tags:
+      - "Recommendation"
+      summary: "Get a new recommendation"
+      description: ""
+      operationId: "recommendation_get"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "learnerId"
+        in: "query"
+        description: "Id of the learner to get a recommendation for"
+        required: true
+        type: "string"
+      - name: "focusedCompetencies"
+        in: "query"
+        description: "Optional parameter to toggle focused competencies"
+        required: false
+        type: "boolean"
+        allowEmptyValue: true
+      responses:
+        200:
+          description: "Successfully got a recommendation"
+          schema:
+            $ref: "#/definitions/Recommendation"
+        404:
+          description: "learnerId not found."
+      x-swagger-router-controller: "recommenderserver.controllers.recommendation_controller"
+  /upcoming:
+    get:
+      tags:
+      - "Upcoming"
+      summary: "Get upcoming activities"
+      description: "Returns an overview of what the learner will be working on (and\
+        \ reflected in upcoming recommendations). It should include current ELO in\
+        \ the sequence that the learner has not yet mastered that they will continue\
+        \ learning. It will also include any ELOs that the learner has forgotten that\
+        \ will be reviewed."
+      operationId: "upcoming_get"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "learnerId"
+        in: "query"
+        description: "Id of the learner to get a recommendation for"
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: "Successfully got a recommendation"
+          schema:
+            $ref: "#/definitions/Recommendation"
+        404:
+          description: "learnerId not found."
+      x-swagger-router-controller: "recommenderserver.controllers.upcoming_controller"
+  /all:
+    get:
+      tags:
+      - "All"
+      summary: "Get all activities"
+      description: "Returns all activities."
+      operationId: "all_get"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "learnerId"
+        in: "query"
+        description: "Id of the learner to get a recommendation for"
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: "Successfully got a recommendation"
+          schema:
+            $ref: "#/definitions/Recommendation"
+        404:
+          description: "learnerId not found."
+      x-swagger-router-controller: "recommenderserver.controllers.all_controller"
+definitions:
+  Recommendation:
+    type: "object"
+    properties:
+      _type:
+        type: "string"
+        enum:
+        - "Recommendation"
+      timestamp:
+        type: "string"
+        format: "date-time"
+        description: "ISO8601 formatted timestamp"
+      learner:
+        type: "string"
+        description: "ID of the learner requesting the recommendation"
+      assignment:
+        $ref: "#/definitions/RecommendedActivity"
+      recommendations:
+        type: "array"
+        description: "Array of RecommendationRow objects. Null if assignment is not\
+          \ null."
+        items:
+          $ref: "#/definitions/RecommendationRow"
+    example:
+      assignment:
+        popularityRating: 1.46581298050294517310021547018550336360931396484375
+        activityId: "activityId"
+        tokens: 0
+        attemptRate: 6.02745618307040320615897144307382404804229736328125
+        priority: 5.962133916683182377482808078639209270477294921875
+      learner: "learner"
+      _type: "Recommendation"
+      recommendations:
+      - activities:
+        - popularityRating: 1.46581298050294517310021547018550336360931396484375
+          activityId: "activityId"
+          tokens: 0
+          attemptRate: 6.02745618307040320615897144307382404804229736328125
+          priority: 5.962133916683182377482808078639209270477294921875
+        - popularityRating: 1.46581298050294517310021547018550336360931396484375
+          activityId: "activityId"
+          tokens: 0
+          attemptRate: 6.02745618307040320615897144307382404804229736328125
+          priority: 5.962133916683182377482808078639209270477294921875
+        _type: "RecommendationRow"
+        name: "name"
+        strategy: "strategy"
+        params:
+          key: "params"
+      - activities:
+        - popularityRating: 1.46581298050294517310021547018550336360931396484375
+          activityId: "activityId"
+          tokens: 0
+          attemptRate: 6.02745618307040320615897144307382404804229736328125
+          priority: 5.962133916683182377482808078639209270477294921875
+        - popularityRating: 1.46581298050294517310021547018550336360931396484375
+          activityId: "activityId"
+          tokens: 0
+          attemptRate: 6.02745618307040320615897144307382404804229736328125
+          priority: 5.962133916683182377482808078639209270477294921875
+        _type: "RecommendationRow"
+        name: "name"
+        strategy: "strategy"
+        params:
+          key: "params"
+      timestamp: "2000-01-23T04:56:07.000+00:00"
+  RecommendationRow:
+    type: "object"
+    properties:
+      _type:
+        type: "string"
+        enum:
+        - "RecommendationRow"
+      name:
+        type: "string"
+        description: "Display name of the recommendation row."
+      strategy:
+        type: "string"
+        description: "Strategy class used to make the recommendations in this row."
+      params:
+        type: "object"
+        description: "Keys with string values, representing the parameters used to\
+          \ instantiate this strategy."
+        additionalProperties:
+          type: "string"
+      activities:
+        type: "array"
+        description: "an array of recommendations in the form of activity ids"
+        items:
+          $ref: "#/definitions/RecommendedActivity"
+    example:
+      activities:
+      - popularityRating: 1.46581298050294517310021547018550336360931396484375
+        activityId: "activityId"
+        tokens: 0
+        attemptRate: 6.02745618307040320615897144307382404804229736328125
+        priority: 5.962133916683182377482808078639209270477294921875
+      - popularityRating: 1.46581298050294517310021547018550336360931396484375
+        activityId: "activityId"
+        tokens: 0
+        attemptRate: 6.02745618307040320615897144307382404804229736328125
+        priority: 5.962133916683182377482808078639209270477294921875
+      _type: "RecommendationRow"
+      name: "name"
+      strategy: "strategy"
+      params:
+        key: "params"
+  RecommendedActivity:
+    type: "object"
+    properties:
+      activityId:
+        type: "string"
+        description: "Unique ID for an activity"
+      tokens:
+        type: "integer"
+        description: "Number of tokens the user gets if this activity is completed"
+      attemptRate:
+        type: "number"
+        description: "Popularity level based on attempt rates."
+      popularityRating:
+        type: "number"
+        description: "Popularity rating based on user ratings."
+      priority:
+        type: "number"
+        description: "Priority value of the activity as determined by the recommendation\
+          \ strategy."
+    example:
+      popularityRating: 1.46581298050294517310021547018550336360931396484375
+      activityId: "activityId"
+      tokens: 0
+      attemptRate: 6.02745618307040320615897144307382404804229736328125
+      priority: 5.962133916683182377482808078639209270477294921875

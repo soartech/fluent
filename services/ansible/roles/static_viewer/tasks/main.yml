@@ -1,0 +1,64 @@
+---
+
+- name: "Initialize Static Viewer Configuration"
+  set_fact:
+    static_viewer: "{{ static_viewer_defaults | combine(static_viewer | default({}), recursive=True) }}"
+
+- name: "Debug Role Configuration"
+  debug:
+    msg: "{{ static_viewer }}"
+
+- name: "Create Static Viewer Web Root Directory"
+  file:
+    path:    "{{ static_viewer.web_root }}"
+    state:   directory
+    owner:   "{{ static_viewer.owner }}"
+    group:   "{{ static_viewer.group }}"
+
+- name: "Copy Code to Web Root"
+  copy:
+    src:  "{{ static_viewer.source_dir }}/"
+    dest: "{{ static_viewer.web_root }}"
+
+- name: "Copy keycloak.json Web Root"
+  template:
+    src:  "keycloak.json.j2"
+    dest: "{{ static_viewer.web_root }}/keycloak.json"
+
+#- name: "Configure LRS Endpoint Address"
+#  lineinfile:
+#    dest:     "{{ static_viewer.web_root }}/index.html"
+#    line:     "        \"endpoint\" : \"{{ static_viewer.lrs.endpoint_url }}\","
+#    regexp:   "['\"]endpoint['\"]\\s*:"
+#
+#- name: "Configure LRS Endpoint Credentials"
+#  lineinfile:
+#    dest:     "{{ static_viewer.web_root }}/index.html"
+#    line:     "        \"auth\" : \"Basic \" + toBase64(\"{{ static_viewer.lrs.username }}:{{ static_viewer.lrs.password }}\"),"
+#    regexp:   "['\"]auth['\"]\\s*:"
+
+- name: "Configure LRS Endpoint"
+  template:
+    src:  "config.js.j2"
+    dest: "{{ static_viewer.web_root }}/config.js"
+
+- name: "Copy Static Viewer VirtualHost File"
+  template:
+    src:  "{{ static_viewer.vhost_file }}"
+    dest: "/etc/apache2/sites-available/static-viewer-vhost.conf"
+  notify: "Restart Apache"
+
+- name: "Add Listening Port to ports.conf"
+  lineinfile:
+    dest: "/etc/apache2/ports.conf"
+    line: "Listen {{ static_viewer.port }}"
+  notify: "Restart Apache"
+
+- name: "Enable Moodle VirtualHost"
+  shell: "a2ensite static-viewer-vhost"
+  args:
+    creates: "/etc/apache2/sites-enabled/static-viewer-vhost.conf"
+  notify: "Restart Apache"
+
+# Restart services if needed
+- meta: flush_handlers

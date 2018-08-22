@@ -1,0 +1,2 @@
+---
+- include: "postgresql-{{ ansible_os_family }}.yml"

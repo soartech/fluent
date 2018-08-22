@@ -1,0 +1,26 @@
+class Config(object):
+    DEBUG = True
+
+    BASE_URL = '{{ tla_config.activity_index.base_url }}'
+
+    ACTIVITY_ENDPOINT = BASE_URL + '/activities'
+    AUTHOR_ENDPOINT = BASE_URL + '/authors'
+    PUBLISHER_ENDPOINT = BASE_URL + '/publishers'
+    PROVIDER_ENDPOINT = BASE_URL + '/providers'
+    ASSOCIATIONS_ENDPOINT = BASE_URL + '/associations'
+
+    MONGO_HOST = '127.0.0.1'
+    MONGO_PORT = {{ tla_config.activity_index.mongodb_port }}
+    MONGO_DB = 'activity_index'
+
+    ASSESSMENT_ACTIVITY_PROVIDER_URL = 'http://{{ ap_server_hostname }}' + ':' + '{{ ap_config.assessment_ap.port }}'
+    VIDEO_PLAYER_URL = 'http://{{ ap_server_hostname }}' + ':' + '{{ ap_config.video_player.port }}'
+    STATIC_CONTENT_VIEWER_URL = 'http://{{ ap_server_hostname }}' + ':' + '{{ ap_config.static_viewer.port }}'
+    CONTENT_BASE = 'http://{{ ap_server_hostname }}'
+    CONTENT_PORT = '{{ ap_config.content_host.port }}'
+    CONTENT_URL = CONTENT_BASE + ':' + CONTENT_PORT
+    MOODLE_URL = 'insertUrl'
+
+
+    BAD_TRAIT_BOOLEAN_THRESHOLD = 0.25
+    USEFUL_BOOLEAN_THRESHOLD = 0.75

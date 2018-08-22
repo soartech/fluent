@@ -1,0 +1,15 @@
+---
+
+- name: "Install NTP Daemon"
+  apt:
+    name:  "{{ item }}"
+    state: present
+    update_cache:     "{{ ntpd.apt.update_cache }}"
+    cache_valid_time: "{{ ntpd.apt.cache_valid_time }}"
+  with_items: "{{ ntpd.dependencies }}"
+
+- name: "Copy NTP Daemon Configuration"
+  template:
+    src:   "ntp.conf.j2"
+    dest:  "{{ ntpd.config_path }}"
+  notify: "Restart NTP Daemon"

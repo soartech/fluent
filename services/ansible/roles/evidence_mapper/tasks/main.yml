@@ -1,0 +1,85 @@
+---
+
+- name: Install Pip
+  command: apt-get -y install python3-pip
+
+- name: Install Pika
+  command: python3 -m pip install pika
+
+- name: Install Numpy
+  command: python3 -m pip install numpy
+
+- name: Install SciPy
+  command: python3 -m pip install scipy
+
+- name: Install sklearn
+  command: python3 -m pip install sklearn
+
+- name: Install python-daemon
+  command: python3 -m pip install python-daemon
+
+- name: Copy config.py template file
+  template:
+    src: "config.py.j2"
+    dest: "/vagrant/evidence-mapper/pyafm/config.py"
+
+- name: Creates evidence mapper code directory
+  file: path=/var/lib/evidence-mapper state=directory
+
+- name: Creates evidence mapper log directory
+  file: path=/var/log/evidence-mapper state=directory
+
+- name: Copy pyafm files into evidence_mapper directory
+  copy:
+    src: "{{ deployment_base }}/evidence-mapper/pyafm/"
+    dest: "/var/lib/evidence-mapper"
+
+- name: Remove trailing \r in shell file
+  command: sed -i 's/\r$//' /var/lib/evidence-mapper/evidence_mapper_service
+  become: true
+  become_user: root
+
+- name: Change service permissions
+  command: chmod u+x /var/lib/evidence-mapper/evidence_mapper_service
+  become: true
+  become_user: root
+
+- name: Remove instance files if they exist
+  file:
+    path: "{{ item }}"
+    state: absent
+  with_items:
+    - /var/lib/evidence-mapper/example_learner_data.json
+    - /var/lib/evidence-mapper/lock.pid
+
+- name: Copy service file into systemd
+  copy:
+    src: "/var/lib/evidence-mapper/evidence-mapper.service"
+    dest: "/etc/systemd/system/evidence-mapper.service"
+
+- name: Reload daemon services
+  command: systemctl daemon-reload
+  become: true
+  become_user: root
+
+- name: Enable evidence mapper service
+  command: systemctl enable evidence-mapper
+  become: true
+  become_user: root
+
+- name: Start evidence mapper service
+  command: systemctl restart evidence-mapper
+  become: true
+  become_user: root
+
+- name: "Create AMQP User/Password"
+  shell: "rabbitmqctl add_user raw_inferences_usr raw_inf_pwd"
+  become: true
+  become_user: root
+  register: command_result
+  failed_when: command_result.stderr != "" and 'user_already_exists' not in command_result.stderr
+
+- name: "Give AMQP user permissions"
+  shell: "rabbitmqctl set_permissions -p / raw_inferences_usr \".*\" \".*\" \".*\" "
+  become: true
+  become_user: root

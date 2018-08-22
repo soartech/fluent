@@ -1,0 +1,91 @@
+
+from learner_inferences_server.store_clients import MongoLearnerStoreClient
+
+
+class Config(object):
+    DEBUG = True
+
+    SERVICE_ENDPOINT = 'https://learner-inferences/learners'
+    PORT = 8999
+
+    # Parameters to access to MongoDB store.
+    STORE_HOST = '127.0.0.1'
+    STORE_PORT = 27017
+    STORE_DB = 'tla2018'
+    STORE_CLIENT = MongoLearnerStoreClient
+
+    STORE_MAX_RETRIES = 3
+
+    # Parameters to access AMQP broker,
+    # to receive experiences, raw inferences and publish deconflicted inferences.
+    class AMQP(object):
+        class Experiences(object):
+            AMQP_HOST = "{{ lrs_hostname }}"
+            AMQP_PORT = 5672
+            AMQP_USR = "insertUsername"
+            AMQP_PWD = "insertPassword"
+            EXCHANGE_NAME = "experiences"
+            QUEUE_NAME = "experiences-learner-inferences"
+            CONNECTION_ATTEMPTS = 3
+
+        class Inferences(object):
+            AMQP_HOST = "localhost"
+            AMQP_PORT = 5672
+            AMQP_USR = "insertUsername"
+            AMQP_PWD = "insertPassword"
+            RAW_EXCHANGE_NAME = "raw-inferences"
+            RAW_QUEUE_NAME = "raw-inferences-queue"
+            LOG_LRS_EXCHANGE_NAME = "logging-lrs-statements"
+            DECONFLICTED_EXCHANGE_NAME = "deconflicted-inferences"
+            DECONFLICTED_QUEUE_NAME = "deconflicted-inferences-queue"
+            CONNECTION_ATTEMPTS = 3
+
+    AMQP_MASTERY_PROB_TYPE = 'MasteryProbability'
+    AMQP_CONTEXT_TYPE = 'Context'
+    AMQP_ASSERTION_TYPE = 'AssertionNotification'
+    AMQP_LEARNER_INFERENCE_TYPE = 'LearnerInference'
+    AMQP_MASTERY_ESTIMATE_TYPE = 'MasteryEstimate'
+
+    # Parameters for mastery estimation.
+    VALID_ESTIMATORS = ['CASS']
+    MASTERY_ESTIMATOR_COMPETENCY_COUNTS = 'BCSE'
+    ESTIMATOR_WEIGHTS = {
+        'CASS': 1.0,
+        'BCSE': 1.0
+    }
+    USE_MASTERY_DECAY = False
+
+    # If the smallest probability in MASTERY_THRESHOLDS is greater than zero then Mastery Calculators
+    # might return 'unknown' for probabilities lower than that smallest probability.
+    MASTERY_THRESHOLDS = [{'mastery': 'expert', 'threshold': 0.8},
+                          {'mastery': 'intermediate', 'threshold': 0.4},
+                          {'mastery': 'novice', 'threshold': 0.0}]
+
+    # Parameters to access cass-worker service.
+    CASS_WORKER_HOST = 'insertHost'
+    CASS_WORKER_PORT = 9722
+
+    ACTIVITY_TIMEOUT_SECS = 0  # Keep it at zero to turn activity timeout feature off.
+    TERMINATED_VERB_ID = "http://adlnet.gov/expapi/verbs/terminated"
+    COMPLETED_VERB_ID = "http://adlnet.gov/expapi/verbs/completed"
+
+    EXPERIENCES_THREADS = 1
+    INFERENCES_THREADS = 1
+
+    # Parameters to communicate Log xAPI statements to Log LRS
+    LOG_TO_LRS = False
+    LOG_XAPI_TO_FILE = True
+    class LogLRSConfig(object):
+        USR = "insertUsername"
+        PWD = "insertPassword"
+        HOST = "insertHost"
+        PORT = "80"
+        ENDPOINT = "data/xAPI/statements"
+
+    #TODO: Parameterize class above, as in the following example:
+        # class LogLRSConfig(object):
+        #     USR = "insertUsername"
+        #     PWD = "insertPassword"
+        #     HOST = "http://{{ lrs_hostname }}"
+        #     PORT = "{{tla_config.lrs.ports.redirect}}"
+        #     ENDPOINT = "data/xAPI/statements"

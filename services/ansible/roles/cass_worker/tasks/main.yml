@@ -1,0 +1,8 @@
+---
+
+- name: "Initialize Cass_Worker Configuration"
+  tags: always
+  set_fact:
+    cass_worker: "{{ cass_worker_defaults | combine(cass_worker | default({}), recursive=True) }}"
+
+- include: "cass-worker-{{ ansible_os_family }}.yml"

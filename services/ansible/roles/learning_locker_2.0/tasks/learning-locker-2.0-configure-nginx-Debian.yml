@@ -1,0 +1,46 @@
+---
+
+- name: "Copy Learning Locker NGINX config file"
+  copy:
+    src:  "{{ _llv2_install_dir }}/nginx.conf.example"
+    dest: "{{ nginx.config_dir }}/sites-available/learninglocker.conf"
+
+- name: "Replace NGINX listening port"
+  replace:
+    dest: "{{ nginx.config_dir }}/sites-available/learninglocker.conf"
+    regexp: "80 default_server;"
+    replace: "{{ tla_config.lrs.ports.redirect }} default_server;"
+
+- name: "Replace instances of UI_PORT in config file"
+  replace:
+    dest: "{{ nginx.config_dir }}/sites-available/learninglocker.conf"
+    regexp: "UI_PORT"
+    replace: "{{ tla_config.lrs.ports.ui }}"
+  
+- name: "Replace instances of API_PORT in config file"
+  replace:
+    dest: "{{ nginx.config_dir }}/sites-available/learninglocker.conf"
+    regexp: ":API_PORT"
+    replace: ":{{ tla_config.lrs.ports.api }}"
+
+- name: "Replace instances of XAPI_PORT in config file"
+  replace:
+    dest: "{{ nginx.config_dir }}/sites-available/learninglocker.conf"
+    regexp: "XAPI_PORT"
+    replace: "{{ tla_config.lrs.ports.xapi }}"
+
+- name: "Replace instances of SITE_ROOT in config file"
+  replace:
+    dest: "{{ nginx.config_dir }}/sites-available/learninglocker.conf"
+    regexp: "/SITE_ROOT"
+    replace: "{{ _llv2_install_dir }}"
+
+# Symlink to sites-enabled
+- name: "Add a symlink in sites-enabled"
+  file:
+    src: "{{ nginx.config_dir }}/sites-available/learninglocker.conf"
+    dest: "{{ nginx.config_dir }}/sites-enabled/learninglocker.conf"
+    state: link
+
+- name: "Restart NGINX"
+  shell: "service nginx restart"

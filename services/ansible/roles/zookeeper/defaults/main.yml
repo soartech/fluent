@@ -1,0 +1,25 @@
+---
+
+zookeeper_default_version: "3.4.8"
+
+zookeeper_defaults:
+  home:      "/opt/zookeeper/zookeeper-{{ zookeeper_default_version }}"
+  log_dir:   "/opt/zookeeper/zookeeper-{{ zookeeper_default_version }}/console.log"
+  log_prop:
+    - INFO
+    - ROLLINGFILE
+  config:
+    clientPort: 2181
+  init_nodes: {}
+  config_filename: "zoo.cfg"
+  version:   "{{ zookeeper_default_version }}"
+  download_url: "http://archive.apache.org/dist/zookeeper/zookeeper-{{ zookeeper_default_version }}/zookeeper-{{ zookeeper_default_version }}.tar.gz"
+  download_cache_dir: "{{ download_cache_dir | default('/tmp') }}"
+  owner: "zookeeper"
+  group: "zookeeper"
+  init_name: "zookeeper"
+  startup_wait:  60
+  shutdown_wait: 60
+
+# Checksum for 3.4.8
+#checksum: "sha256:f10a0b51f45c4f64c1fe69ef713abf9eb9571bc7385a82da892e83bb6c965e90"

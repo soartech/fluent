@@ -1,0 +1,1536 @@
+---
+"$schema": http://json-schema.org/schema#
+definitions:
+  LearningActivity:
+    allOf:
+    - $ref: "#/definitions/CreativeWork"
+    - type: object
+      description: A learning activity in TLA.
+      properties:
+        "@context":
+          type: string
+          description: The constant link in this property should return file tla-declarations.jsonld. The value of this field will always be "https://tla.adl.net/declarations".
+        "@type":
+          type: string
+          description: The value of this field will always be "LearningActivity".
+        identifier:
+          type: string
+          description: The URL that identifies the learning activity. For the 2018 prototype, this URL will include the value of the _id field from MongoDB.
+          format: uri
+        name:
+          type: string
+          description: The title of the Learning Activity.
+        description:
+          type: string
+          description: A description of the Learning Activity.
+        text:
+          type: string
+          description: The textual content of this CreativeWork.
+        version:
+          type: string
+          description: The version of the CreativeWork embodied by the Learning Activity.
+        about:
+          type: string
+          description: The subject of the content provided by the Learning Activity.
+        license:
+          type: string
+          description: The license of the Learning Activity.
+          format: uri
+        dateCreated:
+          type: string
+          description: The date on which the resource was created.
+          format: date-time
+        author:
+          $ref: "../schemas/tla-definitions.yaml#/definitions/Person"
+          description: The author of the Learning Activity.
+        publisher:
+          $ref: "../schemas/tla-definitions.yaml#/definitions/Organization"
+          description: The organization credited with publishing the Learning Activity.
+        provider:
+          $ref: "../schemas/tla-definitions.yaml#/definitions/Organization"
+          description: The provider of the Learning Activity.
+        educationalUse:
+          type: array
+          description: The purposes of the activity in the context of education.
+          items:
+            type: string
+        timeRequired:
+          type: string
+          description: Approximate or typical time it takes to work with or through this learning resource for the typical intended target audience.
+        learningResourceType:
+          type: string
+          description: The predominant type or kind characterizing the learning resource.
+        learningStage:
+          type: string
+          description: Categories that are used to order the presentation order of activities.
+        aggregateRating:
+          $ref: "../schemas/tla-definitions.yaml#/definitions/AggregateRating"
+          description: The overall rating, based on a collection of reviews or ratings, of the item.
+        attemptRate:
+          type: number
+          description: TBD (TODO ASAP)
+        keywords:
+          type: string
+          description: Keywords or tags used to describe this content. Multiple entries in a keywords list are typically delimited by commas.
+        url:
+          type: string
+          description: Launch URL to lanuch the learning activity.
+          format: uri
+        additionaltype:
+          type: string
+          description: In Schema.org, an additional type for this item. Used here to contain Launch URL with params included.
+          format: uri
+        image:
+          type: string
+          description: A URL of the activity's image.
+          format: uri
+        motivationImage:
+          type: string
+          description: An image showing motivation for performing the activity, where you can get to in the future if you learn the basics now.
+          format: uri
+        contentURLs:
+          type: array
+          description: The url for any content that the activity uses such as a video or powerpoint.
+          items:
+            type: string
+            format: uri
+        accessibilityAPI:
+          type: string
+          description: In Schema.org, indicates that the resource is compatible with the referenced accessibility API. Used here to list compatible platforms.
+        accessibilityFeature:
+          type: string
+          description: In Schema.org, content features that support accessibility. Used here to list compatible devices.
+        metadataFile:
+          type: string
+          description: Name of the file used to add/update the activity metadata in the Activity Index database.
+        interactivityType:
+          type: string
+          description: The predominant mode of learning supported by the learning resource. Acceptable values are active, expositive, or mixed.
+        educationalAlignment:
+          type: array
+          items:
+            $ref: "../schemas/tla-definitions.yaml#/definitions/AlignmentObject"
+        popularityRating:
+          type: number
+          description: Population level statistic on whether the activity is found to be popular among learners.
+        emotionRating:
+          type: string
+          description: Population level statistic on which emotion this activity evokes most often in learners.
+      required:
+        - "@context"
+        - "@type"
+        - identifier
+        - name
+        - description
+        - dateCreated
+        - provider
+        - educationalUse
+        - timeRequired
+        - learningResourceType
+        - learningStage
+        - url
+        - image
+        - accessibilityFeature
+        - metadataFile
+        - interactivityType
+        - educationalAlignment
+
+  CreativeWork:
+    description: The most generic kind of creative work, including books, movies, photographs,
+      software programs, etc.
+    properties:
+      about:
+        description: The subject matter of the content.
+        type: object
+      educationalAlignment:
+        description: An alignment to an established educational framework.
+        type: array
+        items:
+          $ref: "../schemas/tla-definitions.yaml#/definitions/AlignmentObject"
+      associatedMedia:
+        description: A media object that encodes this CreativeWork. This property is
+          a synonym for encoding.
+        type: object
+      funder:
+        description: A person or organization that supports (sponsors) something through
+          some kind of financial contribution.
+        type: object
+      position:
+        description: The position of an item in a series or sequence of items.
+        type: integer
+        format: int32
+      audio:
+        description: An embedded audio object.
+        type: object
+      workExample:
+        description: Example/instance/realization/derivation of the concept of this
+          creative work. eg. The paperback edition, first edition, or eBook.
+        type: object
+      provider:
+        description: The service provider, service operator, or service performer; the
+          goods producer. Another party (a seller) may offer those services or goods
+          on behalf of the provider. A provider may also serve as the seller.
+        type: object
+      encoding:
+        description: A media object that encodes this CreativeWork. This property is
+          a synonym for associatedMedia.
+        type: object
+      interactivityType:
+        description: The predominant mode of learning supported by the learning resource.
+          Acceptable values are  active ,  expositive , or  mixed .
+        type: string
+      accessibilitySummary:
+        description: 'A human-readable summary of specific accessibility features or
+          deficiencies, consistent with the other accessibility metadata but expressing
+          subtleties such as  short descriptions are present but long descriptions will
+          be needed for non-visual users  or  short descriptions are present and no
+          long descriptions are needed. '
+        type: string
+      character:
+        description: Fictional person connected with a creative work.
+        type: object
+      audience:
+        description: An intended audience, i.e. a group for whom something was created.
+        type: object
+      sourceOrganization:
+        description: The Organization on whose behalf the creator was working.
+        type: object
+      isPartOf:
+        description: Indicates a CreativeWork that this CreativeWork is (in some sense)
+          part of.
+        type: object
+      video:
+        description: An embedded video object.
+        type: object
+      publisher:
+        description: The publisher of the creative work.
+        type: object
+      publication:
+        description: A publication event associated with the item.
+        type: object
+      text:
+        description: The textual content of this CreativeWork.
+        type: string
+      expires:
+        description: Date the content expires and is no longer useful or available.
+          For example a VideoObject or NewsArticle whose availability or relevance is
+          time-limited, or a ClaimReview fact check whose publisher wants to indicate
+          that it may no longer be relevant (or helpful to highlight) after some date.
+        type: string
+        format: date-time
+      contributor:
+        description: A secondary contributor to the CreativeWork or Event.
+        type: object
+      reviews:
+        description: Review of the item.
+        type: object
+      typicalAgeRange:
+        description: The typical expected age range, e.g.  7-9 ,  11- .
+        type: string
+      releasedEvent:
+        description: The place and time the release was issued, expressed as a PublicationEvent.
+        type: object
+      educationalUse:
+        description: The purpose of a work in the context of education; for example,  assignment
+          ,  group work .
+        type: array
+        items:
+          type: string
+      contentLocation:
+        description: The location depicted or described in the content. For example,
+          the location in a photograph or painting.
+        type: object
+      schemaVersion:
+        description: Indicates (by URL or string) a particular version of a schema used
+          in some CreativeWork. For example, a document could declare a schemaVersion
+          using an URL such as http://schema.org/version/2.0/ if precise indication
+          of schema version was required by some application.
+        type: string
+        format: uri
+      accessibilityFeature:
+        description: Content features of the resource, such as accessible media, alternatives
+          and supported enhancements for accessibility (WebSchemas wiki lists possible
+          values).
+        type: string
+      aggregateRating:
+        description: The overall rating, based on a collection of reviews or ratings,
+          of the item.
+        type: object
+      alternativeHeadline:
+        description: A secondary title of the CreativeWork.
+        type: string
+      locationCreated:
+        description: The location where the CreativeWork was created, which may not
+          be the same as the location depicted in the CreativeWork.
+        type: object
+      accessModeSufficient:
+        description: 'A list of single or combined accessModes that are sufficient to
+          understand all the intellectual content of a resource. Expected values include:  auditory,
+          tactile, textual, visual.'
+        type: string
+      temporalCoverage:
+        description: The temporalCoverage of a CreativeWork indicates the period that
+          the content applies to, i.e. that it describes, either as a DateTime or as
+          a textual string indicating a time period in ISO 8601 time interval format.
+          In       the case of a Dataset it will typically indicate the relevant time
+          period in a precise notation (e.g. for a 2011 census dataset, the year 2011
+          would be written  2011/2012 ). Other forms of content e.g. ScholarlyArticle,
+          Book, TVSeries or TVEpisode may indicate their temporalCoverage in broader
+          terms - textually or via well-known URL.       Written works such as books
+          may sometimes have precise temporal coverage too, e.g. a work set in 1939
+          - 1945 can be indicated in ISO 8601 interval format format via  1939/1945
+          .
+        type: string
+        format: date-time
+      accountablePerson:
+        description: Specifies the Person that is legally accountable for the CreativeWork.
+        type: object
+      spatialCoverage:
+        description: 'The spatialCoverage of a CreativeWork indicates the place(s) which
+          are the focus of the content. It is a subproperty of       contentLocation
+          intended primarily for more technical and detailed materials. For example
+          with a Dataset, it indicates       areas that the dataset describes: a dataset
+          of New York weather would have spatialCoverage which was the place: the state
+          of New York.'
+        type: object
+      offers:
+        description: An offer to provide this item—for example, an offer to sell
+          a product, rent the DVD of a movie, perform a service, or give away tickets
+          to an event.
+        type: object
+      editor:
+        description: Specifies the Person who edited the CreativeWork.
+        type: object
+      discussionUrl:
+        description: A link to the page containing the comments of the CreativeWork.
+        type: string
+        format: uri
+      award:
+        description: An award won by or for this item.
+        type: string
+      copyrightHolder:
+        description: The party holding the legal copyright to the CreativeWork.
+        type: object
+      accessibilityHazard:
+        description: A characteristic of the described resource that is physiologically
+          dangerous to some users. Related to WCAG 2.0 guideline 2.3 (WebSchemas wiki
+          lists possible values).
+        type: string
+      copyrightYear:
+        description: The year during which the claimed copyright for the CreativeWork
+          was first asserted.
+        type: number
+        format: float
+      awards:
+        description: Awards won by or for this item.
+        type: string
+      recordedAt:
+        description: The Event where the CreativeWork was recorded. The CreativeWork
+          may capture all or part of the event.
+        type: object
+      commentCount:
+        description: The number of comments this CreativeWork (e.g. Article, Question
+          or Answer) has received. This is most applicable to works published in Web
+          sites with commenting system; additional comments may exist elsewhere.
+        type: integer
+        format: int32
+      fileFormat:
+        description: Media type, typically MIME format (see IANA site) of the content
+          e.g. application/zip of a SoftwareApplication binary. In cases where a CreativeWork
+          has several media type representations,  encoding  can be used to indicate
+          each MediaObject alongside particular fileFormat information. Unregistered
+          or niche file formats can be indicated instead via the most appropriate URL,
+          e.g. defining Web page or a Wikipedia entry.
+        type: string
+        format: uri
+      inLanguage:
+        description: The language of the content or performance or used in an action.
+          Please use one of the language codes from the IETF BCP 47 standard. See also
+          availableLanguage.
+        type: object
+      accessibilityAPI:
+        description: Indicates that the resource is compatible with the referenced accessibility
+          API (WebSchemas wiki lists possible values).
+        type: string
+      interactionStatistic:
+        description: The number of interactions for the CreativeWork using the WebSite
+          or SoftwareApplication. The most specific child type of InteractionCounter
+          should be used.
+        type: object
+      contentRating:
+        description: Official rating of a piece of content—for example, MPAA
+          PG-13 .
+        type: string
+      learningResourceType:
+        description: The predominant type or kind characterizing the learning resource.
+          For example,  presentation ,  handout .
+        type: string
+      accessMode:
+        description: 'The human sensory perceptual system or cognitive faculty through
+          which a person may process or perceive information. Expected values include:
+          auditory, tactile, textual, visual, colorDependent, chartOnVisual, chemOnVisual,
+          diagramOnVisual, mathOnVisual, musicOnVisual, textOnVisual.'
+        type: string
+      material:
+        description: A material that something is made from, e.g. leather, wool, cotton,
+          paper.
+        type: string
+      isFamilyFriendly:
+        description: Indicates whether this content is family friendly.
+        type: boolean
+      exampleOfWork:
+        description: A creative work that this work is an example/instance/realization/derivation
+          of.
+        type: object
+      version:
+        description: The version of the CreativeWork embodied by a specified resource.
+        type: string
+      dateModified:
+        description: The date on which the CreativeWork was most recently modified or
+          when the item s entry was modified within a DataFeed.
+        type: string
+        format: date-time
+      mainEntity:
+        description: Indicates the primary entity described in some page or other CreativeWork.
+        type: object
+      genre:
+        description: Genre of the creative work, broadcast channel or group.
+        type: string
+        format: uri
+      keywords:
+        description: Keywords or tags used to describe this content. Multiple entries
+          in a keywords list are typically delimited by commas.
+        type: string
+      author:
+        description: The author of this content or rating. Please note that author is
+          special in that HTML 5 provides a special mechanism for indicating authorship
+          via the rel tag. That is equivalent to this and may be used interchangeably.
+        type: object
+      isBasedOnUrl:
+        description: A resource that was used in the creation of this resource. This
+          term can be repeated for multiple sources. For example, http://example.com/great-multiplication-intro.html.
+        type: object
+      timeRequired:
+        description: Approximate or typical time it takes to work with or through this
+          learning resource for the typical intended target audience, e.g.  P30M ,  P1H25M.
+        type: string
+      translator:
+        description: Organization or person who adapts a creative work to different
+          languages, regional differences and technical requirements of a target market,
+          or that translates during some event.
+        type: object
+      thumbnailUrl:
+        description: A thumbnail image relevant to the Thing.
+        type: string
+        format: uri
+      hasPart:
+        description: Indicates a CreativeWork that is (in some sense) a part of this
+          CreativeWork.
+        type: object
+      comment:
+        description: Comments, typically from users.
+        type: object
+      review:
+        description: A review of the item.
+        type: object
+      license:
+        description: A license document that applies to this content, typically indicated
+          by URL.
+        type: object
+      accessibilityControl:
+        description: Identifies input methods that are sufficient to fully control the
+          described resource (WebSchemas wiki lists possible values).
+        type: string
+      encodings:
+        description: A media object that encodes this CreativeWork.
+        type: object
+      isBasedOn:
+        description: A resource that was used in the creation of this resource. This
+          term can be repeated for multiple sources. For example, http://example.com/great-multiplication-intro.html.
+        type: object
+      creator:
+        description: The creator/author of this CreativeWork. This is the same as the
+          Author property for CreativeWork.
+        type: object
+      publishingPrinciples:
+        description: The publishingPrinciples property indicates (typically via URL)
+          a document describing the editorial principles of an Organization (or individual
+          e.g. a Person writing a blog) that relate to their activities as a publisher,
+          e.g. ethics or diversity policies. When applied to a CreativeWork (e.g. NewsArticle)
+          the principles are those of the party primarily responsible for the creation
+          of the CreativeWork.  While such policies are most typically expressed in
+          natural language, sometimes related information (e.g. indicating a funder)
+          can be expressed using schema.org terminology.
+        type: object
+      sponsor:
+        description: A person or organization that supports a thing through a pledge,
+          promise, or financial contribution. e.g. a sponsor of a Medical Study or a
+          corporate sponsor of an event.
+        type: object
+      producer:
+        description: The person or organization who produced the work (e.g. music album,
+          movie, tv/radio series etc.).
+        type: object
+      mentions:
+        description: Indicates that the CreativeWork contains a reference to, but is
+          not necessarily about a concept.
+        type: object
+      dateCreated:
+        description: The date on which the CreativeWork was created or the item was
+          added to a DataFeed.
+        type: string
+        format: date-time
+      datePublished:
+        description: Date of first broadcast/publication.
+        type: string
+        format: date-time
+      isAccessibleForFree:
+        description: A flag to signal that the item, event, or place is accessible for
+          free.
+        type: boolean
+      headline:
+        description: Headline of the article.
+        type: string
+      citation:
+        description: A citation or reference to another creative work, such as another
+          publication, web page, scholarly article, etc.
+        type: object
+      sameAs:
+        description: URL of a reference Web page that unambiguously indicates the item
+          s identity. E.g. the URL of the item s Wikipedia page, Wikidata entry, or
+          official website.
+        type: string
+        format: uri
+      url:
+        description: URL of the item.
+        type: string
+        format: uri
+      image:
+        description: An image of the item. This can be a URL or a fully described ImageObject.
+        type: string
+        format: uri
+      additionalType:
+        description: An additional type for the item, typically used for adding more
+          specific types from external vocabularies in microdata syntax. This is a relationship
+          between something and a class that the thing is in. In RDFa syntax, it is
+          better to use the native RDFa syntax - the  typeof  attribute - for multiple
+          types. Schema.org tools may have only weaker understanding of extra types,
+          in particular those defined externally.
+        type: string
+        format: uri
+      name:
+        description: The name of the item.
+        type: string
+      identifier:
+        description: The identifier property represents any kind of identifier for any
+          kind of Thing, such as ISBNs, GTIN codes, UUIDs etc. Schema.org provides dedicated
+          properties for representing many of these, either as textual strings or as
+          URL (URI) links. See background notes for more details.
+        type: string
+        format: uri
+      potentialAction:
+        description: Indicates a potential Action, which describes an idealized action
+          in which this thing would play an  object  role.
+        type: object
+      mainEntityOfPage:
+        description: Indicates a page (or other CreativeWork) for which this thing is
+          the main entity being described. See background notes for details.
+        type: string
+        format: uri
+      description:
+        description: A description of the item.
+        type: string
+      disambiguatingDescription:
+        description: A sub property of description. A short description of the item
+          used to disambiguate from other, similar items. Information from other properties
+          (in particular, name) may be necessary for the description to be useful for
+          disambiguation.
+        type: string
+      alternateName:
+        description: An alias for the item.
+        type: string
+
+  Person:
+    description: A person (alive, dead, undead, or fictional).
+    properties:
+      spouse:
+        description: The person s spouse.
+        type: object
+      funder:
+        description: A person or organization that supports (sponsors) something through
+          some kind of financial contribution.
+        type: object
+      colleague:
+        description: A colleague of the person. Supersedes colleagues.
+        type: object
+      deathDate:
+        description: Date of death.
+        type: string
+        format: date-time
+      memberOf:
+        description: An Organization (or ProgramMembership) to which this Person or
+          Organization belongs.
+        type: object
+      height:
+        description: The height of the item.
+        type: object
+      workLocation:
+        description: A contact location for a person s place of work.
+        type: object
+      netWorth:
+        description: The total financial value of the person as calculated by subtracting
+          assets from liabilities.
+        type: object
+      children:
+        description: A child of the person.
+        type: object
+      jobTitle:
+        description: The job title of the person (for example, Financial Manager).
+        type: string
+      hasOfferCatalog:
+        description: Indicates an OfferCatalog listing for this Organization, Person,
+          or Service.
+        type: object
+      deathPlace:
+        description: The place where the person died.
+        type: object
+      globalLocationNumber:
+        description: The Global Location Number (GLN, sometimes also referred to as
+          International Location Number or ILN) of the respective organization, person,
+          or place. The GLN is a 13-digit number used to identify parties and physical
+          locations.
+        type: string
+      birthPlace:
+        description: The place where the person was born.
+        type: object
+      gender:
+        description: Gender of the person. While http://schema.org/Male and http://schema.org/Female
+          may be used, text strings are also acceptable for people who do not identify
+          as a binary gender.
+        type: string
+      alumniOf:
+        description: An organization that the person is an alumni of.
+        type: object
+      homeLocation:
+        description: A contact location for a person s residence.
+        type: object
+      duns:
+        description: The Dun & Bradstreet DUNS number for identifying an organization
+          or business person.
+        type: string
+      taxID:
+        description: The Tax / Fiscal ID of the organization or person, e.g. the TIN
+          in the US or the CIF/NIF in Spain.
+        type: string
+      award:
+        description: An award won by or for this item.
+        type: string
+      birthDate:
+        description: Date of birth.
+        type: string
+        format: date-time
+      makesOffer:
+        description: A pointer to products or services offered by the organization or
+          person.
+        type: object
+      givenName:
+        description: Given name. In the U.S., the first name of a Person. This can be
+          used along with familyName instead of the name property.
+        type: string
+      contactPoints:
+        description: A contact point for a person or organization.
+        type: object
+      awards:
+        description: Awards won by or for this item.
+        type: string
+      familyName:
+        description: Family name. In the U.S., the last name of an Person. This can
+          be used along with givenName instead of the name property.
+        type: string
+      seeks:
+        description: A pointer to products or services sought by the organization or
+          person (demand).
+        type: object
+      sibling:
+        description: A sibling of the person.
+        type: object
+      address:
+        description: Physical address of the item.
+        type: object
+      performerIn:
+        description: Event that this person is a performer or participant in.
+        type: object
+      honorificPrefix:
+        description: An honorific prefix preceding a Person s name such as Dr/Mrs/Mr.
+        type: string
+      additionalName:
+        description: An additional name for a Person, can be used for a middle name.
+        type: string
+      siblings:
+        description: A sibling of the person.
+        type: object
+      telephone:
+        description: The telephone number.
+        type: string
+      email:
+        description: Email address.
+        type: string
+      weight:
+        description: The weight of the product or person.
+        type: object
+      contactPoint:
+        description: A contact point for a person or organization.
+        type: object
+      parents:
+        description: A parents of the person.
+        type: object
+      naics:
+        description: The North American Industry Classification System (NAICS) code
+          for a particular organization or business person.
+        type: string
+      hasPOS:
+        description: Points-of-Sales operated by the organization or person.
+        type: object
+      parent:
+        description: A parent of this person.
+        type: object
+      owns:
+        description: Products owned by the organization or person.
+        type: object
+      affiliation:
+        description: An organization that this person is affiliated with. For example,
+          a school/university, a club, or a team.
+        type: object
+      publishingPrinciples:
+        description: The publishingPrinciples property indicates (typically via URL)
+          a document describing the editorial principles of an Organization (or individual
+          e.g. a Person writing a blog) that relate to their activities as a publisher,
+          e.g. ethics or diversity policies. When applied to a CreativeWork (e.g. NewsArticle)
+          the principles are those of the party primarily responsible for the creation
+          of the CreativeWork.  While such policies are most typically expressed in
+          natural language, sometimes related information (e.g. indicating a funder)
+          can be expressed using schema.org terminology.
+        type: object
+      sponsor:
+        description: A person or organization that supports a thing through a pledge,
+          promise, or financial contribution. e.g. a sponsor of a Medical Study or a
+          corporate sponsor of an event.
+        type: object
+      isicV4:
+        description: The International Standard of Industrial Classification of All
+          Economic Activities (ISIC), Revision 4 code for a particular organization,
+          business person, or place.
+        type: string
+      brand:
+        description: The brand(s) associated with a product or service, or the brand(s)
+          maintained by an organization or business person.
+        type: object
+      honorificSuffix:
+        description: An honorific suffix preceding a Person s name such as M.D. /PhD/MSCSW.
+        type: string
+      vatID:
+        description: The Value-added Tax ID of the organization or person.
+        type: string
+      nationality:
+        description: Nationality of the person.
+        type: object
+      faxNumber:
+        description: The fax number.
+        type: string
+      relatedTo:
+        description: The most generic familial relation.
+        type: object
+      follows:
+        description: The most generic uni-directional social relation.
+        type: object
+      knows:
+        description: The most generic bi-directional social/work relation.
+        type: object
+      worksFor:
+        description: Organizations that the person works for.
+        type: object
+      sameAs:
+        description: URL of a reference Web page that unambiguously indicates the item
+          s identity. E.g. the URL of the item s Wikipedia page, Wikidata entry, or
+          official website.
+        type: string
+        format: uri
+      url:
+        description: URL of the item.
+        type: string
+        format: uri
+      image:
+        description: An image of the item. This can be a URL or a fully described ImageObject.
+        type: string
+        format: uri
+      additionalType:
+        description: An additional type for the item, typically used for adding more
+          specific types from external vocabularies in microdata syntax. This is a relationship
+          between something and a class that the thing is in. In RDFa syntax, it is
+          better to use the native RDFa syntax - the  typeof  attribute - for multiple
+          types. Schema.org tools may have only weaker understanding of extra types,
+          in particular those defined externally.
+        type: string
+        format: uri
+      name:
+        description: The name of the item.
+        type: string
+      identifier:
+        description: The identifier property represents any kind of identifier for any
+          kind of Thing, such as ISBNs, GTIN codes, UUIDs etc. Schema.org provides dedicated
+          properties for representing many of these, either as textual strings or as
+          URL (URI) links. See background notes for more details.
+        type: string
+        format: uri
+      potentialAction:
+        description: Indicates a potential Action, which describes an idealized action
+          in which this thing would play an  object  role.
+        type: object
+      mainEntityOfPage:
+        description: Indicates a page (or other CreativeWork) for which this thing is
+          the main entity being described. See background notes for details.
+        type: string
+        format: uri
+      description:
+        description: A description of the item.
+        type: string
+      disambiguatingDescription:
+        description: A sub property of description. A short description of the item
+          used to disambiguate from other, similar items. Information from other properties
+          (in particular, name) may be necessary for the description to be useful for
+          disambiguation.
+        type: string
+      alternateName:
+        description: An alias for the item.
+        type: string
+
+  Organization:
+    description: An organization such as a school, NGO, corporation, club, etc.
+    properties:
+      serviceArea:
+        description: The geographic area where the service is provided.
+        type: object
+      funder:
+        description: A person or organization that supports (sponsors) something through
+          some kind of financial contribution.
+        type: object
+      areaServed:
+        description: The geographic area where a service or offered item is provided.
+        type: object
+      memberOf:
+        description: An Organization (or ProgramMembership) to which this Person or
+          Organization belongs.
+        type: object
+      events:
+        description: Upcoming or past events associated with this place or organization.
+        type: object
+      subOrganization:
+        description: 'A relationship between two organizations where the first includes
+          the second, e.g., as a subsidiary. See also: the more specific  department  property.'
+        type: object
+      hasOfferCatalog:
+        description: Indicates an OfferCatalog listing for this Organization, Person,
+          or Service.
+        type: object
+      globalLocationNumber:
+        description: The Global Location Number (GLN, sometimes also referred to as
+          International Location Number or ILN) of the respective organization, person,
+          or place. The GLN is a 13-digit number used to identify parties and physical
+          locations.
+        type: string
+      reviews:
+        description: Review of the item.
+        type: object
+      members:
+        description: A member of this organization.
+        type: object
+      aggregateRating:
+        description: The overall rating, based on a collection of reviews or ratings,
+          of the item.
+        type: object
+      duns:
+        description: The Dun & Bradstreet DUNS number for identifying an organization
+          or business person.
+        type: string
+      taxID:
+        description: The Tax / Fiscal ID of the organization or person, e.g. the TIN
+          in the US or the CIF/NIF in Spain.
+        type: string
+      award:
+        description: An award won by or for this item.
+        type: string
+      makesOffer:
+        description: A pointer to products or services offered by the organization or
+          person.
+        type: object
+      contactPoints:
+        description: A contact point for a person or organization.
+        type: object
+      awards:
+        description: Awards won by or for this item.
+        type: string
+      seeks:
+        description: A pointer to products or services sought by the organization or
+          person (demand).
+        type: object
+      member:
+        description: A member of an Organization or a ProgramMembership. Organizations
+          can be members of organizations; ProgramMembership is typically for individuals.
+        type: object
+      founders:
+        description: A person who founded this organization.
+        type: object
+      alumni:
+        description: Alumni of an organization.
+        type: object
+      dissolutionDate:
+        description: The date that this organization was dissolved.
+        type: string
+        format: date-time
+      address:
+        description: Physical address of the item.
+        type: object
+      logo:
+        description: An associated logo.
+        type: string
+        format: uri
+      employees:
+        description: People working for this organization.
+        type: object
+      telephone:
+        description: The telephone number.
+        type: string
+      email:
+        description: Email address.
+        type: string
+      department:
+        description: 'A relationship between an organization and a department of that
+          organization, also described as an organization (allowing different urls,
+          logos, opening hours). For example: a store with a pharmacy, or a bakery with
+          a cafe.'
+        type: object
+      contactPoint:
+        description: A contact point for a person or organization.
+        type: object
+      parentOrganization:
+        description: The larger organization that this organization is a subOrganization
+          of, if any.
+        type: object
+      legalName:
+        description: The official name of the organization, e.g. the registered company
+          name.
+        type: string
+      foundingDate:
+        description: The date that this organization was founded.
+        type: string
+        format: date-time
+      employee:
+        description: Someone working for this organization.
+        type: object
+      numberOfEmployees:
+        description: The number of employees in an organization e.g. business.
+        type: object
+      naics:
+        description: The North American Industry Classification System (NAICS) code
+          for a particular organization or business person.
+        type: string
+      hasPOS:
+        description: Points-of-Sales operated by the organization or person.
+        type: object
+      review:
+        description: A review of the item.
+        type: object
+      foundingLocation:
+        description: The place where the Organization was founded.
+        type: object
+      owns:
+        description: Products owned by the organization or person.
+        type: object
+      event:
+        description: Upcoming or past event associated with this place, organization,
+          or action.
+        type: object
+      founder:
+        description: A person who founded this organization.
+        type: object
+      publishingPrinciples:
+        description: The publishingPrinciples property indicates (typically via URL)
+          a document describing the editorial principles of an Organization (or individual
+          e.g. a Person writing a blog) that relate to their activities as a publisher,
+          e.g. ethics or diversity policies. When applied to a CreativeWork (e.g. NewsArticle)
+          the principles are those of the party primarily responsible for the creation
+          of the CreativeWork.  While such policies are most typically expressed in
+          natural language, sometimes related information (e.g. indicating a funder)
+          can be expressed using schema.org terminology.
+        type: object
+      sponsor:
+        description: A person or organization that supports a thing through a pledge,
+          promise, or financial contribution. e.g. a sponsor of a Medical Study or a
+          corporate sponsor of an event.
+        type: object
+      isicV4:
+        description: The International Standard of Industrial Classification of All
+          Economic Activities (ISIC), Revision 4 code for a particular organization,
+          business person, or place.
+        type: string
+      location:
+        description: The location of for example where the event is happening, an organization
+          is located, or where an action takes place.
+        type: object
+      brand:
+        description: The brand(s) associated with a product or service, or the brand(s)
+          maintained by an organization or business person.
+        type: object
+      vatID:
+        description: The Value-added Tax ID of the organization or person.
+        type: string
+      leiCode:
+        description: An organization identifier that uniquely identifies a legal entity
+          as defined in ISO 17442.
+        type: string
+      faxNumber:
+        description: The fax number.
+        type: string
+      sameAs:
+        description: URL of a reference Web page that unambiguously indicates the item
+          s identity. E.g. the URL of the item s Wikipedia page, Wikidata entry, or
+          official website.
+        type: string
+        format: uri
+      url:
+        description: URL of the item.
+        type: string
+        format: uri
+      image:
+        description: An image of the item. This can be a URL or a fully described ImageObject.
+        type: object
+      additionalType:
+        description: An additional type for the item, typically used for adding more
+          specific types from external vocabularies in microdata syntax. This is a relationship
+          between something and a class that the thing is in. In RDFa syntax, it is
+          better to use the native RDFa syntax - the  typeof  attribute - for multiple
+          types. Schema.org tools may have only weaker understanding of extra types,
+          in particular those defined externally.
+        type: string
+        format: uri
+      name:
+        description: The name of the item.
+        type: string
+      identifier:
+        description: The identifier property represents any kind of identifier for any
+          kind of Thing, such as ISBNs, GTIN codes, UUIDs etc. Schema.org provides dedicated
+          properties for representing many of these, either as textual strings or as
+          URL (URI) links. See background notes for more details.
+        type: string
+        format: uri
+      potentialAction:
+        description: Indicates a potential Action, which describes an idealized action
+          in which this thing would play an  object  role.
+        type: object
+      mainEntityOfPage:
+        description: Indicates a page (or other CreativeWork) for which this thing is
+          the main entity being described. See background notes for details.
+        type: string
+        format: uri
+      description:
+        description: A description of the item.
+        type: string
+      disambiguatingDescription:
+        description: A sub property of description. A short description of the item
+          used to disambiguate from other, similar items. Information from other properties
+          (in particular, name) may be necessary for the description to be useful for
+          disambiguation.
+        type: string
+      alternateName:
+        description: An alias for the item.
+        type: string
+
+  Duration:
+    description: 'Quantity: Duration (use ISO 8601 duration format).'
+    properties:
+      sameAs:
+        description: URL of a reference Web page that unambiguously indicates the item
+          s identity. E.g. the URL of the item s Wikipedia page, Wikidata entry, or
+          official website.
+        type: string
+        format: uri
+      url:
+        description: URL of the item.
+        type: string
+        format: uri
+      image:
+        description: An image of the item. This can be a URL or a fully described ImageObject.
+        type: object
+      additionalType:
+        description: An additional type for the item, typically used for adding more
+          specific types from external vocabularies in microdata syntax. This is a relationship
+          between something and a class that the thing is in. In RDFa syntax, it is
+          better to use the native RDFa syntax - the  typeof  attribute - for multiple
+          types. Schema.org tools may have only weaker understanding of extra types,
+          in particular those defined externally.
+        type: string
+        format: uri
+      name:
+        description: The name of the item.
+        type: string
+      identifier:
+        description: The identifier property represents any kind of identifier for any
+          kind of Thing, such as ISBNs, GTIN codes, UUIDs etc. Schema.org provides dedicated
+          properties for representing many of these, either as textual strings or as
+          URL (URI) links. See background notes for more details.
+        type: string
+        format: uri
+      potentialAction:
+        description: Indicates a potential Action, which describes an idealized action
+          in which this thing would play an  object  role.
+        type: object
+      mainEntityOfPage:
+        description: Indicates a page (or other CreativeWork) for which this thing is
+          the main entity being described. See background notes for details.
+        type: string
+        format: uri
+      description:
+        description: A description of the item.
+        type: string
+      disambiguatingDescription:
+        description: A sub property of description. A short description of the item
+          used to disambiguate from other, similar items. Information from other properties
+          (in particular, name) may be necessary for the description to be useful for
+          disambiguation.
+        type: string
+      alternateName:
+        description: An alias for the item.
+        type: string
+
+  AggregateRating:
+    description: The average rating based on multiple ratings or reviews.
+    properties:
+      itemReviewed:
+        description: The item that is being reviewed/rated.
+        type: object
+      reviewCount:
+        description: The count of total number of reviews.
+        type: integer
+        format: int32
+      ratingCount:
+        description: The count of total number of ratings.
+        type: integer
+        format: int32
+      ratingValue:
+        description: The rating for the content.
+        type: number
+        format: float
+      bestRating:
+        description: The highest value allowed in this rating system. If bestRating
+          is omitted, 5 is assumed.
+        type: string
+      author:
+        description: The author of this content or rating. Please note that author is
+          special in that HTML 5 provides a special mechanism for indicating authorship
+          via the rel tag. That is equivalent to this and may be used interchangeably.
+        type: object
+      worstRating:
+        description: The lowest value allowed in this rating system. If worstRating
+          is omitted, 1 is assumed.
+        type: string
+      sameAs:
+        description: URL of a reference Web page that unambiguously indicates the item
+          s identity. E.g. the URL of the item s Wikipedia page, Wikidata entry, or
+          official website.
+        type: string
+        format: uri
+      url:
+        description: URL of the item.
+        type: string
+        format: uri
+      image:
+        description: An image of the item. This can be a URL or a fully described ImageObject.
+        type: object
+      additionalType:
+        description: An additional type for the item, typically used for adding more
+          specific types from external vocabularies in microdata syntax. This is a relationship
+          between something and a class that the thing is in. In RDFa syntax, it is
+          better to use the native RDFa syntax - the  typeof  attribute - for multiple
+          types. Schema.org tools may have only weaker understanding of extra types,
+          in particular those defined externally.
+        type: string
+        format: uri
+      name:
+        description: The name of the item.
+        type: string
+      identifier:
+        description: The identifier property represents any kind of identifier for any
+          kind of Thing, such as ISBNs, GTIN codes, UUIDs etc. Schema.org provides dedicated
+          properties for representing many of these, either as textual strings or as
+          URL (URI) links. See background notes for more details.
+        type: string
+        format: uri
+      potentialAction:
+        description: Indicates a potential Action, which describes an idealized action
+          in which this thing would play an  object  role.
+        type: object
+      mainEntityOfPage:
+        description: Indicates a page (or other CreativeWork) for which this thing is
+          the main entity being described. See background notes for details.
+        type: string
+        format: uri
+      description:
+        description: A description of the item.
+        type: string
+      disambiguatingDescription:
+        description: A sub property of description. A short description of the item
+          used to disambiguate from other, similar items. Information from other properties
+          (in particular, name) may be necessary for the description to be useful for
+          disambiguation.
+        type: string
+      alternateName:
+        description: An alias for the item.
+        type: string
+
+  AlignmentObject:
+    description: An intangible item that describes an alignment between a learning resource
+      and a node in an educational framework.
+    properties:
+      targetDescription:
+        description: The description of a node in an established educational framework.
+        type: string
+      alignmentType:
+        description: 'A category of alignment between the learning resource and the
+          framework node. Recommended values include:  assesses ,  teaches ,  requires
+          ,  textComplexity ,  readingLevel ,  educationalSubject , and  educationalLevel
+          .'
+        type: string
+      targetUrl:
+        description: The URL of a node in an established educational framework.
+        type: string
+        format: uri
+      targetName:
+        description: The name of a node in an established educational framework.
+        type: string
+      educationalFramework:
+        description: The framework to which the resource being described is aligned.
+        type: string
+      sameAs:
+        description: URL of a reference Web page that unambiguously indicates the item
+          s identity. E.g. the URL of the item s Wikipedia page, Wikidata entry, or
+          official website.
+        type: string
+        format: uri
+      url:
+        description: URL of the item.
+        type: string
+        format: uri
+      image:
+        description: An image of the item. This can be a URL or a fully described ImageObject.
+        type: object
+      additionalType:
+        description: An additional type for the item, typically used for adding more
+          specific types from external vocabularies in microdata syntax. This is a relationship
+          between something and a class that the thing is in. In RDFa syntax, it is
+          better to use the native RDFa syntax - the  typeof  attribute - for multiple
+          types. Schema.org tools may have only weaker understanding of extra types,
+          in particular those defined externally.
+        type: string
+        format: uri
+      name:
+        description: The name of the item.
+        type: string
+      identifier:
+        description: The identifier property represents any kind of identifier for any
+          kind of Thing, such as ISBNs, GTIN codes, UUIDs etc. Schema.org provides dedicated
+          properties for representing many of these, either as textual strings or as
+          URL (URI) links. See background notes for more details.
+        type: string
+        format: uri
+      potentialAction:
+        description: Indicates a potential Action, which describes an idealized action
+          in which this thing would play an  object  role.
+        type: object
+      mainEntityOfPage:
+        description: Indicates a page (or other CreativeWork) for which this thing is
+          the main entity being described. See background notes for details.
+        type: string
+        format: uri
+      description:
+        description: A description of the item.
+        type: string
+      disambiguatingDescription:
+        description: A sub property of description. A short description of the item
+          used to disambiguate from other, similar items. Information from other properties
+          (in particular, name) may be necessary for the description to be useful for
+          disambiguation.
+        type: string
+      alternateName:
+        description: An alias for the item.
+        type: string
+
+  Learner:
+    allOf:
+      - $ref: "../schemas/tla-definitions.yaml#/definitions/Person"
+      - type: object
+        description: A representation of a learner in a Learner Profile.
+        properties:
+          "@context":
+            type: string
+            description: The constant link in this property should return file tla-declarations.jsonld. The value of this field will always be "https://tla.adl.net/declarations"
+          "@type":
+            type: string
+            description: The value of this field will always be "Learner"
+          identifier:
+            type: string
+            description: The string that identifies the learner. For the 2018 prototype, this will be the Keycloak-generated ID.
+          name:
+            type: string
+            description: The full name of the learner.
+          competencyAttemptCounters:
+            type: array
+            description: TODO
+            items:
+              $ref: "../schemas/tla-definitions.yaml#/definitions/CompetencyAttemptCounter"
+          goals:
+            type: array
+            description: TODO
+            items:
+              $ref: "../schemas/tla-definitions.yaml#/definitions/Goal"
+          pastGoals:
+            type: array
+            items:
+              $ref: "../schemas/tla-definitions.yaml#/definitions/Goal"
+          competencyAchievements:
+            type: array
+            description: TODO
+            items:
+              $ref: "../schemas/tla-definitions.yaml#/definitions/CompetencyAchievement"
+          masteryEstimates:
+            type: array
+            description: TODO
+            items:
+              $ref: "../schemas/tla-definitions.yaml#/definitions/MasteryEstimate"
+          pastMasteryEstimates:
+            type: array
+            description: TODO
+            items:
+              $ref: "../schemas/tla-definitions.yaml#/definitions/MasteryEstimate"
+          masteryProbabilities:
+            type: array
+            description: TODO
+            items:
+              $ref: "../schemas/tla-definitions.yaml#/definitions/MasteryProbability"
+          currentActivities:
+            type: array
+            description: TODO
+            items:
+              type: string
+              format: uri
+          currentDeviceCategories:
+            type: array
+            description: TODO
+            items:
+              type: string
+          currentPlatforms:
+            type: array
+            description: TODO
+            items:
+              type: string
+          bored:
+            type: boolean
+            description: TODO
+          confused:
+            type: boolean
+            description: TODO
+          frustrated:
+            type: boolean
+            description: TODO
+          flow:
+            type: boolean
+            description: TODO
+          eureka:
+            type: boolean
+            description: TODO
+          activityAttemptCounters:
+            type: array
+            description: TODO
+            items:
+              $ref: "../schemas/tla-definitions.yaml#/definitions/ActivityAttemptCounter"
+          lastActivityHard:
+            type: boolean
+            description: TODO
+          lastActivityUseful:
+            type: boolean
+            description: TODO
+        required:
+          - "@context"
+          - "@type"
+          - identifier
+          - name
+
+  CompetencyAttemptCounter:
+    type: object
+    description: TODO
+    properties:
+      "@context":
+        type: string
+        description: The constant link in this property should return file tla-declarations.jsonld. The value of this field will always be "https://tla.adl.net/declarations".
+      "@type":
+        type: string
+        description: The value of this field will always be "CompetencyAttemptCounter".
+      competencyId:
+        type: string
+        description: TODO
+        format: uri
+      attempts:
+        type: number
+      lastAttemptDateTime:
+        type: string
+        description: TODO
+        format: date-time
+    required:
+      - "@context"
+      - "@type"
+      - competencyId
+      - attempts
+
+  Goal:
+    type: object
+    description: TODO
+    properties:
+      "@context":
+        type: string
+        description: The constant link in this property should return file tla-declarations.jsonld. The value of this field will always be "https://tla.adl.net/declarations".
+      "@type":
+        type: string
+        description: The value of this field will always be "Goal".
+      competencyId:
+        type: string
+        description: TODO
+        format: uri
+      targetDate:
+        type: string
+        description: TODO
+        format: date-time
+      priority:
+        type: string
+        description: TODO
+    required:
+      - "@context"
+      - "@type"
+      - competencyId
+
+  CompetencyAchievement:
+    type: object
+    description: TODO
+    properties:
+      "@context":
+        type: string
+        description: The constant link in this property should return file tla-declarations.jsonld. The value of this field will always be "https://tla.adl.net/declarations".
+      "@type":
+        type: string
+        description: The value of this field will always be "CompetencyAchievement".
+      competencyId:
+        type: string
+        description: TODO
+        format: uri
+      mastery:
+        type: string
+        description: TODO
+      timestamp:
+        type: string
+        description: TODO
+        format: date-time
+      goalId:
+        type: string
+        description: TODO
+        format: uri
+    required:
+      - "@context"
+      - "@type"
+      - competencyId
+      - mastery
+      - timestamp
+
+  MasteryEstimate:
+    type: object
+    description: TODO
+    properties:
+      "@context":
+        type: string
+        description: The constant link in this property should return file tla-declarations.jsonld. The value of this field will always be "https://tla.adl.net/declarations".
+      "@type":
+        type: string
+        description: The value of this field will always be "MasteryEstimate".
+      competencyId:
+        type: string
+        description: TODO
+        format: uri
+      mastery:
+        type: string
+        description: TODO
+      timestamp:
+        type: string
+        description: TODO
+        format: date-time
+    required:
+      - "@context"
+      - "@type"
+      - competencyId
+      - mastery
+      - timestamp
+
+  MasteryProbability:
+    type: object
+    description: TODO
+    properties:
+      "@context":
+        type: string
+        description: The constant link in this property should return file tla-declarations.jsonld. The value of this field will always be "https://tla.adl.net/declarations".
+      "@type":
+        type: string
+        description: The value of this field will always be "MasteryProbability".
+      competencyId:
+        type: string
+        description: TODO
+        format: uri
+      probability:
+        type: number
+        description: TODO
+      timestamp:
+        type: string
+        description: TODO
+        format: date-time
+      source:
+        type: string
+        description: Source of the probability estimate.
+    required:
+      - "@context"
+      - "@type"
+      - competencyId
+      - probability
+      - timestamp
+      - source
+
+  ActivityAttemptCounter:
+    type: object
+    description: TODO
+    properties:
+      "@context":
+        type: string
+        description: The constant link in this property should return file tla-declarations.jsonld. The value of this field will always be "https://tla.adl.net/declarations".
+      "@type":
+        type: string
+        description: The value of this field will always be "ActivityAttemptCounter".
+      activityId:
+        type: string
+        description: TODO
+        format: uri
+      attempts:
+        type: number
+        description: TODO
+      lastAttemptDateTime:
+        type: string
+        description: TODO
+        format: date-time
+    required:
+      - "@context"
+      - "@type"
+      - activityId
+      - attempts

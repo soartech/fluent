@@ -1,0 +1,97 @@
+---
+
+- name: "Provision TLA FLUENT Server"
+  hosts: soartech_server
+  remote_user: root
+  become: yes
+  become_method: sudo
+
+  vars:
+    download_cache_dir: "{{ deployment_base }}/.ansible_cache"
+    tla_staging_dir:    "{{ deployment_base }}/tla-soartech/target"
+    tla_configs_dir:    "/opt/tla/config"
+    # This file is generated in the TLA ansbile scripts during LRS config
+    lrs_creds_location: "{{ deployment_base }}/ansible/.tmp/learning_locker_creds.json"
+    lrs_credentials: "{{ lookup('file', '{{ lrs_creds_location }}') | from_json}}"
+
+  pre_tasks:
+    - name: "Create TLA Directories"
+      file:
+        path:  "{{ item }}"
+        state: "directory"
+      with_items:
+        - "{{ tla_configs_dir }}"
+
+    - name: "Copy TLA Configuration Files to Server"
+      template:
+        src:   "{{ item  }}"
+        dest:  "{{ tla_configs_dir }}/{{ item | basename | splitext | first }}"
+      with_fileglob: "config_templates/*.properties.j2"
+
+  roles:
+    - role: nodejs
+      tags: [node, nodejs, cass_worker ]
+
+    - role: mongodb
+      tags: [ mongodb, activity_index, learner_inferences, recommender_ui_support ]
+      mongodb:
+        dbs:
+          - name: activity_index
+            users:
+              - user: root
+                pwd:  "{{ tla_config.postgres.root_password }}"
+                roles:
+                  - "readWrite"
+          - name: learner_inferences
+            users:
+              - user: root
+                pwd:  "{{ tla_config.postgres.root_password }}"
+                roles:
+                  - "readWrite"
+          - name: rui_support
+            users:
+              - user: root
+                pwd:  "{{ tla_config.postgres.root_password }}"
+                roles:
+                  - "readWrite"
+        config:
+          net:
+            port: 27017 # This is the default port
+            bindIp: 127.0.0.1
+          #security: # This seemed to cause some issues when used
+          #  authorization: true
+
+    - role: apache2
+      tags: [ activity_index, recommender, learner_inferences, recommender_ui_support ]
+      apache2:
+        module_dependencies:
+          - "rewrite"
+        virtual_hosts: {}
+
+    - role: rabbitmq_server
+      tags: [ rabbitmq, rabbitmq_server, statement_forwarding ]
+
+    - role: mod_wsgi
+      tags: [ mod_wsgi, activity_index, recommender ]
+
+    - role: evidence_mapper
+      tags: [ evidence_mapper ]
+
+    - role: recommender
+      tags: [ recommender ]
+
+    - role: activity_index
+      tags: [ activity_index ]
+
+    - role: learner_inferences
+      tags: [ learner_inferences ]
+
+    - role: recommender_ui_support
+      tags: [ recommender_ui_support ]
+
+    - role: cass_worker
+      tags: [cass, cass_worker ]
+      cass_worker:
+        app_source_location: "{{ deployment_base }}/cass-worker"
+        node_apps_location: "/opt/node_js_apps"
+        cass_worker_port: "{{ tla_config.cass_worker.port }}"

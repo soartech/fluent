@@ -1,0 +1,17 @@
+---
+
+keycloak_self_register_defaults:
+  base_url: "http://{{ adl_server_hostname | default('localhost') }}:8080/auth"
+  admin: {}
+    #username: "" # SET ME IN PLAYBOOK OR INVENTORY
+    #password: "" # SET ME IN PLAYBOOK OR INVENTORY
+  clients: []
+
+# Example client:
+#   - definition: "{{ deployment_base }}/path/to/client-def.json"
+#     realm: fluent
+#     install_json:
+#       dest:  "/path/to/place/keycloak.json"
+#       owner: "root" (Optional)
+#       group: "root" (Optional)
+#       mode:  0644   (Optional)

@@ -1,0 +1,28 @@
+---
+
+postfix_defaults:
+  package_name: "postfix"
+
+  addon_packages:
+    - "mailutils"
+
+  conf_path: "/etc/postfix/main.cf"
+  config:
+    myhostname:    "{{ ansible_hostname }}"
+    mydestination: "{{ ansible_hostname }}, localhost.localdomain, localhost"
+
+  owner: root
+  group: root
+
+  init_name: "postfix"
+  init_cache_dir: "{{ init_cache_dir | default('/var/cache/ansible') }}/postfix"
+  download_cache_dir: "{{ download_cache_dir | default('/tmp') }}"
+
+  apt:
+    update_cache:     true
+    cache_valid_time: 3600
+
+_postfix_platform_specific_defaults:
+  Ubuntu:
+    trusty: {}
+    xenial: {}

@@ -1,0 +1,82 @@
+---
+
+# - name: "Download Java {{ java.version }}"
+#   connection: local
+#   get_url:
+#     url:      "{{ java.download_url }}"
+#     headers:  "Cookie: oraclelicense=accept-securebackup-cookie"
+#     dest:     "{{ java.download_cache_dir }}/{{ java.download_url | basename }}"
+#     checksum: "{{ java.checksum | default(omit) }}"
+#   become: false
+
+- name: "Create Java Parent Directory"
+  file:
+    path:    "{{ java.home | dirname }}"
+    state:   directory
+    owner:   root
+    group:   root
+    mode:    0755
+  become: true
+
+- name: "Decompress Java Tarball"
+  unarchive:
+    src:     "{{ java.download_cache_dir }}/{{ java.download_url | basename }}"
+    dest:    "{{ java.home | dirname }}"
+    creates: "{{ java.home }}"
+    owner:   root
+    group:   root
+    copy:    yes
+  become: true
+
+- name: "Create Default Java Directory"
+  file:
+    path:  "{{ java.default_path }}"
+    src:   "{{ java.home }}"
+    state: link
+  become: true
+  when: java.make_default_version
+
+# executables setup
+
+- name: "Identify Java Executables"
+  command: "ls {{ java.default_path }}/bin"
+  changed_when: false
+  register: _java_exe_files
+  when: java.make_default_version
+
+- name: "Identify Current Java Executables Settings"
+  shell: "update-alternatives --list {{ item }}"
+  with_items: "{{ _java_exe_files.stdout_lines }}"
+  when: "'.' not in item and java.make_default_version"
+  changed_when: false
+  failed_when:  false
+  register: _java_alternatives_man_pages
+
+- name: "Install Java Executables"
+  shell: "update-alternatives --install /usr/bin/{{ item.item }} {{ item.item }} {{ java.home }}/bin/{{ item.item }} {{ java.priority_level }}"
+  with_items: "{{ _java_alternatives_man_pages.results }}"
+  become: true
+  # Limit to executables; there are a couple non-executables in this directory
+  when: "'.' not in item.item and java.make_default_version and (item.rc != 0 or '{{ java.home }}/bin/{{ item.item }}' not in item.stdout)"
+
+# man pages setup
+
+- name: "Identify Java Manual Pages"
+  command: "ls {{ java.default_path }}/man/man1"
+  changed_when: false
+  register: _java_man_pages
+  when: java.make_default_version
+
+- name: "Identify Current Java Manual Pages Settings"
+  shell: "update-alternatives --list {{ item }}"
+  with_items: "{{ _java_man_pages.stdout_lines }}"
+  changed_when: false
+  failed_when:  false
+  register: _java_alternatives_man_pages
+  when: java.make_default_version
+
+- name: "Install Java Manual Pages"
+  shell: "update-alternatives --install /usr/share/man/man1/{{ item.item }} {{ item.item }} {{ java.home }}/man/man1/{{ item.item }} {{ java.priority_level }}"
+  with_items: "{{ _java_alternatives_man_pages.results }}"
+  become: true
+  when: "java.make_default_version and (item.rc != 0 or '{{ java.home }}/man/man1/{{ item.item }}' not in item.stdout)"

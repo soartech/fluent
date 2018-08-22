@@ -1,0 +1,5 @@
+---
+
+mod_wsgi_dir_scripts: /var/www/wsgi
+mod_wsgi_installation: package
+mod_wsgi_scripts: []

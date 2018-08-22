@@ -1,0 +1,30 @@
+---
+
+# Add NodeJS APT Sources
+- name: "Download Node.js Script to Add APT Sources & Keys"
+  get_url:
+    url: "https://deb.nodesource.com/setup_8.x"
+    dest: "~/nodejs_setup.sh"
+
+- name: "Run Node.js Script to Add APT Sources & Keys"
+  shell: "bash ~/nodejs_setup.sh"
+
+- name: "Delete the Node.js Setup Script"
+  file:
+    path: "~/nodejs_setup.sh"
+    state: absent
+
+# Install Node.js (also installs npm)
+- name: "Install Node.js"
+  apt:
+    name: "nodejs"
+    state: present
+    update_cache: yes
+    cache_valid_time: 3600
+
+# Make a symlink from node->nodejs
+- name: "Symlink 'node' to more current 'nodejs'"
+  file:
+    src: "/usr/bin/node"
+    dest: "/usr/bin/nodejs"
+    state: link

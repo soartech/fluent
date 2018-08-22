@@ -1,0 +1,18 @@
+---
+create_users:
+  users: {}
+
+_user_passhashes: {}
+
+  # Example of input dictionary. See ansible docs for full list of 
+  # user1: # This field is passed in as the username.
+  #   password: "my_secure_password"
+  #   salt: ""   # Defaults to randomized salt.  Absolute string is used directly as salt while boolean false uses empty salt and boolean True uses randomized salt
+  #   create_home: no
+  #   sudo: no
+  # user2:
+  #   password: "password"
+  #   sudo: yes # defaults to no
+  #   sudo_nopasswd: yes # defaults to no
+  #   group: admin
+  #   groups: [group1,group2]

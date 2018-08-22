@@ -1,0 +1,116 @@
+---
+
+- name: "Initialize Moodle Configuration"
+  tags: always
+  set_fact:
+    moodle_platform_specific: "{{ moodle_defaults | combine(_moodle_platform_specific_defaults[ansible_distribution][ansible_distribution_release] | default({}), recursive=True) }}"
+
+- name: "Initialize Moodle Configuration"
+  tags: always
+  set_fact:
+    moodle: "{{ moodle_platform_specific | combine(moodle | default({}), recursive=True) }}"
+
+- name: "Debug Role Configuration"
+  tags: always
+  debug:
+    msg: "{{ moodle }}"
+
+- name: "Create Init Cache Directory"
+  tags: always
+  file:
+    path:  "{{ moodle.init_cache_dir }}"
+    state: directory
+
+- name: "Install Required PHP Extensions"
+  apt: name="{{ item }}" state=present update_cache=true cache_valid_time=3600
+  with_items: "{{ moodle.dependencies }}"
+  notify: Restart Apache
+
+- name: "Create Moodle Web Root Directory"
+  file:
+    path:    "{{ moodle.web_root }}"
+    state:   directory
+    owner:   "{{ moodle.owner }}"
+    group:   "{{ moodle.group }}"
+
+- name: "Create Moodle Data Directory"
+  file:
+    path:    "{{ moodle.data_dir }}"
+    state:   directory
+    owner:   "{{ moodle.owner }}"
+    group:   "{{ moodle.group }}"
+    mode:    0755
+
+- name: "Download Moodle Zip File"
+  connection: local
+  become:     false
+  get_url:
+    url:  "https://github.com/moodle/moodle/archive/{{ moodle.version }}.tar.gz"
+    dest: "{{ moodle.download_cache_dir }}/moodle-{{ moodle.version }}.tar.gz"
+
+- name: "Unzip Moodle"
+  unarchive:
+    src:     "{{ moodle.download_cache_dir }}/moodle-{{ moodle.version }}.tar.gz"
+    dest:    "{{ moodle.init_cache_dir }}"
+    creates: "{{ moodle.init_cache_dir }}/moodle-{{ moodle.version }}"
+    owner:   "{{ moodle.owner }}"
+    group:   "{{ moodle.group }}"
+    copy:    yes
+
+- name: "Copy Moodle Code to Web Root"
+  shell: "cp -R {{ moodle.init_cache_dir }}/moodle-{{ moodle.version }}/* {{ moodle.web_root }}"
+  args:
+    executable: "/bin/bash"
+    creates:    "{{ moodle.web_root }}/index.php"
+
+- name: "Copy Moodle VirtualHost File"
+  template:
+    src:  "{{ moodle.vhost_conf }}"
+    dest: "/etc/apache2/sites-available/moodle-vhost.conf"
+  register: copy_moodle_virtualhost
+
+- name: "Add Moodle Listening Port to ports.conf"
+  lineinfile:
+    dest: "/etc/apache2/ports.conf"
+    line: "Listen {{ moodle.port }}"
+  register: moodle_ports
+
+- name: "Enable Moodle VirtualHost"
+  shell: "a2ensite moodle-vhost"
+  args:
+    creates: "/etc/apache2/sites-enabled/moodle-vhost.conf"
+  register: moodle_virtualhost_enable
+
+- name: "Initialize Moodle Configuration File"
+  command: |
+    /usr/bin/php {{ moodle.web_root }}/admin/cli/install.php
+                 --chmod=2777
+                 --lang=en
+                 --wwwroot={{  moodle.root_url }}:{{ moodle.port }}
+                 --dataroot={{ moodle.data_dir }}
+                 --dbtype=pgsql
+                 --dbhost=localhost
+                 --dbname=moodle
+                 --dbuser={{ postgresql_dbs.moodle.owner }}
+                 --dbpass={{ postgresql_users[postgresql_dbs.moodle.owner].password }}
+                 --dbport={{ postgresql_port }}
+                 --prefix=mdl_
+                 --fullname="Moodle at SoarTech"
+                 --shortname="MoodleSoar"
+                 --adminuser={{  moodle.admin.username }}
+                 --adminpass={{  moodle.admin.password }}
+                 --adminemail={{ moodle.admin.email    }}
+                 --non-interactive
+                 --agree-license
+  become_user: "{{ moodle.owner }}"
+  args:
+    creates: "{{ moodle.web_root }}/config.php"
+
+- name: "Setup Moodle Crontab Entry"
+  cron:
+    name: "Moodle"
+    job: "/usr/bin/php /path/to/moodle/admin/cli/cron.php >/dev/null"
+
+- name: "Restart Apache"
+  service: name=apache2 enabled=true state=restarted
+  when: "copy_moodle_virtualhost|changed or moodle_ports|changed or moodle_virtualhost_enable|changed"

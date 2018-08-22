@@ -1,0 +1,15 @@
+---
+
+static_viewer_defaults:
+  web_root:    "/var/www/static-viewer"
+  server_name: "{{ default_hostname | default('localhost') }}"
+  server_path: "/static-viewer/"
+  port:        80
+  source_dir:  "static-viewer"
+  vhost_file:  "static-viewer-vhost.conf.j2"
+  owner:       "www-data"
+  group:       "www-data"
+  lrs: {}
+    #endpoint_url: "" # SET ME IN PLAYBOOK OR INVENTORY
+    #username:     "" # SET ME IN PLAYBOOK OR INVENTORY
+    #password:     "" # SET ME IN PLAYBOOK OR INVENTORY

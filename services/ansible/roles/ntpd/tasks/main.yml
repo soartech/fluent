@@ -1,0 +1,11 @@
+---
+
+- name: "Initialize NTP Daemon Configuration"
+  set_fact:
+    ntpd: "{{ ntpd_defaults | combine(ntpd | default({}), recursive=True) }}"
+
+- name: "Debug Role Configuration"
+  debug:
+    msg: "{{ ntpd }}"
+
+- include: "ntpd-{{ ansible_os_family }}.yml"

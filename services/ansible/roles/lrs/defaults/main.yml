@@ -1,0 +1,26 @@
+---
+
+lrs_defaults:
+  home:      "/opt/lrs"
+  init_name: lrs
+  version:   "cb7326b8817fe9bd6c42b96a33e546e12372211a"
+
+  bind_address: 0.0.0.0
+  port:         8000
+
+  user:  lrs_user
+  group: lrs_user
+
+  site_credentials: {} # SET ME IN PLAYBOOK OR INVENTORY
+    #username:     "" # SET ME IN PLAYBOOK OR INVENTORY
+    #password:     "" # SET ME IN PLAYBOOK OR INVENTORY
+
+  db_credentials: {} # SET ME IN PLAYBOOK OR INVENTORY
+    #username:     "" # SET ME IN PLAYBOOK OR INVENTORY
+    #password:     "" # SET ME IN PLAYBOOK OR INVENTORY
+
+  celery:
+    init_name: celerylrs
+    #username:  "" # SET ME IN PLAYBOOK OR INVENTORY
+    #password:  "" # SET ME IN PLAYBOOK OR INVENTORY
+    vhost:     lrs_vhost

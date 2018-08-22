@@ -1,0 +1,38 @@
+---
+
+- name: "Copy CASS VirtualHost File"
+  copy:
+    src:  "cass-vhost.conf"
+    dest: "/etc/apache2/sites-available/cass-vhost.conf"
+  notify: "Restart Apache"
+
+- name: "Change CASS VHost File Redirect"
+  lineinfile:
+    dest: /etc/apache2/sites-available/cass-vhost.conf
+    insertafter: '^    RewriteEngine on'
+    line: '    Redirect 301 / {{ cass.redirect_url }}'
+
+- name: "Disable Existing VirtualHost File"
+  file:
+    dest:  "/etc/apache2/sites-enabled/localhost.conf"
+    state: absent
+  notify: "Restart Apache"
+
+- name: "Enable CASS VirtualHost File"
+  file:
+    dest:  "/etc/apache2/sites-enabled/cass-vhost.conf"
+    src:   "/etc/apache2/sites-available/cass-vhost.conf"
+    state: link
+  notify: "Restart Apache"
+
+- name: "Enable Apache Module Dependencies"
+  apache2_module:
+    name:  "{{ item }}"
+    state: present
+  with_list:
+    - "proxy_http"
+    #- "ssl"
+  notify: "Restart Apache"
+
+# Restart Apache/Tomcat if needed
+- meta: flush_handlers

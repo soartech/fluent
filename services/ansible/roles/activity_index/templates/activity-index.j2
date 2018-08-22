@@ -1,0 +1,27 @@
+<VirtualHost *:{{ tla_config.activity_index.port }}>
+
+    DocumentRoot /var/www/activity-index
+
+    WSGIDaemonProcess activity-index python-path=/usr/bin/python3
+    WSGIScriptAlias / /var/www/activity-index/activity_index.wsgi
+
+    # WSGIRestrictStdout Off
+    WSGIScriptReloading On
+
+    <Directory /var/www/activity-index>
+        WSGIProcessGroup activity-index
+        AllowOverride All
+        Require all granted
+    </Directory>
+
+    ServerName {{ st_server_hostname }}
+
+    ServerAdmin webmaster@localhost
+
+    Header add Access-Control-Allow-Origin "*"
+    Header set Access-Control-Allow-Headers "GET, POST, PATCH, DELETE, Content-Type"
+
+    ErrorLog ${APACHE_LOG_DIR}/activity-index.error.log
+    CustomLog ${APACHE_LOG_DIR}/activity-index.access.log combined
+
+</VirtualHost>

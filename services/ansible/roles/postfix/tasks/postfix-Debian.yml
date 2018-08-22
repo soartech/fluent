@@ -1,0 +1,27 @@
+---
+
+- name: "Install Postfix"
+  apt:
+    name:  "{{ postfix.package_name }}"
+    state: present
+    update_cache:     true
+    cache_valid_time: 3600
+
+- name: "Install any Postfix Add-ons"
+  apt:
+    name:  "{{ item }}"
+    state: present
+    update_cache:     "{{ postfix.apt.update_cache }}"
+    cache_valid_time: "{{ postfix.apt.cache_valid_time }}"
+  with_items: "{{ postfix.addon_packages }}"
+
+- name: "Configure Postfix Settings"
+  lineinfile:
+    dest:   "{{ postfix.conf_path }}"
+    line:   "{{ item.key }} = {{ item.value }}"
+    regexp: "{{ item.key }}\\s*="
+    backup: yes
+  with_dict: "{{ postfix.config }}"
+  notify: "Restart Postfix"
+
+- meta: flush_handlers

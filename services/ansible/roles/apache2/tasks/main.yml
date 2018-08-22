@@ -1,0 +1,25 @@
+---
+
+- name: "Initialize Apache Owning Group"
+  tags: always
+  set_fact:
+    apache2_defaults: "{{ apache2_defaults | combine({ 'group': '{{ apache2.owner }}' }) }}"
+  when: "apache2.owner is defined"
+
+- name: "Initialize Apache Virtual Hosts"
+  tags: always
+  set_fact:
+    apache2_defaults: "{{ apache2_defaults | combine({ 'virtual_hosts': {} }) }}"
+  when: "apache2.virtual_hosts is defined and apache2.virtual_hosts.localhost is undefined"
+
+- name: "Initialize Apache Configuration"
+  tags: always
+  set_fact:
+    apache2: "{{ apache2_defaults | combine(apache2 | default({}), recursive=True) }}"
+
+- name: "Debug Role Configuration"
+  tags: always
+  debug:
+    msg: "{{ apache2 }}"
+
+- include: "apache2-{{ ansible_os_family }}.yml"

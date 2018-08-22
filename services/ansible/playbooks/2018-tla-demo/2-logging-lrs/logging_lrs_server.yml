@@ -1,0 +1,9 @@
+---
+
+- name: "Provision TLA Logging-LRS Server"
+  hosts: logging_lrs_server
+  remote_user: root
+  become: yes
+  become_method: sudo
+
+# TODO: Everything else. Should be mostly a copy fo the LRS one, with config changes.

@@ -1,0 +1,16 @@
+<?php
+
+return [
+  'fetch' => PDO::FETCH_CLASS,
+  'default' => '{{ learning_locker.config.database.default }}',
+  'connections' => [
+{% for c in learning_locker.config.database.connections %}
+		'{{ c }}' => [
+        {% for entry in learning_locker.config.database.connections[c] %}
+        '{{ entry }}'   => '{{ learning_locker.config.database.connections[c][entry] }}',
+        {% endfor %}
+	    ],
+{% endfor %}
+	],
+    'migrations' => '{{ learning_locker.config.database.migrations| default('migrations') }}',
+];

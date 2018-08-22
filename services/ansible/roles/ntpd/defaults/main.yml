@@ -1,0 +1,15 @@
+---
+
+ntpd_defaults:
+  config_path: "/etc/ntp.conf"
+  download_cache_dir: "{{ download_cache_dir | default('/tmp') }}"
+  init_cache_dir:     "{{ init_cache_dir | default('/var/cache/ansible') }}/ntpd"
+  apt:
+    update_cache:     "{{ apt_update_cache     | default(true) }}"
+    cache_valid_time: "{{ apt_cache_valid_time | default(3600) }}"
+  dependencies:
+    - "ntp"
+  init_name: "ntp"
+
+  servers: []
+
