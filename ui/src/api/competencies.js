@@ -17,7 +17,7 @@ export default {
 
     var topLevelCompetencies = []
 
-    var framework = await axios.get('insertCassUrl/api/data/insertCassSchemaUrl.0.3.Framework/59e884bb-510b-4f36-8443-8c3842336e28')
+    var framework = await axios.get('{cass_url_here}/api/data/{cass_framework_schema_here}/{framework_id_here}')
     var frameworkData = framework.data
 
     var competencyUrls = frameworkData.competency
@@ -29,10 +29,12 @@ export default {
       var competencyObj = competencyGet.data
 
       competencyObj['@id'] = this.stripVersionFromUrl(competencyObj['@id'])
+      competencyObj['level'] = 0
       competencyObj['children'] = []
+      competencyObj['parents'] = []
       competencyObj['requires'] = []
 
-      competencyObjs[competencyUrl] = competencyObj
+      competencyObjs[competencyUrl] = competencyObj;
     }
 
     for (var relIdx in relationUrls) {
@@ -53,7 +55,22 @@ export default {
       competencyObjs[relationObj['source']]['requires'].push(relationObj['target']);
     }
 
-    return topLevelCompetencies
+    // This method of cloning is dumb but efficient
+    var compIdMap = JSON.parse(JSON.stringify(competencyObjs));
+    for (var idx in compIdMap) {
+      var comp = compIdMap[idx];
+      for (var idx2 in comp['children']) {
+        comp['children'][idx2] = comp['children'][idx2]['@id'];
+      }
+    }
+
+    var returnObj = {
+      "objectList": topLevelCompetencies,
+      "idMap": compIdMap,
+      "relations": _getRelations()
+    }
+
+    return returnObj
 
 
 
@@ -83,14 +100,16 @@ export default {
       return filteredValues
     }
 
-    function _propagateNodesDown (competencyList) {
+    function _propagateNodesDown (competencyList, depth = 0) {
       var nextIdList = []
       for (var idx in competencyList) {
         var obj = competencyList[idx]
+        obj['level'] = depth
 
         var childrenList = _getRelations('narrows', null, obj['@id']).map(relation => relation['source'])
         for (var idx2 in childrenList) {
-          var childUrl = childrenList[idx2]
+          var childUrl = childrenList[idx2];
+          competencyObjs[childUrl]['parents'].push(obj['@id']);
           if (!obj['children'].includes(competencyObjs[childUrl])) {
             obj['children'].push(competencyObjs[childUrl])
           }
@@ -102,7 +121,7 @@ export default {
       nextIdList = Array.from(new Set(nextIdList))
       var nextCompList = nextIdList.map(id => competencyObjs[id])
       if (nextCompList.length) {
-        _propagateNodesDown(nextCompList)
+        _propagateNodesDown(nextCompList, depth + 1)
       }
     }
 

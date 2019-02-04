@@ -29,6 +29,7 @@ import {
   VDialog,
   VProgressCircular,
   VTooltip,
+  VBadge,
   transitions
 } from 'vuetify'
 import '../node_modules/vuetify/src/stylus/app.styl'
@@ -60,6 +61,7 @@ Vue.use(Vuetify, {
     VDialog,
     VProgressCircular,
     VTooltip,
+    VBadge,
     transitions
   },
   theme: {

@@ -7,7 +7,8 @@
             :competency="competency"
             :toggle="toggle"
             :open="open"
-            :held="isHeld"
+            :mastery="mastery"
+            :headNode="this.headNode"
           />
         </v-flex>
       </v-layout>
@@ -18,7 +19,8 @@
         v-for="(competency, index) in competency.children"
         :key="index"
         :competency="competency"
-        :masteryEstimates="masteryEstimates">
+        :masteryProbabilities="masteryProbabilities"
+        :headNode="false">
       </item>
     </ul>
   </li>
@@ -30,7 +32,8 @@ export default {
   name: 'item',
   props: {
     competency: Object,
-    masteryEstimates: Object
+    masteryProbabilities: Object,
+    headNode: Boolean
   },
   data: function () {
     return {
@@ -42,13 +45,13 @@ export default {
       return this.competency.children &&
         this.competency.children.length
     },
-    isHeld: function () {
+    mastery: function() {
       let competencyId = this.competency['@id']
-      if (competencyId in this.masteryEstimates && this.masteryEstimates[competencyId] === 'held') {
-        return true
-      } else {
-        return false
-      }
+      if (this.masteryProbabilities == null || Object.keys(this.masteryProbabilities).length === 0 || !(competencyId in this.masteryProbabilities)) return '0%'
+
+      var masteryProbability = this.masteryProbabilities[competencyId]
+      masteryProbability = Math.round(parseFloat(masteryProbability)*100)
+      return masteryProbability + "%"
     }
   },
   methods: {

@@ -15,7 +15,6 @@
             <v-list-tile
               v-for="subItem in item.items"
               :key="subItem.title"
-              @click=""
             >
             <v-container>
               <v-layout>

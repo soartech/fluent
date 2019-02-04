@@ -26,7 +26,11 @@
           if (file.match(/\.(js|css)$/)) { %>
     <link rel="<%= chunk.initial?'preload':'prefetch' %>" href="<%= htmlWebpackPlugin.files.publicPath + file %>" as="<%= file.match(/\.css$/)?'style':'script' %>"><% }}} %>
     <!-- <link href='https://fonts.googleapis.com/css?family=Roboto:300,400,500,700|Material+Icons' rel="stylesheet"> -->
-    <script src="insertIPAddr/auth/js/keycloak.js"></script>
+    <script type="text/javascript" src="/static/js/cryptojs_v3.1.2.js"></script>
+    <script type="text/javascript" src="/static/js/xapiwrapper/verbs.js"></script>
+    <script type="text/javascript" src="/static/js/xapiwrapper/xapistatement.js"></script>
+    <script type="text/javascript" src="/static/js/xapiwrapper/xapiwrapper.js"></script>
+    <script src="{keycloak_server_here}/auth/js/keycloak.js"></script>
     <link href='<%= htmlWebpackPlugin.files.publicPath %>static/css/material_design.css' rel="stylesheet">
   </head>
   <body>

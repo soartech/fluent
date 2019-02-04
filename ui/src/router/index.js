@@ -2,8 +2,9 @@ import Vue from 'vue'
 import Router from 'vue-router'
 import ErrorPage from '@/components/pages/404'
 import LearnerApp from '@/apps/LearnerApp'
-import FrameworkChooser from '@/components/pages/FrameworkChooser'
 import ActivityChooser from '@/components/pages/ActivityChooser'
+import CompetencyTree from '@/components/pages/CompetencyTree'
+import Admin from '@/components/pages/Admin'
 Vue.use(Router)
 
 export default new Router({
@@ -15,20 +16,28 @@ export default new Router({
       children: [
         {
           path: '/',
-          component: FrameworkChooser
+          component: CompetencyTree
         },
         {
           path: 'activities',
-          component: ActivityChooser
+          component: ActivityChooser,
+          children: [
+            {
+              path: 'all'
+            },
+            {
+              path: 'focused'
+            }
+          ]
         },
         {
-          path: 'activities/:id',
-          component: ActivityChooser
+          path: '/admin',
+          component: Admin
         }
       ]
     },
     {
-      path: '/',
+      path: '/*',
       name: '404',
       component: ErrorPage
     }
